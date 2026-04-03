@@ -1,0 +1,37 @@
+/* 1. CSS Variables (The Color Palette) */
+:root {
+  --bg-color: #f1f5f9;       /* Light blue/gray background */
+  --card-bg: #ffffff;        /* White cards */
+  --text-main: #0f172a;      /* Dark slate text */
+  --text-muted: #64748b;     /* Gray secondary text */
+  --primary-color: #3b82f6;  /* Vibrant blue buttons */
+  --primary-hover: #2563eb;  /* Darker blue for hover */
+  --success-color: #10b981;  /* Green for submit buttons */
+  --border-color: #e2e8f0;   /* Light gray borders */
+  --radius: 12px;            /* Smooth rounded corners */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Make full height work */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* Uses the default system font (Apple/Windows/Android standard) */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding: 0;
+  margin: 0;
+}
+

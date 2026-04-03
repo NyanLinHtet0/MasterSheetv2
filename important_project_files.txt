@@ -1,0 +1,1730 @@
+
+==================================================
+FILE: backend\server.js
+==================================================
+
+const express = require("express");
+const cors = require("cors");
+const syncRoutes = require("./routes/sync"); // <-- Import new routes
+
+const app = express();
+const PORT = 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// Attach the sync routes to the /api/sync endpoint
+app.use("/api/sync", syncRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Backend running");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
+
+==================================================
+FILE: backend\controllers\syncController.js
+==================================================
+
+const {
+  getCurrentAuditId,
+  getCurrentTableMaxIds,
+  getBaseData,
+  getTransactionsForInitialization,
+  groupByCorpId,
+  splitEmployees,
+  assembleCorps,
+  getAuditChangesAfterId,
+  getRowsByIds
+} = require('../services/syncService');
+
+exports.initializeSync = async (req, res) => {
+  try {
+    const current_audit_id = await getCurrentAuditId();
+    const max_ids = await getCurrentTableMaxIds();
+
+    const {
+      globalTree,
+      assets,
+      employees,
+      corps,
+      localTree
+    } = await getBaseData();
+
+    const allTransactions = await getTransactionsForInitialization(corps);
+
+    const localTreeByCorp = groupByCorpId(localTree);
+    const transactionsByCorp = groupByCorpId(allTransactions);
+    const { employeesByCorp, unassignedEmployees } = splitEmployees(employees);
+
+    const assembledCorps = assembleCorps({
+      corps,
+      localTreeByCorp,
+      employeesByCorp,
+      transactionsByCorp
+    });
+
+    res.json({
+      current_audit_id,
+      max_ids,
+      global_tree: globalTree,
+      assets,
+      unassigned_employees: unassignedEmployees,
+      corp_data: assembledCorps
+    });
+  } catch (error) {
+    console.error('Initialization Error:', error);
+    res.status(500).json({ error: 'Failed to initialize database state' });
+  }
+};
+
+exports.getAuditChanges = async (req, res) => {
+  try {
+    const afterId = Number(req.query.after_id) || 0;
+
+    const result = await getAuditChangesAfterId(afterId);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Audit Changes Error:', error);
+    res.status(500).json({ error: 'Failed to fetch audit changes' });
+  }
+};
+
+exports.getRowsByIds = async (req, res) => {
+  try {
+    const { table_name, row_ids } = req.body;
+
+    const rows = await getRowsByIds(table_name, row_ids);
+
+    res.json({ rows });
+  } catch (error) {
+    console.error('Rows By Ids Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch rows' });
+  }
+};
+
+
+==================================================
+FILE: backend\db\index.js
+==================================================
+
+const mysql = require('mysql2/promise');
+
+// ---> LOCAL SETUP <---
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',         // Change to your local MySQL username
+  password: 'linhtet2003', // Change to your local MySQL password
+  database: 'master_sheets',
+  dateStrings: true,
+  port: 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+
+module.exports = pool;
+
+
+==================================================
+FILE: backend\routes\sync.js
+==================================================
+
+const express = require('express');
+const router = express.Router();
+const syncController = require('../controllers/syncController');
+
+// When a GET request hits the root of this router, run initializeSync
+router.get('/initialize', syncController.initializeSync);
+router.get('/audit/changes', syncController.getAuditChanges);
+router.post('/rows-by-ids', syncController.getRowsByIds);
+
+module.exports = router;
+
+
+==================================================
+FILE: backend\services\syncService.js
+==================================================
+
+const db = require('../db');
+import currency from 'currency.js';
+
+async function getCurrentAuditId() {
+  const [[{ current_audit_id }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'
+  );
+  return current_audit_id;
+}
+
+async function getBaseData() {
+  const [globalTree] = await db.query('SELECT * FROM global_tree');
+  const [assets] = await db.query('SELECT * FROM assets');
+  const [employees] = await db.query('SELECT * FROM employee');
+  const [corps] = await db.query('SELECT * FROM corp_data');
+  const [localTree] = await db.query('SELECT * FROM local_tree');
+
+  return {
+    globalTree,
+    assets,
+    employees,
+    corps,
+    localTree
+  };
+}
+
+function getTransactionFetchInfo(corps) {
+  const verifiedDates = corps
+    .map(corp => corp.last_verified_date)
+    .filter(date => date != null);
+
+  const hasAnyNullVerifiedDate = corps.some(
+    corp => corp.last_verified_date == null
+  );
+
+  if (hasAnyNullVerifiedDate) {
+    return {
+      fetchAll: true,
+      minVerifiedDate: null
+    };
+  }
+
+  if (verifiedDates.length === 0) {
+    return {
+      fetchAll: true,
+      minVerifiedDate: null
+    };
+  }
+
+  const minVerifiedDate = verifiedDates.reduce((min, date) =>
+    date < min ? date : min
+  );
+
+  return {
+    fetchAll: false,
+    minVerifiedDate
+  };
+}
+
+async function getTransactionsForInitialization(corps) {
+  const { fetchAll, minVerifiedDate } = getTransactionFetchInfo(corps);
+
+  let transactions = [];
+
+  if (fetchAll) {
+    [transactions] = await db.query('SELECT * FROM transactions');
+  } else {
+    [transactions] = await db.query(
+      'SELECT * FROM transactions WHERE tx_date > ?',
+      [minVerifiedDate]
+    );
+  }
+
+  return transactions;
+}
+
+function groupByCorpId(rows) {
+  const grouped = {};
+
+  for (const row of rows) {
+    if (row.corp_id == null) continue;
+
+    if (!grouped[row.corp_id]) {
+      grouped[row.corp_id] = [];
+    }
+
+    grouped[row.corp_id].push(row);
+  }
+
+  return grouped;
+}
+
+function splitEmployees(employees) {
+  const employeesByCorp = {};
+  const unassignedEmployees = [];
+
+  for (const emp of employees) {
+    if (emp.corp_id == null) {
+      unassignedEmployees.push(emp);
+    } else {
+      if (!employeesByCorp[emp.corp_id]) {
+        employeesByCorp[emp.corp_id] = [];
+      }
+      employeesByCorp[emp.corp_id].push(emp);
+    }
+  }
+
+  return {
+    employeesByCorp,
+    unassignedEmployees
+  };
+}
+
+function filterTransactionsForCorp(transactions, corp) {
+  if (!corp.last_verified_date) return transactions;
+  return transactions.filter(tx => tx.tx_date > corp.last_verified_date);
+}
+
+function addComputedTransactionFields(transactions, corp) {
+  const isForeign = Number(corp.is_foreign) === 1;
+
+  return transactions.map(tx => {
+    const amount = currency(tx.amount || 0);
+    const rate = currency(tx.rate || 0);
+    const adjustment = currency(tx.adjustment || 0);
+
+    const total_mmk = isForeign
+      ? amount.multiply(rate.value).add(adjustment.value).value
+      : amount.add(adjustment.value).value;
+
+    return {
+      ...tx,
+      total_mmk
+    };
+  });
+}
+
+function assembleCorps({
+  corps,
+  localTreeByCorp,
+  employeesByCorp,
+  transactionsByCorp
+}) {
+  return corps.map(corp => {
+    const corpTransactions = transactionsByCorp[corp.id] || [];
+    const filteredTransactions = filterTransactionsForCorp(corpTransactions, corp);
+    const formattedTransactions = addComputedTransactionFields(
+      filteredTransactions,
+      corp
+    );
+
+    return {
+      ...corp,
+      local_tree: localTreeByCorp[corp.id] || [],
+      employees: employeesByCorp[corp.id] || [],
+      transactions: formattedTransactions
+    };
+  });
+}
+
+async function getCurrentTableMaxIds() {
+  const [[{ corp_data }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS corp_data FROM corp_data'
+  );
+
+  const [[{ transactions }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS transactions FROM transactions'
+  );
+
+  const [[{ employees }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS employees FROM employee'
+  );
+
+  const [[{ assets }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS assets FROM assets'
+  );
+
+  const [[{ global_tree }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS global_tree FROM global_tree'
+  );
+
+  const [[{ local_tree }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS local_tree FROM local_tree'
+  );
+
+  return {
+    corp_data,
+    transactions,
+    employees,
+    assets,
+    global_tree,
+    local_tree
+  };
+}
+async function getAuditChangesAfterId(afterId) {
+  const [[{ current_audit_id }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'
+  );
+
+  if (afterId >= current_audit_id) {
+    return {
+      current_audit_id,
+      audit_rows: []
+    };
+  }
+
+  const [audit_rows] = await db.query(
+    `SELECT * FROM audit_log
+     WHERE id > ?
+     ORDER BY id ASC`,
+    [afterId]
+  );
+
+  return {
+    current_audit_id,
+    audit_rows
+  };
+}
+
+async function getRowsByIds(tableName, rowIds) {
+  const allowedTables = new Set([
+    'transactions',
+    'corp_data',
+    'employee',
+    'assets',
+    'global_tree',
+    'local_tree'
+  ]);
+
+  if (!allowedTables.has(tableName)) {
+    throw new Error('Invalid table name');
+  }
+
+  if (!Array.isArray(rowIds) || rowIds.length === 0) {
+    return [];
+  }
+
+  const placeholders = rowIds.map(() => '?').join(',');
+
+  const [rows] = await db.query(
+    `SELECT * FROM ${tableName} WHERE id IN (${placeholders})`,
+    rowIds
+  );
+
+  return rows;
+}
+
+module.exports = {
+  getCurrentAuditId,
+  getCurrentTableMaxIds,
+  getBaseData,
+  getTransactionsForInitialization,
+  groupByCorpId,
+  splitEmployees,
+  assembleCorps,
+  getAuditChangesAfterId,
+  getRowsByIds
+};
+
+
+==================================================
+FILE: frontend\eslint.config.js
+==================================================
+
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+
+
+
+==================================================
+FILE: frontend\vite.config.js
+==================================================
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+
+
+==================================================
+FILE: frontend\src\App.css
+==================================================
+
+
+
+
+==================================================
+FILE: frontend\src\App.jsx
+==================================================
+
+import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './app/Navbar';
+import Sheets from './pages/Sheets';
+import Home from './pages/Home';
+import { useSyncState } from './data_management/data_init'; // <-- Import the hook
+import { useSyncManager } from './data_management/data_save';
+
+function App() {
+  // <-- Call the hook to fetch DB data
+  const { appData, isLoading, error } = useSyncState(); 
+
+  // Use our manager to handle drafts and the dirty map
+  const { 
+    draftData, 
+    isDirty, 
+    handleInsertCorp, 
+    handleCancel, 
+    handleSave 
+  } = useSyncManager(appData);
+
+  // <-- Prevent app from rendering until DB data is downloaded
+  if (isLoading) return <div style={{padding: '20px'}}>Initializing Database...</div>;
+  if (error) return <div style={{padding: '20px'}}>Error: {error}</div>;
+
+  return (
+    <BrowserRouter>
+      <Navbar isDirty={isDirty} onSave={handleSave} onCancel={handleCancel} />
+
+      <div style={{ padding: "0" }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/Sheets"
+            element={
+              <Sheets 
+                corps={draftData?.corp_data || []}
+                onAddCorp={handleInsertCorp}
+              />
+            }
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
+export default App;
+
+
+==================================================
+FILE: frontend\src\index.css
+==================================================
+
+/* 1. CSS Variables (The Color Palette) */
+:root {
+  --bg-color: #f1f5f9;       /* Light blue/gray background */
+  --card-bg: #ffffff;        /* White cards */
+  --text-main: #0f172a;      /* Dark slate text */
+  --text-muted: #64748b;     /* Gray secondary text */
+  --primary-color: #3b82f6;  /* Vibrant blue buttons */
+  --primary-hover: #2563eb;  /* Darker blue for hover */
+  --success-color: #10b981;  /* Green for submit buttons */
+  --border-color: #e2e8f0;   /* Light gray borders */
+  --radius: 12px;            /* Smooth rounded corners */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Make full height work */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* Uses the default system font (Apple/Windows/Android standard) */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding: 0;
+  margin: 0;
+}
+
+
+
+
+==================================================
+FILE: frontend\src\main.jsx
+==================================================
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+
+==================================================
+FILE: frontend\src\app\Navbar.jsx
+==================================================
+
+import { Link, useLocation } from 'react-router-dom';
+import styles from './Navbar.module.css';
+
+function Navbar({ isDirty, onSave, onCancel }) {
+  const location = useLocation();
+  
+  return (
+    <nav className={styles.navbar}>
+      <div className={styles.navLinks}>
+        <Link to="/" className={location.pathname === '/' ? `${styles.link} ${styles.activeLink}` : styles.link}>Home</Link>
+        <Link to="/Sheets" className={location.pathname === '/Sheets' ? `${styles.link} ${styles.activeLink}` : styles.link}>Sheets</Link>
+      </div>
+
+      {/* Renders Div Block Conditionally Once Modified */}
+      {isDirty && (
+        <div className={styles.actionContainer}>
+          <button onClick={onCancel} className={styles.cancelBtn}>Cancel</button>
+          <button onClick={onSave} className={styles.saveBtn}>Save Changes</button>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+export default Navbar;
+
+
+==================================================
+FILE: frontend\src\app\Navbar.module.css
+==================================================
+
+.navbar {
+  padding: 15px 30px;
+  background-color: #0f172a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+}
+
+.navLinks {
+  display: flex;
+  gap: 25px;
+}
+
+.link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover, .activeLink {
+  color: #3b82f6;
+}
+
+/* Button UI for Dirty Modifications */
+.actionContainer {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: #f1f5f9;
+  border: 1px solid #94a3b8;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.saveBtn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.saveBtn:hover {
+  background-color: #059669;
+}
+
+
+==================================================
+FILE: frontend\src\components\CorpDropdown.jsx
+==================================================
+
+import { useState, useEffect, useRef } from 'react';
+import styles from './CorpDropdown.module.css';
+
+function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedCorp && !isOpen) {
+      setSearchTerm(selectedCorp.name);
+    }
+  }, [selectedCorp, isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        handleCloseDropdown();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [selectedCorp]);
+
+  const handleOpenDropdown = () => {
+    setIsOpen(true);
+    setSearchTerm('');
+  };
+
+  const handleCloseDropdown = () => {
+    setIsOpen(false);
+    setSearchTerm(selectedCorp ? selectedCorp.name : '');
+  };
+
+  const filteredCorps = corps.filter(corp =>
+    corp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelectCorp = (corp) => {
+    onSelect(corp); 
+    setSearchTerm(corp.name);
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    if (!isOpen) setIsOpen(true);
+  };
+
+  return (
+    <div className={styles.dropdownWrapper} ref={dropdownRef}>
+      <div
+        className={`${styles.dropdownHeader} ${isOpen ? styles.activeHeader : ''}`}
+        onClick={() => { if (!isOpen) handleOpenDropdown(); }}
+      >
+        <div className={styles.inputGroup}>
+          <input
+            type="text"
+            className={styles.searchInput}
+            value={isOpen ? searchTerm : (selectedCorp ? selectedCorp.name : 'None')}
+            onChange={handleInputChange}
+            onFocus={() => { if (!isOpen) handleOpenDropdown(); }}
+            placeholder="Search or select a corp..."
+          />
+          
+          {/* <--- APPLIED INVERSE TO HEADER DISPLAY ---> */}
+          {!isOpen && selectedCorp && (
+            <span className={styles.headerBalance}>
+              {selectedCorp.total_mmk 
+                  ? (selectedCorp.inverse ? -Number(selectedCorp.total_mmk) : Number(selectedCorp.total_mmk)).toLocaleString(undefined, {maximumFractionDigits: 0}) 
+                  : 0}
+            </span>
+          )}
+        </div>
+        
+        <div
+          className={`${styles.caret} ${isOpen ? styles.caretOpen : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isOpen) { handleCloseDropdown(); } else { handleOpenDropdown(); }
+          }}
+        >
+          ▼
+        </div>
+      </div>
+
+      {isOpen && (
+        <ul className={styles.dropdownList}>
+          {filteredCorps.length > 0 ? (
+            filteredCorps.map((corp, index) => (
+              <li
+                key={index}
+                className={styles.dropdownItem}
+                onClick={() => handleSelectCorp(corp)}
+              >
+                <span className={styles.corpName}>{corp.name}</span>
+                {/* <--- APPLIED INVERSE TO DROPDOWN ITEMS DISPLAY ---> */}
+                <div className={styles.corpBalance}>
+                  <span>
+                    {corp.total_mmk ? (corp.inverse ? -Number(corp.total_mmk) : Number(corp.total_mmk)).toLocaleString(undefined, {maximumFractionDigits: 0}) : 0}
+                  </span>
+                  
+                  {corp.total_foreign ? (
+                    <span className={styles.foreignText}>
+                      {(corp.inverse ? -Number(corp.total_foreign) : Number(corp.total_foreign)).toLocaleString()} {corp.name.split('ဝယ်စာရင်း')[0].trim()}
+                    </span>
+                  ) : null}
+                </div>
+              </li>
+            ))
+          ) : (
+            <li className={styles.noResults}>No corps found</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export default CorpDropdown;
+
+
+==================================================
+FILE: frontend\src\components\CorpDropdown.module.css
+==================================================
+
+.dropdownWrapper {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 14px 16px; /* Increased by ~15% */
+  cursor: text;
+  transition: all 0.2s ease;
+}
+
+.dropdownHeader:hover,
+.activeHeader {
+  border-color: #94a3b8;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 15px;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 18px; /* Increased by ~15% from 16px */
+  font-weight: 900;
+  color: #334155;
+  width: 100%;
+  min-width: 50px;
+  line-height: 1.8;
+  padding: 4px 0;
+  text-align: center;
+}
+
+.searchInput::placeholder {
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.headerBalance {
+  color: #64748b;
+  font-weight: 700;
+  white-space: nowrap;
+  font-size: 18px; /* Increased by ~15% */
+  line-height: 1.8; 
+}
+
+.caret {
+  color: #94a3b8;
+  font-size: 14px; /* Scaled up slightly */
+  cursor: pointer;
+  padding-left: 10px;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.caretOpen {
+  transform: rotate(180deg);
+}
+
+.dropdownList {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 280px; /* Slightly taller to accommodate bigger items */
+  overflow-y: auto;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.dropdownItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px; /* Increased padding by ~15% */
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownItem:last-child {
+  border-bottom: none;
+}
+
+.dropdownItem:hover {
+  background-color: #f8fafc;
+}
+
+.corpName {
+  font-size: 18px; /* Increased by ~15% */
+  font-weight: 900;
+  color: #334155;
+  line-height: 1.8; 
+  padding: 1px 0;
+}
+
+.corpBalance {
+  color: #64748b;
+  font-size: 18px; /* Increased by ~15% */
+  font-weight: 700;
+  line-height: 1.4; /* Adjusted for stacked layout */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Keeps the numbers aligned on the right */
+}
+
+.foreignText {
+  font-size: 16px; 
+  color: #94a3b8;
+}
+
+.noResults {
+  padding: 18px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 1300px) {
+  .inputGroup {
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+  .searchInput{
+    align-items: center;
+    margin: 0;
+  }
+  .dropdownWrapper {
+    padding: 0;
+  }
+}
+
+
+==================================================
+FILE: frontend\src\data_management\data_init.js
+==================================================
+
+import { useState, useEffect } from 'react';
+import { syncFromAuditLog } from './data_refresh';
+
+export function useSyncState() {
+  const [appData, setAppData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+
+        const storedData = localStorage.getItem('app_sync_state');
+
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          const syncedData = await syncFromAuditLog(parsedData);
+          setAppData(syncedData);
+        } else {
+          await initializeData();
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const initializeData = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch('http://localhost:3000/api/sync/initialize');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch initial database state');
+      }
+
+      const initialPayload = await response.json();
+
+      localStorage.setItem('app_sync_state', JSON.stringify(initialPayload));
+      setAppData(initialPayload);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
+  };
+
+  return { appData, isLoading, error, setAppData };
+}
+
+
+==================================================
+FILE: frontend\src\data_management\data_refresh.js
+==================================================
+
+import currency from 'currency.js';
+
+export async function syncFromAuditLog(localData) {
+  const currentLocalAuditId = localData.current_audit_id || 0;
+
+  const auditResponse = await fetch(
+    `http://localhost:3000/api/sync/audit/changes?after_id=${currentLocalAuditId}`
+  );
+
+  if (!auditResponse.ok) {
+    throw new Error('Failed to fetch audit changes');
+  }
+
+  const { current_audit_id, audit_rows } = await auditResponse.json();
+
+  if (!audit_rows || audit_rows.length === 0) {
+    return localData;
+  }
+
+  let updatedData = structuredClone(localData);
+
+  const insertRowsByTable = {};
+
+  for (const auditRow of audit_rows) {
+    // Match this string to EXACTLY what your backend stores in audit_log
+    if (auditRow.action_type !== 'Insert') continue;
+
+    if (!insertRowsByTable[auditRow.table_name]) {
+      insertRowsByTable[auditRow.table_name] = [];
+    }
+
+    insertRowsByTable[auditRow.table_name].push(auditRow.row_id);
+  }
+
+  for (const [tableName, rowIds] of Object.entries(insertRowsByTable)) {
+    const uniqueIds = [...new Set(rowIds)];
+
+    const rowResponse = await fetch('http://localhost:3000/api/sync/rows-by-ids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table_name: tableName,
+        row_ids: uniqueIds
+      })
+    });
+
+    if (!rowResponse.ok) {
+      throw new Error(`Failed to fetch inserted rows for ${tableName}`);
+    }
+
+    const { rows } = await rowResponse.json();
+
+    updatedData = mergeInsertedRows(updatedData, tableName, rows);
+  }
+
+  updatedData.current_audit_id = current_audit_id;
+  localStorage.setItem('app_sync_state', JSON.stringify(updatedData));
+
+  return updatedData;
+}
+
+function mergeInsertedRows(appData, tableName, rows) {
+  const nextData = structuredClone(appData);
+
+  switch (tableName) {
+    case 'transactions': {
+      for (const tx of rows) {
+        const corp = nextData.corp_data.find(c => c.id === tx.corp_id);
+        if (!corp) continue;
+
+        const exists = corp.transactions.some(existing => existing.id === tx.id);
+        if (exists) continue;
+
+        const isForeign = Number(corp.is_foreign) === 1;
+        const amount = currency(tx.amount || 0);
+        const rate = currency(tx.rate || 0);
+        const adjustment = currency(tx.adjustment || 0);
+
+        const total_mmk = isForeign
+        ? amount.multiply(rate.value).add(adjustment.value).value
+        : amount.add(adjustment.value).value;
+
+        corp.transactions.push({
+          ...tx,
+          total_mmk
+        });
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.transactions = Math.max(
+          nextData.max_ids.transactions,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'corp_data': {
+      for (const corp of rows) {
+        const exists = nextData.corp_data.some(existing => existing.id === corp.id);
+        if (exists) continue;
+
+        nextData.corp_data.push({
+          ...corp,
+          local_tree: [],
+          employees: [],
+          transactions: []
+        });
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.corp_data = Math.max(
+          nextData.max_ids.corp_data,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'employee': {
+      for (const emp of rows) {
+        if (emp.corp_id == null) {
+          const exists = nextData.unassigned_employees.some(e => e.id === emp.id);
+          if (!exists) nextData.unassigned_employees.push(emp);
+        } else {
+          const corp = nextData.corp_data.find(c => c.id === emp.corp_id);
+          if (!corp) continue;
+
+          const exists = corp.employees.some(e => e.id === emp.id);
+          if (!exists) corp.employees.push(emp);
+        }
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.employees = Math.max(
+          nextData.max_ids.employees,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'assets': {
+      for (const asset of rows) {
+        const exists = nextData.assets.some(existing => existing.id === asset.id);
+        if (!exists) nextData.assets.push(asset);
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.assets = Math.max(
+          nextData.max_ids.assets,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'global_tree': {
+      for (const node of rows) {
+        const exists = nextData.global_tree.some(existing => existing.id === node.id);
+        if (!exists) nextData.global_tree.push(node);
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.global_tree = Math.max(
+          nextData.max_ids.global_tree,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'local_tree': {
+      for (const node of rows) {
+        const corp = nextData.corp_data.find(c => c.id === node.corp_id);
+        if (!corp) continue;
+
+        const exists = corp.local_tree.some(existing => existing.id === node.id);
+        if (!exists) corp.local_tree.push(node);
+      }
+
+      if (rows.length > 0) {
+        const maxInsertedId = Math.max(...rows.map(r => r.id));
+        nextData.max_ids.local_tree = Math.max(
+          nextData.max_ids.local_tree,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return nextData;
+}
+
+
+==================================================
+FILE: frontend\src\data_management\data_save.js
+==================================================
+
+import { useState, useCallback, useEffect } from 'react';
+
+export function useSyncManager(initialData) {
+    const [originalData, setOriginalData] = useState(initialData);
+    const [draftData, setDraftData] = useState(initialData);
+    const [dirtyMap, setDirtyMap] = useState({});
+
+    // Sync up when the DB finishes downloading
+    useEffect(() => {
+        if (initialData) {
+            setOriginalData(initialData);
+            setDraftData(initialData);
+            setDirtyMap({});
+        }
+    }, [initialData]);
+
+    // Handle Adding a new Corp from AddCorpForm
+    const handleInsertCorp = useCallback((newCorpData) => {
+        const tempId = -Date.now(); // Create a temporary negative ID for the client
+        const entityKey = `corp_data_${tempId}`;
+        
+        // Match the shape of your backend corp_data table
+        const newRecord = { 
+            id: tempId, 
+            name: newCorpData.name,
+            is_foreign: newCorpData.isForeign ? 1 : 0,
+            current_balance: newCorpData.balance || 0,
+            current_foreign: newCorpData.foreignBalance || null,
+            inverse: newCorpData.isInverse ? 1 : 0,
+            isTemp: true 
+        };
+
+        // 1. Update the UI draft so the user sees it immediately
+        setDraftData(prev => ({
+            ...prev,
+            corp_data: [...(prev?.corp_data || []), newRecord]
+        }));
+
+        // 2. Add it to the dirty queue
+        setDirtyMap(prev => ({
+            ...prev,
+            [entityKey]: {
+                table_name: 'corp_data',
+                row_id: tempId,
+                action_type: 'INSERT',
+                changes: newRecord
+            }
+        }));
+    }, []);
+
+    // Revert everything
+    const handleCancel = useCallback(() => {
+        setDraftData(originalData);
+        setDirtyMap({});
+    }, [originalData]);
+
+    // Send to backend
+    const handleSave = useCallback(() => {
+        const payload = Object.values(dirtyMap);
+        console.log("Payload queued for backend:", payload);
+        alert("Check the console to see the 'dirty' payload!");
+
+        // On success: setOriginalData(draftData); setDirtyMap({});
+    }, [dirtyMap, draftData]);
+
+    const isDirty = Object.keys(dirtyMap).length > 0;
+
+    return { draftData, isDirty, handleInsertCorp, handleCancel, handleSave };
+}
+
+
+==================================================
+FILE: frontend\src\pages\Home.jsx
+==================================================
+
+function Home() {
+    return (
+        <div>
+            <h1>Sheets Page</h1>
+            <p>This is where the sheets will be displayed.</p>
+        </div>
+    );
+}
+
+export default Home;
+
+
+==================================================
+FILE: frontend\src\pages\Sheets.jsx
+==================================================
+
+import React, { useState } from 'react';
+import styles from './Sheets.module.css';
+import CorpList from '../sheets/corp_list';
+import CorpDetails from '../sheets/corp_details';
+
+// 1. Accept the 'corps' prop that App.jsx is sending
+function Sheets({ corps, onAddCorp }) {
+    const [showAddCorpForm, setShowAddCorpForm] = useState(false);
+
+    return (
+        <div className={styles.container}>
+            <CorpList 
+                showAddCorpForm={showAddCorpForm} 
+                setShowAddCorpForm={setShowAddCorpForm} 
+                corps={corps} // 2. Pass the database rows down to CorpList
+                onAddCorp={onAddCorp}
+            />
+            <CorpDetails />
+        </div>
+    );
+}
+
+export default Sheets;
+
+
+==================================================
+FILE: frontend\src\pages\Sheets.module.css
+==================================================
+
+.container {
+    display: flex;
+    height: 100vh; /* Takes up the full height of the viewport */
+    width: 100%;
+    background-color: #f0f2f5; /* Light background to make the white divs pop */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 95vh;
+}
+
+
+
+==================================================
+FILE: frontend\src\sheets\add_corp_form.jsx
+==================================================
+
+import React, { useState } from 'react';
+import currency from 'currency.js';
+import styles from './add_corp_form.module.css';
+
+function AddCorpForm({ onAdd, onCancel }) {
+    const [newCorpName, setNewCorpName] = useState('');
+    // State holds the raw string as the user types (e.g. "1500" or "-")
+    const [newCorpBalance, setNewCorpBalance] = useState('');
+    const [newCorpForeign, setNewCorpForeign] = useState('');
+
+    // Derived state: checks if name ends with 'ဝယ်စာရင်း'
+    const isForeign = newCorpName.includes('ဝယ်စာရင်း') || newCorpName.includes('currency');
+
+
+    // Handle form submission and place values as much as possible in the correct format for the parent component
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const isInverse = newCorpName.includes('/i');
+        const corpData = {
+            name: isInverse? newCorpName.replace('/i', '').trim(): newCorpName,
+            // currency(val).value safely extracts the mathematical float without NaN issues
+            balance: currency(newCorpBalance).value,
+            foreignBalance: isForeign ? currency(newCorpForeign).value : null,
+            isForeign: isForeign,
+            isInverse: isInverse,
+        };
+
+        onAdd(corpData); // Pass the data back up to the parent
+        resetForm();
+    };
+
+    const resetForm = () => {
+        setNewCorpName('');
+        setNewCorpBalance('');
+        setNewCorpForeign('');
+    };
+
+    // only for DISPLAY
+    const formatDisplayValue = (val, allowDecimal = false) => {
+        if (val === '' || val === '-') return val;
+
+        const num = Number(val);
+        if (Number.isNaN(num)) return val;
+
+        if (!allowDecimal) {
+            return Math.trunc(num).toLocaleString();
+        }
+
+        const hasTrailingDot = val.endsWith('.');
+        const decimalPart = val.includes('.') ? val.split('.')[1] : null;
+
+        let formatted = num.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+        });
+
+        if (hasTrailingDot) {
+            formatted += '.';
+        } else if (decimalPart !== null) {
+            formatted =
+                formatted.split('.')[0] +
+                '.' +
+                decimalPart.slice(0, 2);
+        }
+
+        return formatted;
+    };
+
+    // store RAW value only, no commas in state
+    const handleInputChange = (e, setFunction, allowDecimal = false) => {
+        const raw = e.target.value.replace(/,/g, '');
+
+        const pattern = allowDecimal
+            ? /^-?\d*(\.\d{0,2})?$/
+            : /^-?\d*$/;
+
+        if (raw === '' || raw === '-' || pattern.test(raw)) {
+            setFunction(raw);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className={styles.formContainer}>
+            <div className={styles.corpFormWrapper} style={{ alignItems: 'center' }}>
+                
+                <div className={styles.inputFieldCont} style={{ flex: '1' }}>
+                    <input
+                        type="text"
+                        placeholder="Corporation Name ('.../i' for inverse)"
+                        required
+                        value={newCorpName}
+                        onChange={(e) => setNewCorpName(e.target.value)}
+                    />
+                </div>
+
+                <div className={styles.inputFieldCont} style={{ flex: '1' }}>
+                    <input
+                        type="text"
+                        placeholder={isForeign ? "Initial Kyat" : "Balance"}
+                        value={isForeign ? formatDisplayValue(newCorpBalance,true) : formatDisplayValue(newCorpBalance,false)}
+                        onChange={(e) => isForeign ? handleInputChange(e, setNewCorpBalance, true) : handleInputChange(e, setNewCorpBalance, false)}
+                    />
+                </div>
+
+                {isForeign && (
+                    <div className={styles.inputFieldCont} style={{ flex: '1' }}>
+                        <input
+                            type="text"
+                            placeholder="Initial Baht"
+                            value={formatDisplayValue(newCorpForeign, true)}
+                            onChange={(e) => handleInputChange(e, setNewCorpForeign,true)}
+                        />
+                    </div>
+                )}
+            </div>
+            
+            <div>
+                <button type="submit">Submit</button>
+                <button type="button" onClick={onCancel}>Cancel</button>
+            </div>
+        </form>
+    );
+}
+
+export default AddCorpForm;
+
+
+==================================================
+FILE: frontend\src\sheets\add_corp_form.module.css
+==================================================
+
+/* src/pages/add_corp_form.module.css */
+
+/* --- FORMS --- */
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f8fafc;
+  padding: 10px 10px 10px 10px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.formContainer input {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formContainer input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.formContainer div {
+  display: flex;
+  gap: 5px;
+}
+
+.formContainer button[type="submit"] {
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.formContainer button[type="submit"]:hover {
+  background-color: #059669;
+}
+
+.formContainer button[type="button"] {
+  background-color: white;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.formContainer button[type="button"]:hover {
+  background-color: var(--bg-color);
+}
+
+/* --- CORP FORM STYLES --- */
+.corpFormWrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.inputFieldCont {
+  display: flex;
+  flex-direction: column;
+}
+
+
+==================================================
+FILE: frontend\src\sheets\corp_details.jsx
+==================================================
+
+import styles from './corp_details.module.css';
+
+function CorpDetails( ) {
+    return (
+        <div className={styles.corpDetails}>
+            <h2>Corp Details</h2>
+            <p>This is where the details will be displayed.</p>
+        </div>
+    );
+}
+
+export default CorpDetails;
+
+
+==================================================
+FILE: frontend\src\sheets\corp_details.module.css
+==================================================
+
+.corpDetails {
+    flex: 1; /* Automatically takes up all remaining horizontal space */
+    background-color: #ffffff;
+    margin: 8px; /* The gap all the way around creates the "floating" effect */
+    padding: 32px;
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
+    overflow-y: auto;
+}
+
+
+==================================================
+FILE: frontend\src\sheets\corp_list.jsx
+==================================================
+
+import styles from './corp_list.module.css';
+import AddCorpForm from './add_corp_form';
+
+// Accept onAddCorp prop
+function CorpList({ showAddCorpForm, setShowAddCorpForm, corps = [], onAddCorp }) {
+    return (
+        <div className={styles.corpList}>
+            <div className={styles.corpListHeader}>
+                <h2>Corporations</h2>
+                <button onClick={() => setShowAddCorpForm(true)}>Add</button>
+            </div>
+
+            {showAddCorpForm && (
+                <AddCorpForm 
+                    onAdd={(data) => {
+                        // Pass form data back up the chain to the Dirty Map
+                        onAddCorp(data); 
+                        setShowAddCorpForm(false); 
+                    }} 
+                    onCancel={() => setShowAddCorpForm(false)} 
+                />
+            )}
+
+            {/* UNCOMMENTED: You will now see your new corps appear instantly! */}
+            <div style={{ marginTop: '15px' }}>
+                {corps.length > 0 ? (
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {corps.map((corp) => (
+                            <li 
+                                key={corp.id} 
+                                style={{ 
+                                    padding: '16px 10px', 
+                                    borderBottom: '1px solid #f1f5f9', 
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}
+                            >
+                                <strong style={{ fontSize: '18px', color: '#334155' }}>
+                                    {corp.name}
+                                </strong>
+                                <span style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                                    Balance: {Number(corp.current_balance).toLocaleString()}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p style={{ padding: '15px', color: '#94a3b8', fontStyle: 'italic' }}>
+                        No corporations found in database.
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default CorpList;
+
+
+==================================================
+FILE: frontend\src\sheets\corp_list.module.css
+==================================================
+
+.corpList {
+    width: 320px; /* Fixed width, adjust as needed */
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    margin: 0; /* Ensures it stays attached to the left edge */
+    padding: 5px;
+    overflow-y: auto; /* Adds a scrollbar if the list gets too long */
+}
+
+.corpListHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+  border-bottom: 2px solid var(--bg-color);
+  padding-bottom: 16px;
+}
+
+.corpListHeader button, .txHeader button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.corpListHeader button:hover, .txHeader button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.corpListHeader h2, .corpDetails h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
