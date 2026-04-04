@@ -2,8 +2,85 @@
     flex: 1; /* Automatically takes up all remaining horizontal space */
     background-color: #ffffff;
     margin: 8px; /* The gap all the way around creates the "floating" effect */
-    padding: 32px;
+    padding: 8px;
     border-radius: 12px; /* Rounded corners */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
     overflow-y: auto;
+}
+
+.headerbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.headerbar h2 {
+    padding: 0;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+.balanceRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 3px;
+    padding: 2px 5px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background-color: var(--bg-color, #f8f9fa); /* Light grey fallback */
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: #333;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    justify-content: space-between;
+}
+
+.balanceText {
+    font-weight: 600;
+}
+
+.divider {
+    opacity: 0.6;
+}
+
+.rateText {
+    opacity: 0.9;
+}
+
+.balanceContainer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap; /* Allows it to wrap on small screens */
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 12px 18px;
+  background-color: var(--bg-color, #f8f9fa); /* Light grey fallback */
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color, #333);
+}
+.divider {
+  color: #a0aec0; /* Subdued grey for the divider lines */
+  font-weight: 400;
+}
+
+.foreignText {
+  color: #3182ce; /* A nice blue to distinguish foreign currency */
+}
+
+.rateText {
+  color: #dd6b20; /* A nice orange to highlight the rate */
+}
+
+.balanceInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }

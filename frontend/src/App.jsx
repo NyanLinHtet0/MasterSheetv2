@@ -6,19 +6,24 @@ import Home from './pages/Home';
 import { useSyncState } from './data_management/data_init'; // <-- Import the hook
 import { useSyncManager } from './data_management/data_save';
 
+
+
 function App() {
   // <-- Call the hook to fetch DB data
   const { appData, isLoading, error } = useSyncState(); 
-
+  
   // Use our manager to handle drafts and the dirty map
-  const { 
-    draftData, 
-    isDirty, 
-    handleInsertCorp, 
-    handleCancel, 
-    handleSave 
+  const {
+    draftData,
+    isDirty,
+    handleInsertCorp,
+    handleCancel,
+    handleSave,
+    handleUpdate,
+    handleInsertRow,
+    handleRemoveDirtyRow,
+    setDraftData,
   } = useSyncManager(appData);
-
   // <-- Prevent app from rendering until DB data is downloaded
   if (isLoading) return <div style={{padding: '20px'}}>Initializing Database...</div>;
   if (error) return <div style={{padding: '20px'}}>Error: {error}</div>;
@@ -33,9 +38,13 @@ function App() {
           <Route
             path="/Sheets"
             element={
-              <Sheets 
+              <Sheets
                 corps={draftData?.corp_data || []}
                 onAddCorp={handleInsertCorp}
+                onQueueUpdate={handleUpdate}
+                onQueueInsert={handleInsertRow}
+                onRemoveDirtyRow={handleRemoveDirtyRow}
+                setDraftData={setDraftData}
               />
             }
           />

@@ -1,11 +1,64 @@
 import { useState, useEffect, useRef } from 'react';
+import currency from 'currency.js';
 import styles from './CorpDropdown.module.css';
 
 function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const dropdownRef = useRef(null);
+
+  const hasValue = (val) => val !== null && val !== undefined && val !== '';
+
+  const getCorpDisplayData = (corp) => {
+    if (!corp) {
+      return {
+        mmkValue: 0,
+        foreignValue: null,
+        showForeign: false,
+        foreignLabel: '',
+      };
+    }
+
+    // Support both old and new variable names
+    const rawMmk = corp.current_balance;
+    const rawForeign = corp.is_foreign ? corp.current_foreign : null;
+
+    const multiplier = corp.inverse ? -1 : 1;
+
+    const mmkValue = currency(rawMmk || 0).multiply(multiplier).value;
+    const foreignValue = currency(rawForeign || 0).multiply(multiplier).value;
+
+    const showForeign = !!corp.is_foreign || hasValue(rawForeign);
+
+    // Keep your old display fallback logic for foreign label
+    const foreignLabel =
+      corp.name?.split('ဝယ်စာရင်း')[0]?.trim() || '';
+
+    return {
+      mmkValue,
+      foreignValue,
+      showForeign,
+      foreignLabel,
+    };
+  };
+  const formatMmk = (val, isForeign = false) => {
+    if (!isForeign) {
+      return currency(val || 0, { symbol: '', precision: 0 }).format();
+    }
+
+    const mmk = currency(val || 0, { symbol: '', precision: 2 });
+
+    return mmk.intValue % 100 === 0
+      ? currency(mmk.value, { symbol: '', precision: 0 }).format()
+      : mmk.format();
+  };
+  const formatForeign = (val) => {
+    const foreign = currency(val || 0, { symbol: '', precision: 2 });
+    return foreign.intValue % 100 === 0
+      ? currency(foreign.value, { symbol: '', precision: 0 }).format()
+      : foreign.format();
+  };
 
   useEffect(() => {
     if (selectedCorp && !isOpen) {
@@ -19,6 +72,7 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
         handleCloseDropdown();
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [selectedCorp]);
@@ -33,12 +87,12 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
     setSearchTerm(selectedCorp ? selectedCorp.name : '');
   };
 
-  const filteredCorps = corps.filter(corp =>
-    corp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCorps = corps.filter((corp) =>
+    (corp.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelectCorp = (corp) => {
-    onSelect(corp); 
+    onSelect(corp);
     setSearchTerm(corp.name);
     setIsOpen(false);
   };
@@ -48,37 +102,44 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
     if (!isOpen) setIsOpen(true);
   };
 
+  const selectedDisplay = getCorpDisplayData(selectedCorp);
+
   return (
     <div className={styles.dropdownWrapper} ref={dropdownRef}>
       <div
         className={`${styles.dropdownHeader} ${isOpen ? styles.activeHeader : ''}`}
-        onClick={() => { if (!isOpen) handleOpenDropdown(); }}
+        onClick={() => {
+          if (!isOpen) handleOpenDropdown();
+        }}
       >
         <div className={styles.inputGroup}>
           <input
             type="text"
             className={styles.searchInput}
-            value={isOpen ? searchTerm : (selectedCorp ? selectedCorp.name : 'None')}
+            value={isOpen ? searchTerm : selectedCorp ? selectedCorp.name : 'None'}
             onChange={handleInputChange}
-            onFocus={() => { if (!isOpen) handleOpenDropdown(); }}
+            onFocus={() => {
+              if (!isOpen) handleOpenDropdown();
+            }}
             placeholder="Search or select a corp..."
           />
-          
-          {/* <--- APPLIED INVERSE TO HEADER DISPLAY ---> */}
+
           {!isOpen && selectedCorp && (
             <span className={styles.headerBalance}>
-              {selectedCorp.total_mmk 
-                  ? (selectedCorp.inverse ? -Number(selectedCorp.total_mmk) : Number(selectedCorp.total_mmk)).toLocaleString(undefined, {maximumFractionDigits: 0}) 
-                  : 0}
+              {formatMmk(selectedDisplay.mmkValue, selectedDisplay.showForeign)}
             </span>
           )}
         </div>
-        
+
         <div
           className={`${styles.caret} ${isOpen ? styles.caretOpen : ''}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (isOpen) { handleCloseDropdown(); } else { handleOpenDropdown(); }
+            if (isOpen) {
+              handleCloseDropdown();
+            } else {
+              handleOpenDropdown();
+            }
           }}
         >
           ▼
@@ -88,27 +149,30 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
       {isOpen && (
         <ul className={styles.dropdownList}>
           {filteredCorps.length > 0 ? (
-            filteredCorps.map((corp, index) => (
-              <li
-                key={index}
-                className={styles.dropdownItem}
-                onClick={() => handleSelectCorp(corp)}
-              >
-                <span className={styles.corpName}>{corp.name}</span>
-                {/* <--- APPLIED INVERSE TO DROPDOWN ITEMS DISPLAY ---> */}
-                <div className={styles.corpBalance}>
-                  <span>
-                    {corp.total_mmk ? (corp.inverse ? -Number(corp.total_mmk) : Number(corp.total_mmk)).toLocaleString(undefined, {maximumFractionDigits: 0}) : 0}
-                  </span>
-                  
-                  {corp.total_foreign ? (
-                    <span className={styles.foreignText}>
-                      {(corp.inverse ? -Number(corp.total_foreign) : Number(corp.total_foreign)).toLocaleString()} {corp.name.split('ဝယ်စာရင်း')[0].trim()}
-                    </span>
-                  ) : null}
-                </div>
-              </li>
-            ))
+            filteredCorps.map((corp) => {
+              const display = getCorpDisplayData(corp);
+
+              return (
+                <li
+                  key={corp.id}
+                  className={styles.dropdownItem}
+                  onClick={() => handleSelectCorp(corp)}
+                >
+                  <span className={styles.corpName}>{corp.name}</span>
+
+                  <div className={styles.corpBalance}>
+                    <span>{formatMmk(display.mmkValue, display.showForeign)}</span>
+
+                    {display.showForeign && (
+                      <span className={styles.foreignText}>
+                        {formatForeign(display.foreignValue)}
+                        {display.foreignLabel ? ` ${display.foreignLabel}` : ''}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })
           ) : (
             <li className={styles.noResults}>No corps found</li>
           )}

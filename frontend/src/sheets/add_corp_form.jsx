@@ -15,14 +15,22 @@ function AddCorpForm({ onAdd, onCancel }) {
     // Handle form submission and place values as much as possible in the correct format for the parent component
     const handleSubmit = (e) => {
         e.preventDefault();
+        const balance = currency(newCorpBalance || 0, { precision: 4 });
+        const foreign = currency(newCorpForeign || 0, { precision: 4 });
         const isInverse = newCorpName.includes('/i');
         const corpData = {
-            name: isInverse? newCorpName.replace('/i', '').trim(): newCorpName,
-            // currency(val).value safely extracts the mathematical float without NaN issues
-            balance: currency(newCorpBalance).value,
-            foreignBalance: isForeign ? currency(newCorpForeign).value : null,
-            isForeign: isForeign,
-            isInverse: isInverse,
+            name: newCorpName.replace('/i', '').trim(),
+            current_balance: isInverse ? balance.multiply(-1).value : balance.value,
+            current_foreign: isForeign
+            ? (isInverse ? foreign.multiply(-1).value : foreign.value)
+            : null,
+            is_foreign: isForeign ? 1 : 0,
+            inverse: isInverse ? 1 : 0,
+            last_verified_date: null,
+            last_verified_balance: null,
+            last_verified_total_foreign: null,
+            order: 0,
+            is_deleted: 0,  
         };
 
         onAdd(corpData); // Pass the data back up to the parent

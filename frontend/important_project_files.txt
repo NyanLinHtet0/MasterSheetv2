@@ -1,659 +1,6 @@
 
 ==================================================
-FILE: backend\server.js
-==================================================
-
-const express = require("express");
-const cors = require("cors");
-const syncRoutes = require("./routes/sync"); // <-- Import new routes
-
-const app = express();
-const PORT = 3000;
-
-app.use(cors());
-app.use(express.json());
-
-// Attach the sync routes to the /api/sync endpoint
-app.use("/api/sync", syncRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Backend running");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-
-==================================================
-FILE: backend\controllers\syncController.js
-==================================================
-
-const {
-  getCurrentAuditId,
-  getCurrentTableMaxIds,
-  getBaseData,
-  getTransactionsForInitialization,
-  groupByCorpId,
-  splitEmployees,
-  assembleCorps,
-  getAuditChangesAfterId,
-  getRowsByIds
-} = require('../services/syncService');
-
-exports.initializeSync = async (req, res) => {
-  try {
-    const current_audit_id = await getCurrentAuditId();
-    const max_ids = await getCurrentTableMaxIds();
-
-    const {
-      globalTree,
-      assets,
-      employees,
-      corps,
-      localTree
-    } = await getBaseData();
-
-    const allTransactions = await getTransactionsForInitialization(corps);
-
-    const localTreeByCorp = groupByCorpId(localTree);
-    const transactionsByCorp = groupByCorpId(allTransactions);
-    const { employeesByCorp, unassignedEmployees } = splitEmployees(employees);
-
-    const assembledCorps = assembleCorps({
-      corps,
-      localTreeByCorp,
-      employeesByCorp,
-      transactionsByCorp
-    });
-
-    res.json({
-      current_audit_id,
-      max_ids,
-      global_tree: globalTree,
-      assets,
-      unassigned_employees: unassignedEmployees,
-      corp_data: assembledCorps
-    });
-  } catch (error) {
-    console.error('Initialization Error:', error);
-    res.status(500).json({ error: 'Failed to initialize database state' });
-  }
-};
-
-exports.getAuditChanges = async (req, res) => {
-  try {
-    const afterId = Number(req.query.after_id) || 0;
-
-    const result = await getAuditChangesAfterId(afterId);
-
-    res.json(result);
-  } catch (error) {
-    console.error('Audit Changes Error:', error);
-    res.status(500).json({ error: 'Failed to fetch audit changes' });
-  }
-};
-
-exports.getRowsByIds = async (req, res) => {
-  try {
-    const { table_name, row_ids } = req.body;
-
-    const rows = await getRowsByIds(table_name, row_ids);
-
-    res.json({ rows });
-  } catch (error) {
-    console.error('Rows By Ids Error:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch rows' });
-  }
-};
-
-
-==================================================
-FILE: backend\controllers\syncPushController.js
-==================================================
-
-// backend/controllers/syncPushController.js
-const { createIdMapper } = require('../utils/idMapper');
-const db = require('../db');
-
-const allowedColumns = {
-  corp_data: new Set([
-    'name',
-    'is_foreign',
-    'current_balance',
-    'current_foreign',
-    'last_verified_date',
-    'last_verified_balance',
-    'last_verified_total_foreign',
-    'start_day',
-    'inverse',
-    'display_order',
-    'corp_category_id',
-    'soft_delete'
-  ]),
-  transactions: new Set([
-    'corp_id',
-    'tx_date',
-    'description',
-    'amount',
-    'rate',
-    'adjustment',
-    'global_tree_id',
-    'local_tree_id',
-    'employee_id',
-    'asset_id',
-    'soft_delete',
-    'tx_status'
-  ]),
-  employee: new Set([
-    'corp_id',
-    'name',
-    'soft_delete'
-  ]),
-  assets: new Set([
-    'name',
-    'type',
-    'soft_delete'
-  ]),
-  global_tree: new Set([
-    'name',
-    'parent_id',
-    'soft_delete'
-  ]),
-  local_tree: new Set([
-    'corp_id',
-    'global_parent_id',
-    'parent_id',
-    'name',
-    'leaf',
-    'soft_delete'
-  ])
-};
-
-function sanitizeFields(tableName, obj = {}) {
-  const allowed = allowedColumns[tableName];
-  const cleaned = {};
-
-  if (!allowed) return cleaned;
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (allowed.has(key) && value !== undefined) {
-      cleaned[key] = value;
-    }
-  }
-
-  return cleaned;
-}
-
-function resolveForeignKeys(tableName, rowData, mapper) {
-  const next = { ...rowData };
-
-  if (next.corp_id != null) next.corp_id = mapper.resolveId(next.corp_id);
-  if (next.parent_id != null) next.parent_id = mapper.resolveId(next.parent_id);
-  if (next.global_parent_id != null) next.global_parent_id = mapper.resolveId(next.global_parent_id);
-  if (next.local_tree_id != null) next.local_tree_id = mapper.resolveId(next.local_tree_id);
-  if (next.employee_id != null) next.employee_id = mapper.resolveId(next.employee_id);
-  if (next.asset_id != null) next.asset_id = mapper.resolveId(next.asset_id);
-
-  return next;
-}
-
-exports.pushChanges = async (req, res) => {
-  const { client_audit_id, actions } = req.body;
-  const connection = await db.getConnection();
-
-  try {
-    await connection.beginTransaction();
-
-    // 1. Check Audit Alignment
-    const [[{ server_audit_id }]] = await connection.query(
-      'SELECT COALESCE(MAX(id), 0) AS server_audit_id FROM audit_log'
-    );
-
-    if (client_audit_id < server_audit_id) {
-      await connection.rollback();
-      return res.status(409).json({ out_of_date: true });
-    }
-
-    const mapper = createIdMapper();
-
-    const allowedTables = new Set([
-      'corp_data',
-      'transactions',
-      'employee',
-      'assets',
-      'global_tree',
-      'local_tree'
-    ]);
-
-    for (const action of actions) {
-      if (!allowedTables.has(action.table_name)) {
-        throw new Error(`Invalid table name: ${action.table_name}`);
-      }
-
-      const resolvedRowId = mapper.resolveId(action.row_id);
-      let auditRowId = resolvedRowId;
-      let oldData = null;
-      let newData = null;
-
-      if (action.action_type === 'INSERT') {
-        let insertData = sanitizeFields(action.table_name, action.changes || {});
-        insertData = resolveForeignKeys(action.table_name, insertData, mapper);
-
-        const [result] = await connection.query(
-          `INSERT INTO ${action.table_name} SET ?`,
-          [insertData]
-        );
-
-        auditRowId = result.insertId;
-        mapper.mapId(action.row_id, auditRowId);
-        newData = insertData;
-      }
-
-      else if (action.action_type === 'UPDATE') {
-        const [existingRows] = await connection.query(
-          `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
-          [resolvedRowId]
-        );
-
-        oldData = existingRows[0] || null;
-
-        let updateFields = sanitizeFields(
-          action.table_name,
-          action.changed_data?.new || {}
-        );
-        updateFields = resolveForeignKeys(action.table_name, updateFields, mapper);
-
-        if (Object.keys(updateFields).length > 0) {
-          await connection.query(
-            `UPDATE ${action.table_name} SET ? WHERE id = ?`,
-            [updateFields, resolvedRowId]
-          );
-          newData = updateFields;
-        }
-      }
-
-      else if (action.action_type === 'DELETE') {
-        const [existingRows] = await connection.query(
-          `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
-          [resolvedRowId]
-        );
-
-        oldData = existingRows[0] || null;
-
-        await connection.query(
-          `UPDATE ${action.table_name} SET soft_delete = 1 WHERE id = ?`,
-          [resolvedRowId]
-        );
-
-        newData = { soft_delete: 1 };
-      }
-
-      await connection.query(
-        `INSERT INTO audit_log
-          (table_name, row_id, action_type, old_data, new_data)
-        VALUES (?, ?, ?, ?, ?)`,
-        [
-          action.table_name,
-          auditRowId,
-          String(action.action_type).toUpperCase(),
-          oldData ? JSON.stringify(oldData) : null,
-          newData ? JSON.stringify(newData) : null
-        ]
-      );
-    }
-
-    await connection.commit();
-
-    const [[{ current_audit_id }]] = await connection.query(
-      'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'
-    );
-
-    res.json({
-      success: true,
-      current_audit_id,
-      simulated_backend: { id_maps: mapper.getMap() }
-    });
-
-  } catch (error) {
-    await connection.rollback();
-    res.status(500).json({ error: error.message });
-  } finally {
-    connection.release();
-  }
-};
-
-
-==================================================
-FILE: backend\db\index.js
-==================================================
-
-const mysql = require('mysql2/promise');
-
-// ---> LOCAL SETUP <---
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',         // Change to your local MySQL username
-  password: 'linhtet2003', // Change to your local MySQL password
-  database: 'master_sheets',
-  dateStrings: true,
-  port: 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-
-module.exports = pool;
-
-
-==================================================
-FILE: backend\routes\sync.js
-==================================================
-
-const express = require('express');
-const router = express.Router();
-const syncController = require('../controllers/syncController');
-const syncPushController = require('../controllers/syncPushController');
-
-router.get('/initialize', syncController.initializeSync);
-router.get('/audit/changes', syncController.getAuditChanges);
-router.post('/rows-by-ids', syncController.getRowsByIds);
-router.post('/push', syncPushController.pushChanges);
-
-module.exports = router;
-
-
-==================================================
-FILE: backend\services\syncService.js
-==================================================
-
-const db = require('../db');
-const currency = require('currency.js'); // <-- Changed this line
-
-async function getCurrentAuditId() {
-  const [[{ current_audit_id }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'
-  );
-  return current_audit_id;
-}
-
-async function getBaseData() {
-  const [globalTree] = await db.query('SELECT * FROM global_tree');
-  const [assets] = await db.query('SELECT * FROM assets');
-  const [employees] = await db.query('SELECT * FROM employee');
-  const [corps] = await db.query('SELECT * FROM corp_data');
-  const [localTree] = await db.query('SELECT * FROM local_tree');
-
-  return {
-    globalTree,
-    assets,
-    employees,
-    corps,
-    localTree
-  };
-}
-
-function getTransactionFetchInfo(corps) {
-  const verifiedDates = corps
-    .map(corp => corp.last_verified_date)
-    .filter(date => date != null);
-
-  const hasAnyNullVerifiedDate = corps.some(
-    corp => corp.last_verified_date == null
-  );
-
-  if (hasAnyNullVerifiedDate) {
-    return {
-      fetchAll: true,
-      minVerifiedDate: null
-    };
-  }
-
-  if (verifiedDates.length === 0) {
-    return {
-      fetchAll: true,
-      minVerifiedDate: null
-    };
-  }
-
-  const minVerifiedDate = verifiedDates.reduce((min, date) =>
-    date < min ? date : min
-  );
-
-  return {
-    fetchAll: false,
-    minVerifiedDate
-  };
-}
-
-async function getTransactionsForInitialization(corps) {
-  const { fetchAll, minVerifiedDate } = getTransactionFetchInfo(corps);
-
-  let transactions = [];
-
-  if (fetchAll) {
-    [transactions] = await db.query('SELECT * FROM transactions');
-  } else {
-    [transactions] = await db.query(
-      'SELECT * FROM transactions WHERE tx_date > ?',
-      [minVerifiedDate]
-    );
-  }
-
-  return transactions;
-}
-
-function groupByCorpId(rows) {
-  const grouped = {};
-
-  for (const row of rows) {
-    if (row.corp_id == null) continue;
-
-    if (!grouped[row.corp_id]) {
-      grouped[row.corp_id] = [];
-    }
-
-    grouped[row.corp_id].push(row);
-  }
-
-  return grouped;
-}
-
-function splitEmployees(employees) {
-  const employeesByCorp = {};
-  const unassignedEmployees = [];
-
-  for (const emp of employees) {
-    if (emp.corp_id == null) {
-      unassignedEmployees.push(emp);
-    } else {
-      if (!employeesByCorp[emp.corp_id]) {
-        employeesByCorp[emp.corp_id] = [];
-      }
-      employeesByCorp[emp.corp_id].push(emp);
-    }
-  }
-
-  return {
-    employeesByCorp,
-    unassignedEmployees
-  };
-}
-
-function filterTransactionsForCorp(transactions, corp) {
-  if (!corp.last_verified_date) return transactions;
-  return transactions.filter(tx => tx.tx_date > corp.last_verified_date);
-}
-
-function addComputedTransactionFields(transactions, corp) {
-  const isForeign = Number(corp.is_foreign) === 1;
-
-  return transactions.map(tx => {
-    const amount = currency(tx.amount || 0);
-    const rate = currency(tx.rate || 0);
-    const adjustment = currency(tx.adjustment || 0);
-
-    const total_mmk = isForeign
-      ? amount.multiply(rate.value).add(adjustment.value).value
-      : amount.add(adjustment.value).value;
-
-    return {
-      ...tx,
-      total_mmk
-    };
-  });
-}
-
-function assembleCorps({
-  corps,
-  localTreeByCorp,
-  employeesByCorp,
-  transactionsByCorp
-}) {
-  return corps.map(corp => {
-    const corpTransactions = transactionsByCorp[corp.id] || [];
-    const filteredTransactions = filterTransactionsForCorp(corpTransactions, corp);
-    const formattedTransactions = addComputedTransactionFields(
-      filteredTransactions,
-      corp
-    );
-
-    return {
-      ...corp,
-      local_tree: localTreeByCorp[corp.id] || [],
-      employees: employeesByCorp[corp.id] || [],
-      transactions: formattedTransactions
-    };
-  });
-}
-
-async function getCurrentTableMaxIds() {
-  const [[{ corp_data }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS corp_data FROM corp_data'
-  );
-
-  const [[{ transactions }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS transactions FROM transactions'
-  );
-
-  const [[{ employees }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS employees FROM employee'
-  );
-
-  const [[{ assets }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS assets FROM assets'
-  );
-
-  const [[{ global_tree }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS global_tree FROM global_tree'
-  );
-
-  const [[{ local_tree }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS local_tree FROM local_tree'
-  );
-
-  return {
-    corp_data,
-    transactions,
-    employees,
-    assets,
-    global_tree,
-    local_tree
-  };
-}
-async function getAuditChangesAfterId(afterId) {
-  const [[{ current_audit_id }]] = await db.query(
-    'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'
-  );
-
-  if (afterId >= current_audit_id) {
-    return {
-      current_audit_id,
-      audit_rows: []
-    };
-  }
-
-  const [audit_rows] = await db.query(
-    `SELECT * FROM audit_log
-     WHERE id > ?
-     ORDER BY id ASC`,
-    [afterId]
-  );
-
-  return {
-    current_audit_id,
-    audit_rows
-  };
-}
-
-async function getRowsByIds(tableName, rowIds) {
-  const allowedTables = new Set([
-    'transactions',
-    'corp_data',
-    'employee',
-    'assets',
-    'global_tree',
-    'local_tree'
-  ]);
-
-  if (!allowedTables.has(tableName)) {
-    throw new Error('Invalid table name');
-  }
-
-  if (!Array.isArray(rowIds) || rowIds.length === 0) {
-    return [];
-  }
-
-  const placeholders = rowIds.map(() => '?').join(',');
-
-  const [rows] = await db.query(
-    `SELECT * FROM ${tableName} WHERE id IN (${placeholders})`,
-    rowIds
-  );
-
-  return rows;
-}
-
-module.exports = {
-  getCurrentAuditId,
-  getCurrentTableMaxIds,
-  getBaseData,
-  getTransactionsForInitialization,
-  groupByCorpId,
-  splitEmployees,
-  assembleCorps,
-  getAuditChangesAfterId,
-  getRowsByIds
-};
-
-
-==================================================
-FILE: backend\utils\idMapper.js
-==================================================
-
-// backend/utils/idMapper.js
-function createIdMapper() {
-  const idMap = {};
-  
-  return {
-    mapId: (oldId, newId) => {
-      if (oldId < 0) idMap[oldId] = newId;
-    },
-    resolveId: (id) => {
-      // If it's a negative ID, replace it.
-      // Otherwise, keep it.
-      return idMap[id] !== undefined ? idMap[id] : id;
-    },
-    getMap: () => idMap
-  };
-}
-
-module.exports = { createIdMapper };
-
-
-==================================================
-FILE: frontend\eslint.config.js
+FILE: eslint.config.js
 ==================================================
 
 import js from '@eslint/js'
@@ -689,7 +36,7 @@ export default defineConfig([
 
 
 ==================================================
-FILE: frontend\vite.config.js
+FILE: vite.config.js
 ==================================================
 
 import { defineConfig } from 'vite'
@@ -703,7 +50,7 @@ export default defineConfig({
 
 
 ==================================================
-FILE: frontend\src\App.jsx
+FILE: src\App.jsx
 ==================================================
 
 import { useState } from 'react'
@@ -729,6 +76,7 @@ function App() {
     handleSave,
     handleUpdate,
     handleInsertRow,
+    handleRemoveDirtyRow,
     setDraftData,
   } = useSyncManager(appData);
   // <-- Prevent app from rendering until DB data is downloaded
@@ -750,6 +98,7 @@ function App() {
                 onAddCorp={handleInsertCorp}
                 onQueueUpdate={handleUpdate}
                 onQueueInsert={handleInsertRow}
+                onRemoveDirtyRow={handleRemoveDirtyRow}
                 setDraftData={setDraftData}
               />
             }
@@ -763,7 +112,7 @@ export default App;
 
 
 ==================================================
-FILE: frontend\src\main.jsx
+FILE: src\main.jsx
 ==================================================
 
 import { StrictMode } from 'react'
@@ -780,7 +129,7 @@ createRoot(document.getElementById('root')).render(
 
 
 ==================================================
-FILE: frontend\src\app\Navbar.jsx
+FILE: src\app\Navbar.jsx
 ==================================================
 
 import { Link, useLocation } from 'react-router-dom';
@@ -811,7 +160,7 @@ export default Navbar;
 
 
 ==================================================
-FILE: frontend\src\components\CorpDropdown.jsx
+FILE: src\components\CorpDropdown.jsx
 ==================================================
 
 import { useState, useEffect, useRef } from 'react';
@@ -1002,7 +351,7 @@ export default CorpDropdown;
 
 
 ==================================================
-FILE: frontend\src\components\TransactionForm.jsx
+FILE: src\components\TransactionForm.jsx
 ==================================================
 
 import { useState, useEffect, useRef } from 'react';
@@ -1283,7 +632,7 @@ export default function TransactionForm({
 
 
 ==================================================
-FILE: frontend\src\components\transaction_table\TransactionRow.jsx
+FILE: src\components\transaction_table\TransactionRow.jsx
 ==================================================
 
 import styles from './transactiontable.module.css';
@@ -1382,7 +731,7 @@ export default function TransactionRow({
 
 
 ==================================================
-FILE: frontend\src\components\transaction_table\TransactionTable.jsx
+FILE: src\components\transaction_table\TransactionTable.jsx
 ==================================================
 
 import styles from './transactiontable.module.css';
@@ -1468,7 +817,7 @@ export default function TransactionTable({
 
 
 ==================================================
-FILE: frontend\src\components\transaction_table\TransactionTableHeader.jsx
+FILE: src\components\transaction_table\TransactionTableHeader.jsx
 ==================================================
 
 
@@ -1498,7 +847,7 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
 
 
 ==================================================
-FILE: frontend\src\components\transaction_table\transactionTableHelpers.js
+FILE: src\components\transaction_table\transactionTableHelpers.js
 ==================================================
 
 import currency from 'currency.js';
@@ -1707,10 +1056,27 @@ export function buildInsertedTransaction(
     insertPayload,
   };
 }
+export function areTransactionsEqual(txA, txB) {
+  const a = sanitizeTransactionForDirty(txA);
+  const b = sanitizeTransactionForDirty(txB);
+
+  const keys = new Set([
+    ...Object.keys(a || {}),
+    ...Object.keys(b || {}),
+  ]);
+
+  for (const key of keys) {
+    if (a?.[key] !== b?.[key]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 
 ==================================================
-FILE: frontend\src\components\transaction_table\useTransactionTable.js
+FILE: src\components\transaction_table\useTransactionTable.js
 ==================================================
 
 import { useState } from 'react';
@@ -1770,7 +1136,7 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
 
 
 ==================================================
-FILE: frontend\src\data_management\data_init.js
+FILE: src\data_management\data_init.js
 ==================================================
 
 import { useState, useEffect } from 'react';
@@ -1831,7 +1197,7 @@ export function useSyncState() {
 
 
 ==================================================
-FILE: frontend\src\data_management\data_refresh.js
+FILE: src\data_management\data_refresh.js
 ==================================================
 
 import currency from 'currency.js';
@@ -2045,11 +1411,11 @@ function mergeInsertedRows(appData, tableName, rows) {
 
 
 ==================================================
-FILE: frontend\src\data_management\data_save.js
+FILE: src\data_management\data_save.js
 ==================================================
 
 import { useState, useEffect } from 'react';
-import { queueUpdate } from './syncOperations';
+import { queueUpdate, queueInsert, removeDirtyEntry } from './syncOperations';
 import { pushSyncPayload } from './syncNetwork';
 
 export function useSyncManager(initialData, refreshDataFn = async () => {}) {
@@ -2057,7 +1423,6 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
   const [draftData, setDraftData] = useState(initialData || null);
   const [dirtyMap, setDirtyMap] = useState({});
 
-  // Use the data that already came from useSyncState()
   useEffect(() => {
     if (initialData) {
       setOriginalData(initialData);
@@ -2065,6 +1430,14 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
       setDirtyMap({});
     }
   }, [initialData]);
+
+  const handleInsertRow = (tableName, rowId, changes) => {
+    queueInsert(setDirtyMap, tableName, rowId, changes);
+  };
+
+  const handleRemoveDirtyRow = (actionType, tableName, rowId) => {
+    removeDirtyEntry(setDirtyMap, actionType, tableName, rowId);
+  };
 
   const handleCancel = () => {
     setDraftData(originalData);
@@ -2142,17 +1515,6 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
       alert(result.error || "Save failed.");
     }
   };
-  const handleInsertRow = (tableName, tempId, changes) => {
-    setDirtyMap(prev => ({
-      ...prev,
-      [`${tableName}_${tempId}_INSERT`]: {
-        table_name: tableName,
-        row_id: tempId,
-        action_type: 'INSERT',
-        changes,
-      }
-    }));
-  };
   
   return {
     draftData,
@@ -2160,6 +1522,7 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
     isDirty: Object.keys(dirtyMap).length > 0,
     handleUpdate,
     handleInsertRow,
+    handleRemoveDirtyRow,
     handleSave,
     handleInsertCorp,
     handleCancel
@@ -2168,7 +1531,7 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
 
 
 ==================================================
-FILE: frontend\src\data_management\syncNetwork.js
+FILE: src\data_management\syncNetwork.js
 ==================================================
 
 import { simplifyQueue } from './syncSimplifier';
@@ -2209,33 +1572,57 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
 
 
 ==================================================
-FILE: frontend\src\data_management\syncOperations.js
+FILE: src\data_management\syncOperations.js
 ==================================================
 
-export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, newData) {
-  // 1. Calculate Field-Level Changes dynamically
+function buildChangedData(oldData, newData) {
   const changedOld = {};
   const changedNew = {};
-  
-  for (const key in newData) {
-    if (oldData[key] !== newData[key]) {
-      changedOld[key] = oldData[key];
-      changedNew[key] = newData[key];
+
+  const keys = new Set([
+    ...Object.keys(oldData || {}),
+    ...Object.keys(newData || {}),
+  ]);
+
+  for (const key of keys) {
+    if (oldData?.[key] !== newData?.[key]) {
+      changedOld[key] = oldData?.[key];
+      changedNew[key] = newData?.[key];
     }
   }
 
-  if (Object.keys(changedNew).length === 0) return; // No real changes
+  return { changedOld, changedNew };
+}
 
-  const entityKey = `${tableName}_${rowId}_UPDATE_${Date.now()}`;
-  setDirtyMap(prev => ({
-    ...prev,
-    [entityKey]: {
+export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, newData) {
+  const entityKey = `${tableName}_${rowId}_UPDATE`;
+
+  setDirtyMap((prev) => {
+    const next = { ...prev };
+    const existing = next[entityKey];
+
+    // If this row already has an update queued, compare against its ORIGINAL old state
+    const baseOldData = existing?.changed_data?.old || oldData || {};
+    const { changedOld, changedNew } = buildChangedData(baseOldData, newData || {});
+
+    // Net zero change: remove the queued update entirely
+    if (Object.keys(changedNew).length === 0) {
+      delete next[entityKey];
+      return next;
+    }
+
+    next[entityKey] = {
       table_name: tableName,
       row_id: rowId,
       action_type: 'UPDATE',
-      changed_data: { old: changedOld, new: changedNew }
-    }
-  }));
+      changed_data: {
+        old: changedOld,
+        new: changedNew,
+      },
+    };
+
+    return next;
+  });
 }
 
 export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) {
@@ -2264,9 +1651,35 @@ export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) 
   setDirtyMap(prev => ({ ...prev, ...additions }));
 }
 
+export function queueInsert(setDirtyMap, tableName, rowId, changes) {
+  const entityKey = `${tableName}_${rowId}_INSERT`;
+
+  setDirtyMap((prev) => ({
+    ...prev,
+    [entityKey]: {
+      table_name: tableName,
+      row_id: rowId,
+      action_type: 'INSERT',
+      changes,
+    },
+  }));
+}
+
+export function removeDirtyEntry(setDirtyMap, actionType, tableName, rowId) {
+  const entityKey = `${tableName}_${rowId}_${actionType}`;
+
+  setDirtyMap((prev) => {
+    const next = { ...prev };
+    delete next[entityKey];
+    delete next[`${tableName}_${rowId}_UPDATE`];
+    delete next[`${tableName}_${rowId}_DELETE`];
+    return next;
+  });
+}
+
 
 ==================================================
-FILE: frontend\src\data_management\syncSimplifier.js
+FILE: src\data_management\syncSimplifier.js
 ==================================================
 
 export function simplifyQueue(dirtyMap) {
@@ -2305,7 +1718,7 @@ export function simplifyQueue(dirtyMap) {
 
 
 ==================================================
-FILE: frontend\src\pages\Home.jsx
+FILE: src\pages\Home.jsx
 ==================================================
 
 function Home() {
@@ -2321,7 +1734,7 @@ export default Home;
 
 
 ==================================================
-FILE: frontend\src\pages\Sheets.jsx
+FILE: src\pages\Sheets.jsx
 ==================================================
 
 import React, { useState, useEffect } from 'react';
@@ -2334,6 +1747,7 @@ import {
   buildSoftDeletedTransaction,
   sanitizeTransactionForDirty,
   applyTransactionDeltaToCorp,
+  areTransactionsEqual,
 } from '../components/transaction_table/transactionTableHelpers';
 
 function Sheets({
@@ -2341,6 +1755,7 @@ function Sheets({
   onAddCorp,
   onQueueUpdate,
   onQueueInsert,
+  onRemoveDirtyRow, // optional: only needed for temp insert -> delete cleanup
   setDraftData,
 }) {
   const [showAddCorpForm, setShowAddCorpForm] = useState(false);
@@ -2352,7 +1767,7 @@ function Sheets({
       return;
     }
 
-    const stillExists = corps.some(corp => corp.id === selectedCorpId);
+    const stillExists = corps.some((corp) => corp.id === selectedCorpId);
 
     if (!stillExists) {
       setSelectedCorpId(corps[0].id);
@@ -2360,7 +1775,7 @@ function Sheets({
   }, [corps, selectedCorpId]);
 
   const selectedCorp =
-    corps.find(corp => corp.id === selectedCorpId) || null;
+    corps.find((corp) => corp.id === selectedCorpId) || null;
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
@@ -2373,13 +1788,13 @@ function Sheets({
         corpId: selectedCorp.id,
         isForeign: selectedCorp.is_foreign,
         isInverse: selectedCorp.inverse,
-        globalTreeId: txData.global_tree_id ?? 1, // change if needed
+        globalTreeId: txData.global_tree_id ?? 1,
       }
     );
 
-    setDraftData(prev => ({
+    setDraftData((prev) => ({
       ...prev,
-      corp_data: prev.corp_data.map(corp => {
+      corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
         const nextTransactions = [...(corp.transactions || []), draftTx];
@@ -2392,10 +1807,10 @@ function Sheets({
           null,
           draftTx
         );
-      })
+      }),
     }));
 
-    onQueueInsert('transactions', tempId, insertPayload);
+    onQueueInsert?.('transactions', tempId, insertPayload);
   };
 
   const handleUpdateTransaction = (originalIndex, editFormData) => {
@@ -2413,9 +1828,13 @@ function Sheets({
       }
     );
 
-    setDraftData(prev => ({
+    if (areTransactionsEqual(oldTx, draftTx)) {
+      return;
+    }
+
+    setDraftData((prev) => ({
       ...prev,
-      corp_data: prev.corp_data.map(corp => {
+      corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
         const nextTransactions = [...(corp.transactions || [])];
@@ -2429,10 +1848,10 @@ function Sheets({
           oldTx,
           draftTx
         );
-      })
+      }),
     }));
 
-    onQueueUpdate(
+    onQueueUpdate?.(
       'transactions',
       oldTx.id,
       sanitizeTransactionForDirty(oldTx),
@@ -2446,42 +1865,10 @@ function Sheets({
     const oldTx = selectedCorp.transactions?.[originalIndex];
     if (!oldTx) return;
 
-    if (oldTx.id < 0) {
-      setDraftData(prev => ({
-        ...prev,
-        corp_data: prev.corp_data.map(corp => {
-          if (corp.id !== selectedCorp.id) return corp;
-
-          const nextTransactions = (corp.transactions || []).filter(
-            (_, index) => index !== originalIndex
-          );
-
-          return applyTransactionDeltaToCorp(
-            {
-              ...corp,
-              transactions: nextTransactions,
-            },
-            oldTx,
-            null
-          );
-        })
-      }));
-
-      onQueueUpdate(
-        'transactions',
-        oldTx.id,
-        sanitizeTransactionForDirty(oldTx),
-        null
-      );
-
-      return;
-    }
-
-    const { dirtyTx } = buildSoftDeletedTransaction(oldTx);
-
-    setDraftData(prev => ({
+    // Remove it from local draft immediately either way
+    setDraftData((prev) => ({
       ...prev,
-      corp_data: prev.corp_data.map(corp => {
+      corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
         const nextTransactions = (corp.transactions || []).filter(
@@ -2496,10 +1883,20 @@ function Sheets({
           oldTx,
           null
         );
-      })
+      }),
     }));
 
-    onQueueUpdate(
+    // FIX 2:
+    // If this was a temp inserted row, treat it as "never happened".
+    // This fully clears dirty state only if parent passes onRemoveDirtyRow.
+    if (oldTx.id < 0) {
+      onRemoveDirtyRow?.('INSERT', 'transactions', oldTx.id);
+      return;
+    }
+
+    const { dirtyTx } = buildSoftDeletedTransaction(oldTx);
+
+    onQueueUpdate?.(
       'transactions',
       oldTx.id,
       sanitizeTransactionForDirty(oldTx),
@@ -2532,7 +1929,7 @@ export default Sheets;
 
 
 ==================================================
-FILE: frontend\src\sheets\add_corp_form.jsx
+FILE: src\sheets\add_corp_form.jsx
 ==================================================
 
 import React, { useState } from 'react';
@@ -2671,7 +2068,7 @@ export default AddCorpForm;
 
 
 ==================================================
-FILE: frontend\src\sheets\corp_details.jsx
+FILE: src\sheets\corp_details.jsx
 ==================================================
 
 import currency from 'currency.js';
@@ -2785,22 +2182,9 @@ function CorpDetails({
       >
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <TransactionTable
-            title="Income"
-            data={incomeTx}
-            type="income"
-            currencyName={foreignLabel}
-            isForeign={isForeign}
-            isInverse={isInverse}
-            onUpdate={onUpdateTransaction}
-            onDelete={onDeleteTransaction}
-          />
-        </div>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <TransactionTable
-            title="Expense"
-            data={expenseTx}
-            type="expense"
+            title="Transactions"
+            data={visibleTransactions}
+            type="all"
             currencyName={foreignLabel}
             isForeign={isForeign}
             isInverse={isInverse}
@@ -2817,7 +2201,7 @@ export default CorpDetails;
 
 
 ==================================================
-FILE: frontend\src\sheets\corp_list.jsx
+FILE: src\sheets\corp_list.jsx
 ==================================================
 
 import currency from 'currency.js';

@@ -1,5 +1,5 @@
 const db = require('../db');
-import currency from 'currency.js';
+const currency = require('currency.js'); // <-- Changed this line
 
 async function getCurrentAuditId() {
   const [[{ current_audit_id }]] = await db.query(

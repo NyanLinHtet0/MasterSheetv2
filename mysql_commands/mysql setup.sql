@@ -13,8 +13,8 @@ CREATE TABLE users (
     email             VARCHAR(255) NULL,
     password_hash     VARCHAR(255) NOT NULL,
     employee_id       INT UNSIGNED NULL,
-    is_active         TINYINT(1) NOT NULL DEFAULT 1,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
+    is_active         TINYINT NOT NULL DEFAULT 1,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -31,22 +31,21 @@ CREATE TABLE users (
 CREATE TABLE corp_data (
     id                           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name                         VARCHAR(255) NOT NULL,
-    is_foreign                   TINYINT(1) NOT NULL DEFAULT 0,
+    is_foreign                   TINYINT NOT NULL DEFAULT 0,
     current_balance              DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
     current_foreign              DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
     last_verified_date           DATE NULL,
     last_verified_balance        DECIMAL(16,4) NULL,
     last_verified_total_foreign  DECIMAL(16,4) NULL,
     start_day                    TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    inverse                      TINYINT(1) NOT NULL DEFAULT 0,
-    `order`                      INT NOT NULL DEFAULT 0,
-    corp_category_id             INT NULL,
-    soft_delete                  TINYINT(1) NOT NULL DEFAULT 0,
+    inverse                      TINYINT NOT NULL DEFAULT 0,
+    display_order                INT NOT NULL DEFAULT 0,
+    corp_category_id             INT UNSIGNED NULL,
+    soft_delete                  TINYINT NOT NULL DEFAULT 0,
     created_at                   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT uq_corp_data_name UNIQUE (name),
-    CONSTRAINT chk_corp_data_start_day CHECK (start_day BETWEEN 1 AND 31)
+    CONSTRAINT uq_corp_data_name UNIQUE (name)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
@@ -60,7 +59,7 @@ CREATE TABLE global_tree (
     id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name              VARCHAR(255) NOT NULL,
     parent_id         INT UNSIGNED NULL,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -85,8 +84,8 @@ CREATE TABLE local_tree (
     global_parent_id  INT UNSIGNED NOT NULL,
     parent_id         INT UNSIGNED NULL,
     name              VARCHAR(255) NOT NULL,
-    leaf              TINYINT(1) NOT NULL DEFAULT 0,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
+    leaf              TINYINT NOT NULL DEFAULT 0,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -117,7 +116,7 @@ CREATE TABLE employee (
     id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     corp_id           INT UNSIGNED NULL,
     name              VARCHAR(255) NOT NULL,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -146,7 +145,7 @@ CREATE TABLE assets (
     id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name              VARCHAR(255) NOT NULL,
     type              VARCHAR(100) NULL,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB
@@ -171,8 +170,8 @@ CREATE TABLE transactions (
     local_tree_id     INT UNSIGNED NULL,
     employee_id       INT UNSIGNED NULL,
     asset_id          INT UNSIGNED NULL,
-    soft_delete       TINYINT(1) NOT NULL DEFAULT 0,
-    complete          TINYINT(1) NOT NULL DEFAULT 1,
+    soft_delete       TINYINT NOT NULL DEFAULT 0,
+    tx_status         TINYINT NOT NULL DEFAULT 1,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -218,7 +217,8 @@ CREATE TABLE audit_log (
     row_id            BIGINT UNSIGNED NOT NULL,
     action_type       ENUM('INSERT', 'UPDATE', 'PUBLISH') NOT NULL,
     corp_id           INT UNSIGNED NULL,
-    changed_data      JSON NULL,
+    old_data          JSON NULL,
+    new_data          JSON NULL,
     changed_by        INT UNSIGNED NULL,
     changed_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -230,10 +230,7 @@ CREATE TABLE audit_log (
     CONSTRAINT fk_audit_log_corp
         FOREIGN KEY (corp_id) REFERENCES corp_data(id)
         ON UPDATE CASCADE
-        ON DELETE SET NULL,
-
-    CONSTRAINT chk_audit_log_json
-        CHECK (changed_data IS NULL OR JSON_VALID(changed_data))
+        ON DELETE SET NULL
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
@@ -246,7 +243,7 @@ CREATE TABLE audit_log (
 -- Corp
 CREATE INDEX idx_corp_data_soft_delete ON corp_data (soft_delete);
 CREATE INDEX idx_corp_data_category ON corp_data (corp_category_id);
-CREATE INDEX idx_corp_data_order ON corp_data (`order`);
+CREATE INDEX idx_corp_data_display_order ON corp_data (display_order);
 
 -- Global tree
 CREATE INDEX idx_global_tree_parent_id ON global_tree (parent_id);

@@ -23,7 +23,7 @@ export async function syncFromAuditLog(localData) {
 
   for (const auditRow of audit_rows) {
     // Match this string to EXACTLY what your backend stores in audit_log
-    if (auditRow.action_type !== 'Insert') continue;
+    if (String(auditRow.action_type).toUpperCase() !== 'INSERT') continue;
 
     if (!insertRowsByTable[auditRow.table_name]) {
       insertRowsByTable[auditRow.table_name] = [];
