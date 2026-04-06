@@ -1,0 +1,89 @@
+.corpDetails {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+  margin: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.headerbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.headerbar h2 {
+  padding: 0;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.balanceRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+  padding: 2px 5px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background-color: var(--bg-color, #f8f9fa);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: #333;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  justify-content: space-between;
+}
+
+.balanceText {
+  font-weight: 600;
+}
+
+.divider {
+  opacity: 0.6;
+  color: #a0aec0;
+  font-weight: 400;
+}
+
+.rateText {
+  opacity: 0.9;
+  color: #dd6b20;
+}
+
+.foreignText {
+  color: #3182ce;
+}
+
+.balanceInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tablecontainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  margin-top: 15px;
+  overflow: hidden;
+}
+
+.tablecontent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}

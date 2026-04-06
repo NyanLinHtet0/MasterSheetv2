@@ -1,0 +1,71 @@
+/* src/pages/add_corp_form.module.css */
+
+/* --- FORMS --- */
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f8fafc;
+  padding: 10px 10px 10px 10px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.formContainer input {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formContainer input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.formContainer div {
+  display: flex;
+  gap: 5px;
+}
+
+.formContainer button[type="submit"] {
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.formContainer button[type="submit"]:hover {
+  background-color: #059669;
+}
+
+.formContainer button[type="button"] {
+  background-color: white;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.formContainer button[type="button"]:hover {
+  background-color: var(--bg-color);
+}
+
+/* --- CORP FORM STYLES --- */
+.corpFormWrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.inputFieldCont {
+  display: flex;
+  flex-direction: column;
+}

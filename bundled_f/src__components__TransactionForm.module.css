@@ -1,0 +1,77 @@
+.transactionFormWrapper {
+  margin-top: 10px;
+}
+
+.formTitle {
+  margin: 0 0 10px 0;
+  color: var(--text-main);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  margin-bottom: 24px;
+}
+
+.formContainer input,
+.formContainer select {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formContainer input:focus,
+.formContainer select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.inputRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.inputDatefields {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.flexInput {
+  flex: 1;
+}
+
+.submitBtn {
+  margin-top: 5px;
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.submitBtn:hover {
+  background-color: #475569;
+}
+
+@media (max-width: 900px) {
+  .inputRow,
+  .inputDatefields {
+    flex-direction: column;
+  }
+}

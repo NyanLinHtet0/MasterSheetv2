@@ -95,6 +95,8 @@ function App() {
             element={
               <Sheets
                 corps={draftData?.corp_data || []}
+                globalTree={draftData?.global_tree || []}
+                assets={draftData?.assets || []}
                 onAddCorp={handleInsertCorp}
                 onQueueUpdate={handleUpdate}
                 onQueueInsert={handleInsertRow}
@@ -612,6 +614,803 @@ export default function TransactionForm({
   );
 }
 
+
+
+==================================================
+FILE: src\components\change_view\ChangeViewControl.jsx
+==================================================
+
+import { useEffect, useRef, useState } from 'react';
+import styles from './ChangeViewControl.module.css';
+
+const VIEW_MODES = {
+  LIVE: 'live',
+  TRASH: 'trash',
+};
+
+function renderSingleChoiceColumn({
+  title,
+  options = [],
+  selectedValue,
+  onSelect,
+  emptyLabel,
+}) {
+  return (
+    <div className={styles.viewColumn}>
+      <div className={styles.viewSectionTitle}>{title}</div>
+
+      <div className={styles.viewOptionsList}>
+        {options.length === 0 ? (
+          <div className={styles.viewEmptyState}>{emptyLabel}</div>
+        ) : (
+          options.map((option) => {
+            const isSelected = selectedValue === option.key;
+
+            return (
+              <label key={option.key} className={styles.viewOptionRow}>
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onSelect(option.key)}
+                />
+                <span className={styles.viewOptionLabel}>
+                  {option.label}
+                </span>
+              </label>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ChangeViewControl({
+  viewMode,
+  setViewMode,
+  layer1Options = [],
+  selectedLayer1Key = null,
+  onSelectLayer1,
+  layer2Options = [],
+  selectedLayer2Key = null,
+  onSelectLayer2,
+  layer3Options = [],
+  selectedLayer3Key = null,
+  onSelectLayer3,
+}) {
+  const [showViewPopup, setShowViewPopup] = useState(false);
+  const viewPopupRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showViewPopup &&
+        viewPopupRef.current &&
+        !viewPopupRef.current.contains(event.target)
+      ) {
+        setShowViewPopup(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showViewPopup]);
+
+  return (
+    <div className={styles.viewControlWrap} ref={viewPopupRef}>
+      <button
+        type="button"
+        className={styles.viewButton}
+        onClick={() => setShowViewPopup((prev) => !prev)}
+      >
+        Change View
+      </button>
+
+      {showViewPopup && (
+        <div className={styles.viewPopup}>
+          <div className={styles.viewPopupHeader}>
+            <span className={styles.viewPopupTitle}>Change View</span>
+
+            <div className={styles.viewPopupCurrentBlock}>
+              <button
+                type="button"
+                className={`${styles.modeToggleButton} ${
+                  viewMode === VIEW_MODES.LIVE ? styles.modeToggleButtonActive : ''
+                }`}
+                onClick={() => setViewMode(VIEW_MODES.LIVE)}
+              >
+                Live
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.modeToggleButton} ${
+                  viewMode === VIEW_MODES.TRASH ? styles.modeToggleButtonActive : ''
+                }`}
+                onClick={() => setViewMode(VIEW_MODES.TRASH)}
+              >
+                Trash
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.viewColumns}>
+            {renderSingleChoiceColumn({
+              title: 'Layer 1',
+              options: layer1Options,
+              selectedValue: selectedLayer1Key,
+              onSelect: onSelectLayer1,
+              emptyLabel: 'No layer 1 items.',
+            })}
+
+            {renderSingleChoiceColumn({
+              title: 'Layer 2',
+              options: layer2Options,
+              selectedValue: selectedLayer2Key,
+              onSelect: onSelectLayer2,
+              emptyLabel: 'No layer 2 items.',
+            })}
+
+            {renderSingleChoiceColumn({
+              title: 'Layer 3',
+              options: layer3Options,
+              selectedValue: selectedLayer3Key,
+              onSelect: onSelectLayer3,
+              emptyLabel: 'No layer 3 items.',
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ChangeViewControl;
+
+
+==================================================
+FILE: src\components\helpers\treeHelpers.js
+==================================================
+
+// src/components/helpers/treeHelpers.js
+
+import currency from 'currency.js';
+
+function isLiveRow(row) {
+  return Number(row?.soft_delete) !== 1;
+}
+
+function normalizeRows(rows = [], { includeSoftDeleted = false } = {}) {
+  if (includeSoftDeleted) return rows;
+  return rows.filter(isLiveRow);
+}
+
+function toIdSet(values = []) {
+  return new Set(values.filter((value) => value != null));
+}
+
+function buildChildrenMap(
+  rows = [],
+  parentKey = 'parent_id',
+  { includeSoftDeleted = false } = {}
+) {
+  const liveRows = normalizeRows(rows, { includeSoftDeleted });
+  const childrenByParent = new Map();
+
+  for (const row of liveRows) {
+    const parentId = row[parentKey] ?? null;
+
+    if (!childrenByParent.has(parentId)) {
+      childrenByParent.set(parentId, []);
+    }
+
+    childrenByParent.get(parentId).push(row);
+  }
+
+  return childrenByParent;
+}
+
+function buildRowMap(rows = [], { includeSoftDeleted = false } = {}) {
+  const liveRows = normalizeRows(rows, { includeSoftDeleted });
+  const rowMap = new Map();
+
+  for (const row of liveRows) {
+    rowMap.set(row.id, row);
+  }
+
+  return rowMap;
+}
+
+function findNodeByName(
+  rows = [],
+  targetName = '',
+  { includeSoftDeleted = false } = {}
+) {
+  const normalizedTarget = String(targetName || '').trim().toLowerCase();
+
+  if (!normalizedTarget) return null;
+
+  return (
+    normalizeRows(rows, { includeSoftDeleted }).find((row) => {
+      return (
+        String(row.name || '').trim().toLowerCase() === normalizedTarget
+      );
+    }) || null
+  );
+}
+
+function getDescendantIds(
+  rows = [],
+  rootId,
+  {
+    parentKey = 'parent_id',
+    includeRoot = true,
+    includeSoftDeleted = false,
+  } = {}
+) {
+  if (rootId == null) return new Set();
+
+  const childrenByParent = buildChildrenMap(rows, parentKey, {
+    includeSoftDeleted,
+  });
+  const visited = new Set();
+  const stack = [rootId];
+
+  while (stack.length > 0) {
+    const currentId = stack.pop();
+
+    if (visited.has(currentId)) continue;
+    visited.add(currentId);
+
+    const children = childrenByParent.get(currentId) || [];
+
+    for (const child of children) {
+      stack.push(child.id);
+    }
+  }
+
+  if (!includeRoot) {
+    visited.delete(rootId);
+  }
+
+  return visited;
+}
+
+function getAncestorIds(
+  rows = [],
+  startId,
+  {
+    parentKey = 'parent_id',
+    includeSelf = true,
+    includeSoftDeleted = false,
+  } = {}
+) {
+  if (startId == null) return new Set();
+
+  const rowMap = buildRowMap(rows, { includeSoftDeleted });
+  const visited = new Set();
+
+  let currentId = includeSelf
+    ? startId
+    : rowMap.get(startId)?.[parentKey] ?? null;
+
+  while (currentId != null && !visited.has(currentId)) {
+    visited.add(currentId);
+    currentId = rowMap.get(currentId)?.[parentKey] ?? null;
+  }
+
+  return visited;
+}
+
+function getGlobalRootScopeByName(globalTree = [], globalName = '', options = {}) {
+  const globalRoot = findNodeByName(globalTree, globalName, options);
+
+  if (!globalRoot) {
+    return {
+      root: null,
+      idSet: new Set(),
+    };
+  }
+
+  return {
+    root: globalRoot,
+    idSet: getDescendantIds(globalTree, globalRoot.id, {
+      parentKey: 'parent_id',
+      includeRoot: true,
+      includeSoftDeleted: options.includeSoftDeleted,
+    }),
+  };
+}
+
+function getGlobalRootScopeById(globalTree = [], globalId, options = {}) {
+  if (globalId == null) {
+    return {
+      root: null,
+      idSet: new Set(),
+    };
+  }
+
+  const rowMap = buildRowMap(globalTree, options);
+  const globalRoot = rowMap.get(globalId) || null;
+
+  return {
+    root: globalRoot,
+    idSet: getDescendantIds(globalTree, globalId, {
+      parentKey: 'parent_id',
+      includeRoot: true,
+      includeSoftDeleted: options.includeSoftDeleted,
+    }),
+  };
+}
+
+function getLocalRowsForGlobalIds(
+  localTree = [],
+  globalIdSet = new Set(),
+  { includeSoftDeleted = false } = {}
+) {
+  const liveRows = normalizeRows(localTree, { includeSoftDeleted });
+
+  if (!globalIdSet || globalIdSet.size === 0) return [];
+
+  return liveRows.filter((row) => globalIdSet.has(row.global_parent_id));
+}
+
+function getLocalScopeByName(localTree = [], localName = '', options = {}) {
+  const localRoot = findNodeByName(localTree, localName, options);
+
+  if (!localRoot) {
+    return {
+      root: null,
+      idSet: new Set(),
+    };
+  }
+
+  return {
+    root: localRoot,
+    idSet: getDescendantIds(localTree, localRoot.id, {
+      parentKey: 'parent_id',
+      includeRoot: true,
+      includeSoftDeleted: options.includeSoftDeleted,
+    }),
+  };
+}
+
+function getLocalScopeById(localTree = [], localId, options = {}) {
+  if (localId == null) {
+    return {
+      root: null,
+      idSet: new Set(),
+    };
+  }
+
+  const rowMap = buildRowMap(localTree, options);
+  const localRoot = rowMap.get(localId) || null;
+
+  return {
+    root: localRoot,
+    idSet: getDescendantIds(localTree, localId, {
+      parentKey: 'parent_id',
+      includeRoot: true,
+      includeSoftDeleted: options.includeSoftDeleted,
+    }),
+  };
+}
+
+function buildTreeScope({
+  globalTree = [],
+  localTree = [],
+  globalId = null,
+  globalName = '',
+  localId = null,
+  localName = '',
+  includeSoftDeleted = false,
+  includeLinkedLocalRowsFromGlobal = true,
+} = {}) {
+  let globalScope = { root: null, idSet: new Set() };
+
+  if (globalId != null) {
+    globalScope = getGlobalRootScopeById(globalTree, globalId, {
+      includeSoftDeleted,
+    });
+  } else if (globalName) {
+    globalScope = getGlobalRootScopeByName(globalTree, globalName, {
+      includeSoftDeleted,
+    });
+  }
+
+  let localScope = { root: null, idSet: new Set() };
+
+  if (localId != null) {
+    localScope = getLocalScopeById(localTree, localId, { includeSoftDeleted });
+  } else if (localName) {
+    localScope = getLocalScopeByName(localTree, localName, {
+      includeSoftDeleted,
+    });
+  } else if (includeLinkedLocalRowsFromGlobal && globalScope.idSet.size > 0) {
+    const localRowsLinkedToGlobal = getLocalRowsForGlobalIds(
+      localTree,
+      globalScope.idSet,
+      { includeSoftDeleted }
+    );
+
+    localScope = {
+      root: null,
+      idSet: toIdSet(localRowsLinkedToGlobal.map((row) => row.id)),
+    };
+  }
+
+  return {
+    globalRoot: globalScope.root,
+    localRoot: localScope.root,
+    globalIdSet: globalScope.idSet,
+    localIdSet: localScope.idSet,
+  };
+}
+
+function matchesTreeScope(
+  tx,
+  scope,
+  {
+    includeSoftDeleted = false,
+    requireLocalMatch = false,
+  } = {}
+) {
+  if (!tx) return false;
+
+  const isSoftDeleted = Number(tx.soft_delete) === 1;
+
+  if (!includeSoftDeleted && isSoftDeleted) {
+    return false;
+  }
+
+  const hasGlobalScope = scope?.globalIdSet && scope.globalIdSet.size > 0;
+  const hasLocalScope = scope?.localIdSet && scope.localIdSet.size > 0;
+
+  const matchesGlobal = hasGlobalScope
+    ? scope.globalIdSet.has(tx.global_tree_id)
+    : true;
+
+  const matchesLocal = hasLocalScope
+    ? scope.localIdSet.has(tx.local_tree_id)
+    : !requireLocalMatch;
+
+  if (hasGlobalScope && hasLocalScope) {
+    return requireLocalMatch
+      ? matchesGlobal && matchesLocal
+      : matchesGlobal && (tx.local_tree_id == null || matchesLocal);
+  }
+
+  if (hasGlobalScope) return matchesGlobal;
+  if (hasLocalScope) return matchesLocal;
+
+  return true;
+}
+
+function filterTransactionsByScope(
+  transactions = [],
+  scope,
+  options = {}
+) {
+  return transactions.filter((tx) => matchesTreeScope(tx, scope, options));
+}
+
+function getCurrencyValue(value) {
+  return currency(value || 0).value;
+}
+
+function getCurrencyAmount(value) {
+  return currency(value || 0);
+}
+
+function sumTransactions(
+  transactions = [],
+  {
+    field = 'total_mmk',
+    scope = null,
+    includeSoftDeleted = false,
+    requireLocalMatch = false,
+    returnCurrencyObject = false,
+  } = {}
+) {
+  const rows = scope
+    ? filterTransactionsByScope(transactions, scope, {
+        includeSoftDeleted,
+        requireLocalMatch,
+      })
+    : transactions.filter(
+        (tx) => includeSoftDeleted || Number(tx.soft_delete) !== 1
+      );
+
+  const total = rows.reduce((sum, tx) => {
+    return sum.add(getCurrencyValue(tx?.[field]));
+  }, currency(0));
+
+  return returnCurrencyObject ? total : total.value;
+}
+
+function calculateProfit({
+  transactions = [],
+  globalTree = [],
+  localTree = [],
+  revenueGlobalName = 'Revenue',
+  expenseGlobalName = 'Expense',
+  includeSoftDeleted = false,
+  returnCurrencyObject = false,
+} = {}) {
+  const revenueScope = buildTreeScope({
+    globalTree,
+    localTree,
+    globalName: revenueGlobalName,
+    includeSoftDeleted,
+  });
+
+  const expenseScope = buildTreeScope({
+    globalTree,
+    localTree,
+    globalName: expenseGlobalName,
+    includeSoftDeleted,
+  });
+
+  const revenue = sumTransactions(transactions, {
+    scope: revenueScope,
+    includeSoftDeleted,
+    returnCurrencyObject: true,
+  });
+
+  const expenses = sumTransactions(transactions, {
+    scope: expenseScope,
+    includeSoftDeleted,
+    returnCurrencyObject: true,
+  });
+
+  const profit = revenue.subtract(expenses);
+
+  if (returnCurrencyObject) {
+    return {
+      revenue,
+      expenses,
+      profit,
+    };
+  }
+
+  return {
+    revenue: revenue.value,
+    expenses: expenses.value,
+    profit: profit.value,
+  };
+}
+
+export {
+  isLiveRow,
+  normalizeRows,
+  buildChildrenMap,
+  buildRowMap,
+  findNodeByName,
+  getDescendantIds,
+  getAncestorIds,
+  getGlobalRootScopeByName,
+  getGlobalRootScopeById,
+  getLocalRowsForGlobalIds,
+  getLocalScopeByName,
+  getLocalScopeById,
+  buildTreeScope,
+  matchesTreeScope,
+  filterTransactionsByScope,
+  getCurrencyValue,
+  getCurrencyAmount,
+  sumTransactions,
+  calculateProfit,
+};
+
+
+export function attachTransactionTagNames(
+  transactions = [],
+  globalTree = [],
+  localTree = [],
+  { includeSoftDeleted = false } = {}
+) {
+  const globalMap = buildRowMap(globalTree, { includeSoftDeleted });
+  const localMap = buildRowMap(localTree, { includeSoftDeleted });
+
+  return transactions.map((tx) => ({
+    ...tx,
+    global_tag_name:
+      tx.global_tree_id != null
+        ? (globalMap.get(tx.global_tree_id)?.name || '')
+        : '',
+    local_tag_name:
+      tx.local_tree_id != null
+        ? (localMap.get(tx.local_tree_id)?.name || '')
+        : '',
+  }));
+}
+
+
+==================================================
+FILE: src\components\helpers\treeViewHelpers.js
+==================================================
+
+import {
+  buildChildrenMap,
+  buildTreeScope,
+  filterTransactionsByScope,
+  getDescendantIds,
+  normalizeRows,
+} from './treeHelpers';
+
+export const VIEW_MODES = {
+  LIVE: 'live',
+  TRASH: 'trash',
+};
+
+export function buildNodePathLabel(node, nodeMap) {
+  if (!node) return '';
+
+  const parts = [];
+  let current = node;
+
+  while (current) {
+    parts.push(current.label);
+    current = current.parentKey != null ? nodeMap.get(current.parentKey) : null;
+  }
+
+  return parts.join(' ');
+}
+
+export function filterTransactionsByViewMode(transactions = [], viewMode) {
+  if (viewMode === VIEW_MODES.TRASH) {
+    return transactions.filter((tx) => Number(tx.soft_delete) === 1);
+  }
+
+  return transactions.filter((tx) => Number(tx.soft_delete) !== 1);
+}
+
+export function buildAssembledTree(globalTree = [], localTree = []) {
+  const liveGlobalRows = normalizeRows(globalTree);
+  const liveLocalRows = normalizeRows(localTree);
+
+  const globalChildrenByParent = buildChildrenMap(liveGlobalRows, 'parent_id');
+  const localChildrenByParent = buildChildrenMap(liveLocalRows, 'parent_id');
+
+  const nodes = [];
+  const nodeMap = new Map();
+  const childrenByKey = new Map();
+
+  function pushNode(node) {
+    nodes.push(node);
+    nodeMap.set(node.key, node);
+
+    if (!childrenByKey.has(node.parentKey)) {
+      childrenByKey.set(node.parentKey, []);
+    }
+
+    childrenByKey.get(node.parentKey).push(node);
+  }
+
+  function walkLocal(localRow, parentKey, depth, rootGlobalId) {
+    const node = {
+      key: `l-${localRow.id}`,
+      parentKey,
+      label: localRow.name || `ID ${localRow.id}`,
+      depth,
+      source: 'local',
+      globalId: localRow.global_parent_id ?? rootGlobalId ?? null,
+      localId: localRow.id,
+    };
+
+    pushNode(node);
+
+    const children = localChildrenByParent.get(localRow.id) || [];
+    children.forEach((child) => {
+      walkLocal(child, node.key, depth + 1, node.globalId);
+    });
+  }
+
+  function walkGlobal(globalRow, parentKey = null, depth = 1, rootGlobalId = null) {
+    const nextRootGlobalId = rootGlobalId ?? globalRow.id;
+
+    const node = {
+      key: `g-${globalRow.id}`,
+      parentKey,
+      label: globalRow.name || `ID ${globalRow.id}`,
+      depth,
+      source: 'global',
+      globalId: globalRow.id,
+      localId: null,
+      rootGlobalId: nextRootGlobalId,
+    };
+
+    pushNode(node);
+
+    const globalChildren = globalChildrenByParent.get(globalRow.id) || [];
+    globalChildren.forEach((child) => {
+      walkGlobal(child, node.key, depth + 1, nextRootGlobalId);
+    });
+
+    const linkedLocalRoots = liveLocalRows.filter(
+      (row) => row.parent_id == null && row.global_parent_id === globalRow.id
+    );
+
+    linkedLocalRoots.forEach((localRow) => {
+      walkLocal(localRow, node.key, depth + 1, nextRootGlobalId);
+    });
+  }
+
+  const globalRoots = globalChildrenByParent.get(null) || [];
+  globalRoots.forEach((globalRoot) => walkGlobal(globalRoot, null, 1, globalRoot.id));
+
+  return {
+    nodes,
+    nodeMap,
+    childrenByKey,
+  };
+}
+
+export function buildLayerOptions(childrenByKey = new Map(), parentKey = null) {
+  return (childrenByKey.get(parentKey) || []).map((node) => ({
+    key: node.key,
+    label: node.label,
+    depth: 0,
+  }));
+}
+
+export function getNodeScope(node, globalTree = [], localTree = []) {
+  if (!node) {
+    return null;
+  }
+
+  if (node.source === 'global') {
+    return buildTreeScope({
+      globalTree,
+      localTree,
+      globalId: node.globalId,
+      includeLinkedLocalRowsFromGlobal: true,
+    });
+  }
+
+  const localIdSet = getDescendantIds(localTree, node.localId, {
+    parentKey: 'parent_id',
+    includeRoot: true,
+  });
+
+  return {
+    globalRoot: null,
+    localRoot: null,
+    globalIdSet: new Set(),
+    localIdSet,
+  };
+}
+
+export function filterTransactionsByTreeSelection({
+  transactions = [],
+  selectedNode = null,
+  globalTree = [],
+  localTree = [],
+  includeSoftDeleted = false,
+}) {
+  if (!selectedNode) {
+    return includeSoftDeleted
+      ? transactions.filter((tx) => Number(tx.soft_delete) === 1)
+      : transactions.filter((tx) => Number(tx.soft_delete) !== 1);
+  }
+
+  const scope = getNodeScope(selectedNode, globalTree, localTree);
+
+  return filterTransactionsByScope(transactions, scope, {
+    includeSoftDeleted,
+    requireLocalMatch: selectedNode.source === 'local',
+  });
+}
+
+export function buildIdRowMap(rows = [], { includeSoftDeleted = false } = {}) {
+  return buildRowMap(rows, { includeSoftDeleted });
+}
+
+export function getTreeRowNameById(rows = [], id, options = {}) {
+  if (id == null) return '';
+  const rowMap = buildRowMap(rows, options);
+  return rowMap.get(id)?.name || '';
+}
 
 
 ==================================================
@@ -2174,6 +2973,8 @@ import {
 
 function Sheets({
   corps = [],
+  globalTree = [],
+  assets = [],
   onAddCorp,
   onQueueUpdate,
   onQueueInsert,
@@ -2342,6 +3143,8 @@ function Sheets({
 
       <CorpDetails
         selectedCorp={selectedCorp}
+        globalTree={globalTree}
+        assets={assets}
         onUpdateTransaction={handleUpdateTransaction}
         onDeleteTransaction={handleDeleteTransaction}
       />
@@ -2497,19 +3300,224 @@ export default AddCorpForm;
 FILE: src\sheets\corp_details.jsx
 ==================================================
 
+import { useMemo, useState } from 'react';
 import currency from 'currency.js';
 import styles from './corp_details.module.css';
 import TransactionTable from '../components/transaction_table/TransactionTable';
+import ChangeViewControl from '../components/change_view/ChangeViewControl';
 import {
   normalizeBool,
   toDisplayTransaction,
 } from '../components/transaction_table/transactionTableHelpers';
+import {
+  VIEW_MODES,
+  buildAssembledTree,
+  buildLayerOptions,
+  buildNodePathLabel,
+  filterTransactionsByTreeSelection,
+  filterTransactionsByViewMode,
+} from '../components/helpers/treeViewHelpers';
 
 function CorpDetails({
   selectedCorp,
+  globalTree = [],
   onUpdateTransaction,
   onDeleteTransaction,
 }) {
+  const [viewMode, setViewMode] = useState(VIEW_MODES.LIVE);
+  const [selectedLayer1Key, setSelectedLayer1Key] = useState(null);
+  const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
+  const [selectedLayer3Key, setSelectedLayer3Key] = useState(null);
+
+  const safeCorp = selectedCorp || {};
+  const localTree = safeCorp.local_tree || [];
+  const transactions = safeCorp.transactions || [];
+  const isInverse = normalizeBool(safeCorp.inverse);
+  const isForeign = normalizeBool(safeCorp.is_foreign);
+
+  const currentBalance = currency(safeCorp.current_balance || 0, {
+    symbol: '',
+    precision: 0,
+  })
+    .multiply(isInverse ? -1 : 1)
+    .format();
+
+  const currentForeign = currency(safeCorp.current_foreign || 0, {
+    symbol: '',
+    precision: 2,
+  })
+    .multiply(isInverse ? -1 : 1)
+    .format();
+
+  const foreignLabel =
+    safeCorp.name?.split('ဝယ်စာရင်း')[0]?.trim() || 'Foreign';
+
+  const rate =
+    isForeign && Number(safeCorp.current_foreign)
+      ? Math.abs(
+          Number(safeCorp.current_balance || 0) /
+            Number(safeCorp.current_foreign || 0)
+        ).toLocaleString(undefined, { maximumFractionDigits: 2 })
+      : '-';
+
+  const assembledTree = useMemo(() => {
+    return buildAssembledTree(globalTree, localTree);
+  }, [globalTree, localTree]);
+
+  const selectedLayer1Node = assembledTree.nodeMap.get(selectedLayer1Key) || null;
+  const selectedLayer2Node = assembledTree.nodeMap.get(selectedLayer2Key) || null;
+  const selectedLayer3Node = assembledTree.nodeMap.get(selectedLayer3Key) || null;
+
+  const layer1Options = useMemo(() => {
+    return buildLayerOptions(assembledTree.childrenByKey, null).map((option) => {
+      const node = assembledTree.nodeMap.get(option.key);
+      return {
+        ...option,
+        label: buildNodePathLabel(node, assembledTree.nodeMap),
+      };
+    });
+  }, [assembledTree]);
+
+  const layer2Options = useMemo(() => {
+    let baseOptions = [];
+
+    if (selectedLayer1Key != null) {
+      baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer1Key);
+    } else {
+      baseOptions = assembledTree.nodes
+        .filter((node) => node.depth === 2)
+        .map((node) => ({
+          key: node.key,
+          label: node.label,
+          depth: 0,
+        }));
+    }
+
+    return baseOptions.map((option) => {
+      const node = assembledTree.nodeMap.get(option.key);
+      return {
+        ...option,
+        label: buildNodePathLabel(node, assembledTree.nodeMap),
+      };
+    });
+  }, [assembledTree, selectedLayer1Key]);
+
+  const layer3Options = useMemo(() => {
+    let baseOptions = [];
+
+    if (selectedLayer2Key != null) {
+      baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer2Key);
+    } else if (selectedLayer1Key != null) {
+      const childLayer2Nodes = assembledTree.childrenByKey.get(selectedLayer1Key) || [];
+      baseOptions = childLayer2Nodes.flatMap((node) =>
+        buildLayerOptions(assembledTree.childrenByKey, node.key)
+      );
+    } else {
+      baseOptions = assembledTree.nodes
+        .filter((node) => node.depth === 3)
+        .map((node) => ({
+          key: node.key,
+          label: node.label,
+          depth: 0,
+        }));
+    }
+
+    return baseOptions.map((option) => {
+      const node = assembledTree.nodeMap.get(option.key);
+      return {
+        ...option,
+        label: buildNodePathLabel(node, assembledTree.nodeMap),
+      };
+    });
+  }, [assembledTree, selectedLayer1Key, selectedLayer2Key]);
+
+  const filteredTransactions = useMemo(() => {
+    const baseRows = filterTransactionsByViewMode(transactions, viewMode);
+
+    const deepestSelectedNode =
+      selectedLayer3Node || selectedLayer2Node || selectedLayer1Node || null;
+
+    return filterTransactionsByTreeSelection({
+      transactions: baseRows,
+      selectedNode: deepestSelectedNode,
+      globalTree,
+      localTree,
+      includeSoftDeleted: viewMode === VIEW_MODES.TRASH,
+    });
+  }, [
+    transactions,
+    viewMode,
+    globalTree,
+    localTree,
+    selectedLayer1Node,
+    selectedLayer2Node,
+    selectedLayer3Node,
+  ]);
+
+  const visibleTransactions = useMemo(() => {
+    return filteredTransactions.map((tx) =>
+      toDisplayTransaction(tx, { isInverse, isForeign })
+    );
+  }, [filteredTransactions, isInverse, isForeign]);
+
+  const handleSelectLayer1 = (nextKey) => {
+    const resolvedKey = nextKey === selectedLayer1Key ? null : nextKey;
+
+    setSelectedLayer1Key(resolvedKey);
+    setSelectedLayer2Key(null);
+    setSelectedLayer3Key(null);
+  };
+
+  const handleSelectLayer2 = (nextKey) => {
+    const resolvedKey = nextKey === selectedLayer2Key ? null : nextKey;
+    const nextNode = assembledTree.nodeMap.get(resolvedKey) || null;
+
+    setSelectedLayer2Key(resolvedKey);
+    setSelectedLayer3Key(null);
+
+    if (!nextNode) {
+      return;
+    }
+
+    if (selectedLayer1Key == null) {
+      setSelectedLayer1Key(nextNode.parentKey || null);
+    }
+  };
+
+  const handleSelectLayer3 = (nextKey) => {
+    const resolvedKey = nextKey === selectedLayer3Key ? null : nextKey;
+    const nextNode = assembledTree.nodeMap.get(resolvedKey) || null;
+
+    setSelectedLayer3Key(resolvedKey);
+
+    if (!nextNode) {
+      return;
+    }
+
+    if (selectedLayer2Key == null) {
+      setSelectedLayer2Key(nextNode.parentKey || null);
+    }
+
+    if (selectedLayer1Key == null) {
+      const parentNode = assembledTree.nodeMap.get(nextNode.parentKey) || null;
+      setSelectedLayer1Key(parentNode?.parentKey || null);
+    }
+  };
+
+  const titleParts = [];
+
+  if (selectedLayer1Node) {
+    titleParts.push(selectedLayer1Node.label);
+  }
+
+  if (selectedLayer2Node) {
+    titleParts.push(selectedLayer2Node.label);
+  }
+
+  if (selectedLayer3Node) {
+    titleParts.push(selectedLayer3Node.label);
+  }
+
   if (!selectedCorp) {
     return (
       <div className={styles.corpDetails}>
@@ -2519,49 +3527,15 @@ function CorpDetails({
     );
   }
 
-  const isInverse = normalizeBool(selectedCorp.inverse);
-  const isForeign = normalizeBool(selectedCorp.is_foreign);
-
-  const currentBalance = currency(selectedCorp.current_balance || 0, {
-    symbol: '',
-    precision: 0,
-  })
-    .multiply(isInverse ? -1 : 1)
-    .format();
-
-  const currentForeign = currency(selectedCorp.current_foreign || 0, {
-    symbol: '',
-    precision: 2,
-  })
-    .multiply(isInverse ? -1 : 1)
-    .format();
-
-  const foreignLabel =
-    selectedCorp.name?.split('ဝယ်စာရင်း')[0]?.trim() || 'Foreign';
-
-  const rate =
-    isForeign && Number(selectedCorp.current_foreign)
-      ? Math.abs(
-          Number(selectedCorp.current_balance || 0) /
-          Number(selectedCorp.current_foreign || 0)
-        ).toLocaleString(undefined, { maximumFractionDigits: 2 })
-      : '-';
-
-  const visibleTransactions = (selectedCorp.transactions || [])
-    .filter((tx) => Number(tx.soft_delete) !== 1)
-    .map((tx) => toDisplayTransaction(tx, { isInverse, isForeign }));
-
   return (
     <div className={styles.corpDetails}>
       <div className={styles.headerbar}>
-        <h2>{selectedCorp.name}</h2>
+        <h2>{safeCorp.name}</h2>
       </div>
 
       <div className={styles.balanceRow}>
         <div className={styles.balanceInfo}>
-          <span className={styles.balanceText}>
-            Balance: {currentBalance} MMK
-          </span>
+          <span className={styles.balanceText}>Balance: {currentBalance} MMK</span>
 
           {isForeign && (
             <>
@@ -2570,42 +3544,30 @@ function CorpDetails({
                 {foreignLabel} Balance: {currentForeign}
               </span>
               <span className={styles.divider}>|</span>
-              <span className={styles.rateText}>
-                Rate: {rate}
-              </span>
+              <span className={styles.rateText}>Rate: {rate}</span>
             </>
           )}
         </div>
 
-        <button
-          onClick={() => alert('Split view coming soon!')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            color: 'var(--text-main)',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-          }}
-        >
-          Split View
-        </button>
+        <ChangeViewControl
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          layer1Options={layer1Options}
+          selectedLayer1Key={selectedLayer1Key}
+          onSelectLayer1={handleSelectLayer1}
+          layer2Options={layer2Options}
+          selectedLayer2Key={selectedLayer2Key}
+          onSelectLayer2={handleSelectLayer2}
+          layer3Options={layer3Options}
+          selectedLayer3Key={selectedLayer3Key}
+          onSelectLayer3={handleSelectLayer3}
+        />
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '20px',
-          marginTop: '15px',
-          flex: 1,
-          minHeight: 0,
-        }}
-      >
-        <div >
+      <div className={styles.tablecontainer}>
+        <div className={styles.tablecontent}>
           <TransactionTable
-            title="Transactions"
+            title={`Transactions - ${titleParts.reverse().join('  ')}`}
             data={visibleTransactions}
             type="all"
             currencyName={foreignLabel}
@@ -2621,7 +3583,6 @@ function CorpDetails({
 }
 
 export default CorpDetails;
-
 
 
 ==================================================

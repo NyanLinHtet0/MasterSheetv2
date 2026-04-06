@@ -2,10 +2,10 @@ INSERT INTO global_tree (name, parent_id) VALUES
 ('Revenue', NULL),
 ('Expense', NULL),
 ('Transfer', NULL),
-('Asset Investment', NULL),
+('Investment', NULL),
 
 ('Sales', 1),
-('Operational Expenses', 2),
+('General', 2),
 ('Purchases', 2),
 
 ('Infrastructure', 4),

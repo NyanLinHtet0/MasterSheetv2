@@ -1,0 +1,61 @@
+.navbar {
+  padding: 15px 30px 15px 30px;
+  background-color: #0f172a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: max-content;
+  margin: 0;
+}
+
+.navLinks {
+  display: flex;
+  gap: 25px;
+}
+
+.link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover, .activeLink {
+  color: #3b82f6;
+}
+
+/* Button UI for Dirty Modifications */
+.actionContainer {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: #f1f5f9;
+  border: 1px solid #94a3b8;
+  padding: 6px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.saveBtn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 6px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.saveBtn:hover {
+  background-color: #059669;
+}

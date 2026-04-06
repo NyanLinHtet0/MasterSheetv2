@@ -76,7 +76,7 @@
 
 .txTable th,
 .txTable td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
@@ -138,8 +138,6 @@
   background-color: #fee2e2;
   color: #b91c1c;
   border-color: #fca5a5;
-  font-size: 0.6rem;
-  font-weight: 700;
 }
 
 .deleteBtn:hover {
@@ -151,8 +149,6 @@
   background-color: #dcfce7;
   color: #15803d;
   border-color: #86efac;
-  font-size: 0.6em;
-  font-weight: 700;
 }
 
 .saveBtn:hover {
@@ -164,9 +160,6 @@
   background-color: #f8fafc;
   color: var(--text-muted);
   border-color: #cbd5e1;
-  font-size: 0.6rem;
-  font-weight: 700;
-
 }
 
 .cancelBtn:hover {
@@ -176,7 +169,7 @@
 
 .editInput {
   height: 40px;
-  padding: 0 3px;
+  padding: 0 10px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background-color: #fff;

@@ -1,0 +1,10 @@
+.container {
+    display: flex;
+    height: 100vh; /* Takes up the full height of the viewport */
+    width: 100%;
+    background-color: #f0f2f5; /* Light background to make the white divs pop */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 95vh;
+}
