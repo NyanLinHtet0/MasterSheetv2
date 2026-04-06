@@ -17,7 +17,7 @@ export default function TransactionTable({
 
   const {
     isTableEditMode,
-    editingRowIndex,
+    editingRowId,
     editFormData,
     handleEditClick,
     handleSaveEdit,
@@ -49,6 +49,21 @@ export default function TransactionTable({
           </p>
         ) : (
           <table className={styles.txTable}>
+            <colgroup>
+              <col style={{ width: '140px' }} />
+              <col />
+              {isForeign ? (
+                <>
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '85px' }} />
+                  <col style={{ width: '120px' }} />
+                </>
+              ) : (
+                <col style={{ width: '120px' }} />
+              )}
+              <col style={{ width: '180px' }} />
+            </colgroup>
+
             <TransactionTableHeader
               isForeign={isForeign}
               currencyName={currencyName}
@@ -57,18 +72,18 @@ export default function TransactionTable({
             <tbody>
               {data.map((tx) => (
                 <TransactionRow
-                  key={`tx-${tx.originalIndex}`}
+                  key={`tx-${tx.id}`}
                   tx={tx}
                   type={type}
                   isForeign={isForeign}
                   isTableEditMode={isTableEditMode}
-                  isEditing={editingRowIndex === tx.originalIndex}
+                  isEditing={editingRowId === tx.id}
                   editFormData={editFormData}
                   onInputChange={handleInputChange}
-                  onSave={() => handleSaveEdit(tx.originalIndex)}
+                  onSave={() => handleSaveEdit(tx.id)}
                   onCancel={handleCancelEdit}
                   onEditClick={() => handleEditClick(tx)}
-                  onDelete={() => onDelete(tx.originalIndex)}
+                  onDelete={() => onDelete(tx.id)}
                 />
               ))}
             </tbody>

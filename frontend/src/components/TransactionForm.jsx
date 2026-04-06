@@ -1,23 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import currency from 'currency.js';
 import styles from './TransactionForm.module.css';
+import {
+  calculateTransactionValues,
+  cleanNumericInput,
+  getDisplayedBaseTotal,
+  isUsableNumberInput,
+  isValidPartialNumber,
+  parseEditableNumber,
+} from './transaction_table/transactionTableHelpers';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
-
-const cleanNumericInput = (value) => value.replace(/,/g, '').trim();
-
-const isValidPartialNumber = (value) => /^-?\d*\.?\d*$/.test(value);
-
-const isUsableNumber = (value) =>
-  value !== '' && value !== '-' && value !== '.' && value !== '-.';
-
-const toCurrencyValue = (value) => {
-  if (!isUsableNumber(value)) return 0;
-  return currency(value).value;
- currency(value).value;
-};
 
 const formatDisplayValue = (value) => {
   if (value === '' || value === '-' || value === '.' || value === '-.') return value;
@@ -59,32 +53,20 @@ export default function TransactionForm({
     }
   }, [year, month, day, daysInSelectedMonth]);
 
-  const getBaseTotal = (nextAmount = amount, nextRate = rate) => {
-    const amountValue = toCurrencyValue(nextAmount);
-
-    if (!isForeign) {
-      return amountValue;
-    }
-
-    const rateValue = toCurrencyValue(nextRate);
-    return currency(amountValue).multiply(rateValue).value;
-  };
-
   const syncForeignTotal = (nextAmount, nextRate) => {
     if (!isForeign) return;
 
-    if (!isUsableNumber(nextAmount) || !isUsableNumber(nextRate)) {
-      setTotalMMK('');
-      return;
-    }
+    const baseTotal = getDisplayedBaseTotal({
+      amount: nextAmount,
+      rate: nextRate,
+      isForeign,
+    });
 
-    const baseTotal = getBaseTotal(nextAmount, nextRate);
-    setTotalMMK(baseTotal === 0 ? '' : String(baseTotal));
+    setTotalMMK(baseTotal == null ? '' : String(baseTotal));
   };
 
   const handleAmountChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setAmount(rawValue);
@@ -93,7 +75,6 @@ export default function TransactionForm({
 
   const handleRateChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setRate(rawValue);
@@ -102,7 +83,6 @@ export default function TransactionForm({
 
   const handleTotalChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setTotalMMK(rawValue);
@@ -119,33 +99,33 @@ export default function TransactionForm({
     const trimmedDescription = description.trim();
 
     if (!trimmedDescription) return;
-    if (!isUsableNumber(amount)) return;
-    if (isForeign && !isUsableNumber(rate)) return;
+    if (!isUsableNumberInput(amount)) return;
+    if (isForeign && !isUsableNumberInput(rate)) return;
 
     const tx_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    const amountValue = toCurrencyValue(amount);
-    const rateValue = isForeign ? toCurrencyValue(rate) : 0;
-
-    const expectedTotal = getBaseTotal(amount, rate);
-    const submittedTotal = isForeign
-      ? currency(isUsableNumber(totalMMK) ? toCurrencyValue(totalMMK) : expectedTotal).value
-      : amountValue;
-
-    const adjustmentValue = isForeign
-      ? currency(submittedTotal).subtract(expectedTotal).value
-      : 0;
+    const calculated = calculateTransactionValues(
+      {
+        amount: parseEditableNumber(amount, 0),
+        rate: isForeign ? parseEditableNumber(rate, 0) : 0,
+        manualTotal:
+          isForeign && isUsableNumberInput(totalMMK)
+            ? parseEditableNumber(totalMMK, 0)
+            : undefined,
+      },
+      { isForeign }
+    );
 
     const txData = {
       tx_date,
       description: trimmedDescription,
-      amount: amountValue,
-      adjustment: adjustmentValue,
-      total_mmk: submittedTotal,
+      amount: calculated.amount,
+      adjustment: calculated.adjustment,
+      total_mmk: calculated.total_mmk,
       soft_delete: 0,
       tx_status: 1,
       ...(isForeign && {
-        rate: rateValue,
+        rate: calculated.rate,
       }),
     };
 
@@ -177,7 +157,7 @@ export default function TransactionForm({
 
   return (
     <div className={styles.transactionFormWrapper}>
-      <h3 className={styles.formTitle}>Add New Transaction</h3>
+      <h3 className={styles.formTitle}></h3>
 
       <form
         onSubmit={handleSubmit}

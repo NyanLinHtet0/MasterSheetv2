@@ -9,8 +9,8 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       client_audit_id: currentAuditId,
-      actions: payload
-    })
+      actions: payload,
+    }),
   });
 
   const result = await response.json().catch(() => ({}));
@@ -23,13 +23,15 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
   if (!response.ok) {
     return {
       success: false,
-      error: result.error || 'Failed to save changes'
+      error: result.error || 'Failed to save changes',
+      server_response: result,
     };
   }
 
   return {
     success: true,
     current_audit_id: result.current_audit_id,
-    simulated_backend: result.simulated_backend
+    simulated_backend: result.simulated_backend,
+    server_response: result,
   };
 }

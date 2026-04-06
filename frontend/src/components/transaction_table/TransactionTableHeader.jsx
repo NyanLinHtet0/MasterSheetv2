@@ -1,5 +1,4 @@
-
-
+import styles from './transactiontable.module.css';
 export default function TransactionTableHeader({ isForeign, currencyName, isTableEditMode }) {
   return (
     <thead>
@@ -15,7 +14,7 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
         ) : (
           <th style={{ textAlign: 'right' }}>Amount</th>
         )}
-        <th style={{ textAlign: 'center', width: '150px' }}>
+        <th className={styles.actionCell}>
           {isTableEditMode ? 'Actions' : '\u00A0'}
         </th>
       </tr>

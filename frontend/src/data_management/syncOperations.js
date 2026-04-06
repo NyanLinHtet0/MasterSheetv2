@@ -24,11 +24,9 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
     const next = { ...prev };
     const existing = next[entityKey];
 
-    // If this row already has an update queued, compare against its ORIGINAL old state
     const baseOldData = existing?.changed_data?.old || oldData || {};
     const { changedOld, changedNew } = buildChangedData(baseOldData, newData || {});
 
-    // Net zero change: remove the queued update entirely
     if (Object.keys(changedNew).length === 0) {
       delete next[entityKey];
       return next;
@@ -49,29 +47,48 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
 }
 
 export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) {
-  const additions = {};
-  additions[`${tableName}_${rowId}_DELETE`] = {
-    table_name: tableName,
-    row_id: rowId,
-    action_type: 'DELETE' // Treat as soft-delete on backend
+  const queueSoftDelete = (oldRow) => {
+    if (!oldRow) return;
+
+    queueUpdate(
+      dirtyMap,
+      setDirtyMap,
+      tableName,
+      rowId,
+      oldRow,
+      {
+        ...oldRow,
+        soft_delete: 1,
+      }
+    );
   };
 
-  // 2. Handling "Orphaned" Data
   if (tableName === 'corp_data') {
-    const corp = draftData.corp_data.find(c => c.id === rowId);
-    if (corp) {
-      corp.transactions.forEach(tx => {
-        additions[`transactions_${tx.id}_DELETE`] = {
-          table_name: 'transactions',
-          row_id: tx.id,
-          action_type: 'DELETE'
-        };
-      });
-      // Do the same for employees if needed
-    }
+    const corp = draftData?.corp_data?.find((row) => row.id === rowId);
+    queueSoftDelete(corp);
+
+    (corp?.transactions || []).forEach((tx) => {
+      queueUpdate(
+        dirtyMap,
+        setDirtyMap,
+        'transactions',
+        tx.id,
+        tx,
+        {
+          ...tx,
+          soft_delete: 1,
+        }
+      );
+    });
+
+    return;
   }
 
-  setDirtyMap(prev => ({ ...prev, ...additions }));
+  const row = tableName === 'transactions'
+    ? draftData?.corp_data?.flatMap((corp) => corp.transactions || []).find((item) => item.id === rowId)
+    : draftData?.[tableName]?.find?.((item) => item.id === rowId);
+
+  queueSoftDelete(row);
 }
 
 export function queueInsert(setDirtyMap, tableName, rowId, changes) {
@@ -95,7 +112,6 @@ export function removeDirtyEntry(setDirtyMap, actionType, tableName, rowId) {
     const next = { ...prev };
     delete next[entityKey];
     delete next[`${tableName}_${rowId}_UPDATE`];
-    delete next[`${tableName}_${rowId}_DELETE`];
     return next;
   });
 }

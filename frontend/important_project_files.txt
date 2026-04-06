@@ -111,6 +111,7 @@ function App() {
 export default App;
 
 
+
 ==================================================
 FILE: src\main.jsx
 ==================================================
@@ -125,7 +126,6 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
-
 
 
 ==================================================
@@ -157,6 +157,7 @@ function Navbar({ isDirty, onSave, onCancel }) {
 }
 
 export default Navbar;
+
 
 
 ==================================================
@@ -350,30 +351,25 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
 export default CorpDropdown;
 
 
+
 ==================================================
 FILE: src\components\TransactionForm.jsx
 ==================================================
 
 import { useState, useEffect, useRef } from 'react';
-import currency from 'currency.js';
 import styles from './TransactionForm.module.css';
+import {
+  calculateTransactionValues,
+  cleanNumericInput,
+  getDisplayedBaseTotal,
+  isUsableNumberInput,
+  isValidPartialNumber,
+  parseEditableNumber,
+} from './transaction_table/transactionTableHelpers';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
-
-const cleanNumericInput = (value) => value.replace(/,/g, '').trim();
-
-const isValidPartialNumber = (value) => /^-?\d*\.?\d*$/.test(value);
-
-const isUsableNumber = (value) =>
-  value !== '' && value !== '-' && value !== '.' && value !== '-.';
-
-const toCurrencyValue = (value) => {
-  if (!isUsableNumber(value)) return 0;
-  return currency(value).value;
- currency(value).value;
-};
 
 const formatDisplayValue = (value) => {
   if (value === '' || value === '-' || value === '.' || value === '-.') return value;
@@ -415,32 +411,20 @@ export default function TransactionForm({
     }
   }, [year, month, day, daysInSelectedMonth]);
 
-  const getBaseTotal = (nextAmount = amount, nextRate = rate) => {
-    const amountValue = toCurrencyValue(nextAmount);
-
-    if (!isForeign) {
-      return amountValue;
-    }
-
-    const rateValue = toCurrencyValue(nextRate);
-    return currency(amountValue).multiply(rateValue).value;
-  };
-
   const syncForeignTotal = (nextAmount, nextRate) => {
     if (!isForeign) return;
 
-    if (!isUsableNumber(nextAmount) || !isUsableNumber(nextRate)) {
-      setTotalMMK('');
-      return;
-    }
+    const baseTotal = getDisplayedBaseTotal({
+      amount: nextAmount,
+      rate: nextRate,
+      isForeign,
+    });
 
-    const baseTotal = getBaseTotal(nextAmount, nextRate);
-    setTotalMMK(baseTotal === 0 ? '' : String(baseTotal));
+    setTotalMMK(baseTotal == null ? '' : String(baseTotal));
   };
 
   const handleAmountChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setAmount(rawValue);
@@ -449,7 +433,6 @@ export default function TransactionForm({
 
   const handleRateChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setRate(rawValue);
@@ -458,7 +441,6 @@ export default function TransactionForm({
 
   const handleTotalChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
-
     if (!isValidPartialNumber(rawValue)) return;
 
     setTotalMMK(rawValue);
@@ -475,33 +457,33 @@ export default function TransactionForm({
     const trimmedDescription = description.trim();
 
     if (!trimmedDescription) return;
-    if (!isUsableNumber(amount)) return;
-    if (isForeign && !isUsableNumber(rate)) return;
+    if (!isUsableNumberInput(amount)) return;
+    if (isForeign && !isUsableNumberInput(rate)) return;
 
     const tx_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    const amountValue = toCurrencyValue(amount);
-    const rateValue = isForeign ? toCurrencyValue(rate) : 0;
-
-    const expectedTotal = getBaseTotal(amount, rate);
-    const submittedTotal = isForeign
-      ? currency(isUsableNumber(totalMMK) ? toCurrencyValue(totalMMK) : expectedTotal).value
-      : amountValue;
-
-    const adjustmentValue = isForeign
-      ? currency(submittedTotal).subtract(expectedTotal).value
-      : 0;
+    const calculated = calculateTransactionValues(
+      {
+        amount: parseEditableNumber(amount, 0),
+        rate: isForeign ? parseEditableNumber(rate, 0) : 0,
+        manualTotal:
+          isForeign && isUsableNumberInput(totalMMK)
+            ? parseEditableNumber(totalMMK, 0)
+            : undefined,
+      },
+      { isForeign }
+    );
 
     const txData = {
       tx_date,
       description: trimmedDescription,
-      amount: amountValue,
-      adjustment: adjustmentValue,
-      total_mmk: submittedTotal,
+      amount: calculated.amount,
+      adjustment: calculated.adjustment,
+      total_mmk: calculated.total_mmk,
       soft_delete: 0,
       tx_status: 1,
       ...(isForeign && {
-        rate: rateValue,
+        rate: calculated.rate,
       }),
     };
 
@@ -533,7 +515,7 @@ export default function TransactionForm({
 
   return (
     <div className={styles.transactionFormWrapper}>
-      <h3 className={styles.formTitle}>Add New Transaction</h3>
+      <h3 className={styles.formTitle}></h3>
 
       <form
         onSubmit={handleSubmit}
@@ -631,6 +613,7 @@ export default function TransactionForm({
 }
 
 
+
 ==================================================
 FILE: src\components\transaction_table\TransactionRow.jsx
 ==================================================
@@ -638,47 +621,77 @@ FILE: src\components\transaction_table\TransactionRow.jsx
 import styles from './transactiontable.module.css';
 
 export default function TransactionRow({
-  tx, type, isForeign, isTableEditMode, isEditing, 
+  tx, type, isForeign, isTableEditMode, isEditing,
   editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete
 }) {
-  const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0)) 
-    ? 'var(--success-color)' 
-    : (type === 'expense' || (type === 'all' && Number(tx.amount) < 0)) 
-      ? '#ef4444' 
+  const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
+    ? 'var(--success-color)'
+    : (type === 'expense' || (type === 'all' && Number(tx.amount) < 0))
+      ? '#ef4444'
       : 'inherit';
 
   if (isEditing) {
     return (
       <tr>
         <td>
-          <input type="date" value={editFormData.date} onChange={(e) => onInputChange(e, 'date')} />
+          <input
+            className={`${styles.editInput} ${styles.editInputDate}`}
+            type="date"
+            value={editFormData.date}
+            onChange={(e) => onInputChange(e, 'date')}
+          />
         </td>
+
         <td>
-          <input type="text" value={editFormData.description} onChange={(e) => onInputChange(e, 'description')} />
+          <input
+            className={`${styles.editInput} ${styles.editInputText}`}
+            type="text"
+            value={editFormData.description}
+            onChange={(e) => onInputChange(e, 'description')}
+          />
         </td>
+
         {isForeign ? (
           <>
             <td style={{ textAlign: 'right' }}>
-              <input style={{ textAlign: 'right', width: '80px' }} type="number" value={editFormData.amount} onChange={(e) => onInputChange(e, 'amount')} />
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputSm}`}
+                type="number"
+                value={editFormData.amount}
+                onChange={(e) => onInputChange(e, 'amount')}
+              />
             </td>
+
             <td style={{ textAlign: 'right' }}>
-              <input style={{ textAlign: 'right', width: '60px' }} type="number" value={editFormData.rate} onChange={(e) => onInputChange(e, 'rate')} />
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputXs}`}
+                type="number"
+                value={editFormData.rate}
+                onChange={(e) => onInputChange(e, 'rate')}
+              />
             </td>
+
             <td style={{ textAlign: 'right' }}>
-              <input 
-                style={{ textAlign: 'right', width: '100px', fontWeight: 'bold' }} 
-                type="number" 
-                value={editFormData.total_mmk} 
-                onChange={(e) => onInputChange(e, 'total_mmk')} 
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd} ${styles.editInputBold}`}
+                type="number"
+                value={editFormData.total_mmk}
+                onChange={(e) => onInputChange(e, 'total_mmk')}
               />
             </td>
           </>
         ) : (
           <td style={{ textAlign: 'right' }}>
-            <input style={{ textAlign: 'right', width: '100px' }} type="number" value={editFormData.amount} onChange={(e) => onInputChange(e, 'amount')} />
+            <input
+              className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd}`}
+              type="number"
+              value={editFormData.amount}
+              onChange={(e) => onInputChange(e, 'amount')}
+            />
           </td>
         )}
-        <td className={styles.actionCell} style={{ textAlign: 'center', width: '150px' }}>
+
+        <td className={styles.actionCell}>
           <div className={styles.actionCellButtons}>
             <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onSave}>Save</button>
             <button className={`${styles.actionBtn} ${styles.cancelBtn}`} onClick={onCancel}>Cancel</button>
@@ -715,7 +728,7 @@ export default function TransactionRow({
           </span>
         </td>
       )}
-      <td className={styles.actionCell} style={{ textAlign: 'center', width: '150px' }}>
+      <td className={styles.actionCell}>
         {isTableEditMode ? (
           <div className={styles.actionCellButtons}>
             <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onEditClick}>Edit</button>
@@ -753,7 +766,7 @@ export default function TransactionTable({
 
   const {
     isTableEditMode,
-    editingRowIndex,
+    editingRowId,
     editFormData,
     handleEditClick,
     handleSaveEdit,
@@ -785,6 +798,21 @@ export default function TransactionTable({
           </p>
         ) : (
           <table className={styles.txTable}>
+            <colgroup>
+              <col style={{ width: '140px' }} />
+              <col />
+              {isForeign ? (
+                <>
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '85px' }} />
+                  <col style={{ width: '120px' }} />
+                </>
+              ) : (
+                <col style={{ width: '120px' }} />
+              )}
+              <col style={{ width: '180px' }} />
+            </colgroup>
+
             <TransactionTableHeader
               isForeign={isForeign}
               currencyName={currencyName}
@@ -793,18 +821,18 @@ export default function TransactionTable({
             <tbody>
               {data.map((tx) => (
                 <TransactionRow
-                  key={`tx-${tx.originalIndex}`}
+                  key={`tx-${tx.id}`}
                   tx={tx}
                   type={type}
                   isForeign={isForeign}
                   isTableEditMode={isTableEditMode}
-                  isEditing={editingRowIndex === tx.originalIndex}
+                  isEditing={editingRowId === tx.id}
                   editFormData={editFormData}
                   onInputChange={handleInputChange}
-                  onSave={() => handleSaveEdit(tx.originalIndex)}
+                  onSave={() => handleSaveEdit(tx.id)}
                   onCancel={handleCancelEdit}
                   onEditClick={() => handleEditClick(tx)}
-                  onDelete={() => onDelete(tx.originalIndex)}
+                  onDelete={() => onDelete(tx.id)}
                 />
               ))}
             </tbody>
@@ -816,12 +844,12 @@ export default function TransactionTable({
 }
 
 
+
 ==================================================
 FILE: src\components\transaction_table\TransactionTableHeader.jsx
 ==================================================
 
-
-
+import styles from './transactiontable.module.css';
 export default function TransactionTableHeader({ isForeign, currencyName, isTableEditMode }) {
   return (
     <thead>
@@ -837,13 +865,14 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
         ) : (
           <th style={{ textAlign: 'right' }}>Amount</th>
         )}
-        <th style={{ textAlign: 'center', width: '150px' }}>
+        <th className={styles.actionCell}>
           {isTableEditMode ? 'Actions' : '\u00A0'}
         </th>
       </tr>
     </thead>
   );
 }
+
 
 
 ==================================================
@@ -856,6 +885,31 @@ export function normalizeBool(value) {
   return value === true || value === 1 || value === '1';
 }
 
+export function toMoney(value) {
+  return currency(value || 0).value;
+}
+
+export function cleanNumericInput(value = '') {
+  return String(value).replace(/,/g, '').trim();
+}
+
+export function isValidPartialNumber(value) {
+  return /^-?\d*\.?\d*$/.test(cleanNumericInput(value));
+}
+
+export function isUsableNumberInput(value) {
+  const cleaned = cleanNumericInput(value);
+  return cleaned !== '' && cleaned !== '-' && cleaned !== '.' && cleaned !== '-.';
+}
+
+export function parseEditableNumber(value, fallback = 0) {
+  if (!isUsableNumberInput(value)) {
+    return toMoney(fallback);
+  }
+
+  return toMoney(cleanNumericInput(value));
+}
+
 export function flipByInverse(value, isInverse) {
   return normalizeBool(isInverse)
     ? currency(value || 0).multiply(-1).value
@@ -864,16 +918,75 @@ export function flipByInverse(value, isInverse) {
 
 export function formatTxDateForInput(txDate) {
   if (!txDate) return '';
+
   const clean = String(txDate).split('T')[0];
   const [year, month, day] = clean.split('-');
+
   if (!year || !month || !day) return '';
+
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 export function formatTxDateForSave(inputDate) {
   if (!inputDate) return null;
-  const [year, month, day] = inputDate.split('-');
-  return `${year}-${Number(month)}-${Number(day)}`;
+
+  const [year, month, day] = String(inputDate).split('-');
+
+  if (!year || !month || !day) return null;
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+export function getDisplayedBaseTotal({ amount, rate, isForeign }) {
+  if (!isForeign) {
+    return parseEditableNumber(amount, 0);
+  }
+
+  if (!isUsableNumberInput(amount) || !isUsableNumberInput(rate)) {
+    return null;
+  }
+
+  return currency(parseEditableNumber(amount, 0))
+    .multiply(parseEditableNumber(rate, 0))
+    .value;
+}
+
+export function calculateTransactionValues(
+  { amount = 0, rate = 0, manualTotal, adjustment },
+  { isForeign }
+) {
+  const normalizedAmount = toMoney(amount);
+  const normalizedRate = isForeign ? toMoney(rate) : 0;
+
+  const baseTotalMmk = isForeign
+    ? currency(normalizedAmount).multiply(normalizedRate).value
+    : normalizedAmount;
+
+  let normalizedAdjustment = 0;
+  let normalizedTotalMmk = baseTotalMmk;
+
+  const hasManualTotal = manualTotal !== undefined && manualTotal !== null && manualTotal !== '';
+  const hasAdjustment = adjustment !== undefined && adjustment !== null && adjustment !== '';
+
+  if (hasManualTotal) {
+    normalizedTotalMmk = toMoney(manualTotal);
+    normalizedAdjustment = currency(normalizedTotalMmk)
+      .subtract(baseTotalMmk)
+      .value;
+  } else if (hasAdjustment) {
+    normalizedAdjustment = toMoney(adjustment);
+    normalizedTotalMmk = currency(baseTotalMmk)
+      .add(normalizedAdjustment)
+      .value;
+  }
+
+  return {
+    amount: normalizedAmount,
+    rate: normalizedRate,
+    base_total_mmk: baseTotalMmk,
+    adjustment: normalizedAdjustment,
+    total_mmk: normalizedTotalMmk,
+  };
 }
 
 export function sanitizeTransactionForDirty(tx) {
@@ -884,9 +997,9 @@ export function sanitizeTransactionForDirty(tx) {
     corp_id: tx.corp_id,
     tx_date: tx.tx_date,
     description: tx.description,
-    amount: currency(tx.amount || 0).value,
-    rate: currency(tx.rate || 0).value,
-    adjustment: currency(tx.adjustment || 0).value,
+    amount: toMoney(tx.amount),
+    rate: toMoney(tx.rate),
+    adjustment: toMoney(tx.adjustment),
     global_tree_id: tx.global_tree_id ?? null,
     local_tree_id: tx.local_tree_id ?? null,
     employee_id: tx.employee_id ?? null,
@@ -896,63 +1009,93 @@ export function sanitizeTransactionForDirty(tx) {
   };
 }
 
-export function toDisplayTransaction(tx, originalIndex, { isInverse }) {
+export function hydrateStoredTransaction(tx, { isForeign }) {
+  if (!tx) return null;
+
+  const { amount, rate, adjustment, total_mmk } = calculateTransactionValues(
+    {
+      amount: tx.amount,
+      rate: tx.rate,
+      adjustment: tx.adjustment,
+      manualTotal:
+        tx.total_mmk != null && tx.adjustment == null
+          ? tx.total_mmk
+          : undefined,
+    },
+    { isForeign }
+  );
+
   return {
     ...tx,
-    originalIndex,
-    tx_date: tx.tx_date,
-    amount: flipByInverse(tx.amount || 0, isInverse),
-    total_mmk: flipByInverse(tx.total_mmk || 0, isInverse),
+    amount,
+    rate,
+    adjustment,
+    total_mmk,
+  };
+}
+
+export function toDisplayTransaction(tx, { isInverse, isForeign }) {
+  const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
+
+  return {
+    ...hydratedTx,
+    tx_date: hydratedTx.tx_date,
+    amount: flipByInverse(hydratedTx.amount || 0, isInverse),
+    total_mmk: flipByInverse(hydratedTx.total_mmk || 0, isInverse),
   };
 }
 
 export function buildEditFormData(tx, { isInverse, isForeign }) {
+  const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
+
   return {
-    date: formatTxDateForInput(tx.tx_date),
-    description: tx.description || '',
-    amount: flipByInverse(tx.amount || 0, isInverse),
-    rate: isForeign ? currency(tx.rate || 0).value : '',
+    date: formatTxDateForInput(hydratedTx.tx_date),
+    description: hydratedTx.description || '',
+    amount: String(flipByInverse(hydratedTx.amount || 0, isInverse)),
+    rate: isForeign ? String(toMoney(hydratedTx.rate)) : '',
     total_mmk: isForeign
-      ? flipByInverse(tx.total_mmk || 0, isInverse)
+      ? String(flipByInverse(hydratedTx.total_mmk || 0, isInverse))
       : '',
   };
 }
 
 export function buildUpdatedTransaction(oldTx, editFormData, { isForeign, isInverse }) {
-  const rawAmount = flipByInverse(editFormData.amount || 0, isInverse);
-  const rawRate = isForeign ? currency(editFormData.rate || 0).value : 0;
+  const rawAmount = flipByInverse(parseEditableNumber(editFormData.amount, 0), isInverse);
+  const rawRate = isForeign ? parseEditableNumber(editFormData.rate, 0) : toMoney(oldTx.rate);
 
-  const expectedRawTotal = isForeign
-    ? currency(rawAmount).multiply(rawRate).value
-    : currency(rawAmount).value;
+  const rawManualTotal = isForeign && isUsableNumberInput(editFormData.total_mmk)
+    ? flipByInverse(parseEditableNumber(editFormData.total_mmk, 0), isInverse)
+    : undefined;
 
-  const rawManualTotal = isForeign
-    ? flipByInverse(editFormData.total_mmk || expectedRawTotal, isInverse)
-    : expectedRawTotal;
+  const didAmountChange = !isForeign && toMoney(rawAmount) !== toMoney(oldTx.amount);
 
-  const rawAdjustment = isForeign
-    ? currency(rawManualTotal).subtract(expectedRawTotal).value
-    : currency(oldTx.adjustment || 0).value;
-
-  const rawTotalMmk = isForeign
-    ? currency(expectedRawTotal).add(rawAdjustment).value
-    : currency(rawAmount).add(rawAdjustment).value;
+  const calculated = calculateTransactionValues(
+    {
+      amount: rawAmount,
+      rate: rawRate,
+      manualTotal: rawManualTotal,
+      adjustment: isForeign
+        ? undefined
+        : didAmountChange
+          ? 0
+          : oldTx.adjustment,
+    },
+    { isForeign }
+  );
 
   const draftTx = {
     ...oldTx,
     tx_date: formatTxDateForSave(editFormData.date),
     description: editFormData.description,
-    amount: rawAmount,
-    rate: rawRate,
-    adjustment: rawAdjustment,
-    total_mmk: rawTotalMmk,
+    amount: calculated.amount,
+    rate: calculated.rate,
+    adjustment: calculated.adjustment,
+    total_mmk: calculated.total_mmk,
   };
-
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
 
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
   };
 }
 
@@ -962,33 +1105,46 @@ export function buildSoftDeletedTransaction(oldTx) {
     soft_delete: 1,
   };
 
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
-
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
+  };
+}
+
+function getTransactionContribution(tx, corp) {
+  if (!tx || Number(tx.soft_delete) === 1) {
+    return {
+      totalMmk: 0,
+      foreignAmount: 0,
+    };
+  }
+
+  const hydratedTx = hydrateStoredTransaction(tx, {
+    isForeign: normalizeBool(corp?.is_foreign),
+  });
+
+  return {
+    totalMmk: toMoney(hydratedTx?.total_mmk),
+    foreignAmount: toMoney(hydratedTx?.amount),
   };
 }
 
 export function applyTransactionDeltaToCorp(corp, oldTx, newTx) {
-  const oldTotal = currency(oldTx?.total_mmk || 0).value;
-  const newTotal = currency(newTx?.total_mmk || 0).value;
+  const oldContribution = getTransactionContribution(oldTx, corp);
+  const newContribution = getTransactionContribution(newTx, corp);
 
   const nextCorp = {
     ...corp,
     current_balance: currency(corp.current_balance || 0)
-      .add(newTotal)
-      .subtract(oldTotal)
+      .add(newContribution.totalMmk)
+      .subtract(oldContribution.totalMmk)
       .value,
   };
 
   if (normalizeBool(corp.is_foreign)) {
-    const oldForeign = currency(oldTx?.amount || 0).value;
-    const newForeign = currency(newTx?.amount || 0).value;
-
     nextCorp.current_foreign = currency(corp.current_foreign || 0)
-      .add(newForeign)
-      .subtract(oldForeign)
+      .add(newContribution.foreignAmount)
+      .subtract(oldContribution.foreignAmount)
       .value;
   }
 
@@ -1001,39 +1157,35 @@ export function buildInsertedTransaction(
     corpId,
     isForeign,
     isInverse,
-    globalTreeId = 1, // change this if your fallback tree id is different
+    globalTreeId = 1,
     localTreeId = null,
     employeeId = null,
     assetId = null,
   }
 ) {
-  const rawAmount = flipByInverse(formTx.amount || 0, isInverse);
-  const rawRate = isForeign ? currency(formTx.rate || 0).value : 0;
+  const rawAmount = flipByInverse(toMoney(formTx.amount), isInverse);
+  const rawRate = isForeign ? toMoney(formTx.rate) : 0;
 
-  const expectedRawTotal = isForeign
-    ? currency(rawAmount).multiply(rawRate).value
-    : currency(rawAmount).value;
+  const rawManualTotal = isForeign && formTx.total_mmk != null && formTx.total_mmk !== ''
+    ? flipByInverse(toMoney(formTx.total_mmk), isInverse)
+    : undefined;
 
-  const rawManualTotal = flipByInverse(
-    formTx.total_mmk || expectedRawTotal,
-    isInverse
+  const calculated = calculateTransactionValues(
+    {
+      amount: rawAmount,
+      rate: rawRate,
+      manualTotal: rawManualTotal,
+    },
+    { isForeign }
   );
-
-  const rawAdjustment = isForeign
-    ? currency(rawManualTotal).subtract(expectedRawTotal).value
-    : 0;
-
-  const rawTotalMmk = isForeign
-    ? currency(expectedRawTotal).add(rawAdjustment).value
-    : currency(rawAmount).value;
 
   const insertPayload = {
     corp_id: corpId,
     tx_date: formTx.tx_date,
     description: formTx.description,
-    amount: rawAmount,
-    rate: rawRate,
-    adjustment: rawAdjustment,
+    amount: calculated.amount,
+    rate: calculated.rate,
+    adjustment: calculated.adjustment,
     global_tree_id: globalTreeId,
     local_tree_id: localTreeId,
     employee_id: employeeId,
@@ -1045,17 +1197,16 @@ export function buildInsertedTransaction(
   const draftTx = {
     id: formTx.id,
     ...insertPayload,
-    total_mmk: rawTotalMmk,
+    total_mmk: calculated.total_mmk,
   };
-
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
 
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
     insertPayload,
   };
 }
+
 export function areTransactionsEqual(txA, txB) {
   const a = sanitizeTransactionForDirty(txA);
   const b = sanitizeTransactionForDirty(txB);
@@ -1074,17 +1225,41 @@ export function areTransactionsEqual(txA, txB) {
   return true;
 }
 
+export function hydrateAppDataTransactions(appData) {
+  if (!appData?.corp_data) {
+    return appData;
+  }
+
+  return {
+    ...appData,
+    corp_data: appData.corp_data.map((corp) => ({
+      ...corp,
+      transactions: (corp.transactions || []).map((tx) =>
+        hydrateStoredTransaction(tx, {
+          isForeign: normalizeBool(corp.is_foreign),
+        })
+      ),
+    })),
+  };
+}
+
+
 
 ==================================================
 FILE: src\components\transaction_table\useTransactionTable.js
 ==================================================
 
 import { useState } from 'react';
-import { buildEditFormData } from './transactionTableHelpers';
+import {
+  buildEditFormData,
+  cleanNumericInput,
+  getDisplayedBaseTotal,
+  isValidPartialNumber,
+} from './transactionTableHelpers';
 
 export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
   const [isTableEditMode, setIsTableEditMode] = useState(false);
-  const [editingRowIndex, setEditingRowIndex] = useState(null);
+  const [editingRowId, setEditingRowId] = useState(null);
 
   const [editFormData, setEditFormData] = useState({
     date: '',
@@ -1095,36 +1270,54 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
   });
 
   const handleEditClick = (tx) => {
-    setEditingRowIndex(tx.originalIndex);
-    setEditFormData(
-      buildEditFormData(tx, { isForeign, isInverse })
-    );
+    setEditingRowId(tx.id);
+    setEditFormData(buildEditFormData(tx, { isForeign, isInverse }));
   };
 
-  const handleSaveEdit = (originalIndex) => {
-    onSaveRow(originalIndex, editFormData);
-    setEditingRowIndex(null);
+  const handleSaveEdit = (rowId) => {
+    onSaveRow(rowId, editFormData);
+    setEditingRowId(null);
   };
 
   const handleCancelEdit = () => {
-    setEditingRowIndex(null);
+    setEditingRowId(null);
   };
 
   const handleInputChange = (e, field) => {
-    setEditFormData((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
+    const rawValue = cleanNumericInput(e.target.value);
+
+    if (['amount', 'rate', 'total_mmk'].includes(field) && !isValidPartialNumber(rawValue)) {
+      return;
+    }
+
+    setEditFormData((prev) => {
+      const next = {
+        ...prev,
+        [field]: rawValue,
+      };
+
+      if (isForeign && (field === 'amount' || field === 'rate')) {
+        const nextBaseTotal = getDisplayedBaseTotal({
+          amount: field === 'amount' ? rawValue : next.amount,
+          rate: field === 'rate' ? rawValue : next.rate,
+          isForeign,
+        });
+
+        next.total_mmk = nextBaseTotal == null ? '' : String(nextBaseTotal);
+      }
+
+      return next;
+    });
   };
 
   const handleToggleEditMode = () => {
     setIsTableEditMode((prev) => !prev);
-    setEditingRowIndex(null);
+    setEditingRowId(null);
   };
 
   return {
     isTableEditMode,
-    editingRowIndex,
+    editingRowId,
     editFormData,
     handleEditClick,
     handleSaveEdit,
@@ -1135,12 +1328,14 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
 }
 
 
+
 ==================================================
 FILE: src\data_management\data_init.js
 ==================================================
 
 import { useState, useEffect } from 'react';
 import { syncFromAuditLog } from './data_refresh';
+import { hydrateAppDataTransactions } from '../components/transaction_table/transactionTableHelpers';
 
 export function useSyncState() {
   const [appData, setAppData] = useState(null);
@@ -1155,9 +1350,9 @@ export function useSyncState() {
         const storedData = localStorage.getItem('app_sync_state');
 
         if (storedData) {
-          const parsedData = JSON.parse(storedData);
+          const parsedData = hydrateAppDataTransactions(JSON.parse(storedData));
           const syncedData = await syncFromAuditLog(parsedData);
-          setAppData(syncedData);
+          setAppData(hydrateAppDataTransactions(syncedData));
         } else {
           await initializeData();
         }
@@ -1182,7 +1377,7 @@ export function useSyncState() {
         throw new Error('Failed to fetch initial database state');
       }
 
-      const initialPayload = await response.json();
+      const initialPayload = hydrateAppDataTransactions(await response.json());
 
       localStorage.setItem('app_sync_state', JSON.stringify(initialPayload));
       setAppData(initialPayload);
@@ -1196,11 +1391,15 @@ export function useSyncState() {
 }
 
 
+
 ==================================================
 FILE: src\data_management\data_refresh.js
 ==================================================
 
-import currency from 'currency.js';
+import {
+  applyTransactionDeltaToCorp,
+  hydrateStoredTransaction,
+} from '../components/transaction_table/transactionTableHelpers';
 
 export async function syncFromAuditLog(localData) {
   const currentLocalAuditId = localData.current_audit_id || 0;
@@ -1221,11 +1420,18 @@ export async function syncFromAuditLog(localData) {
 
   let updatedData = structuredClone(localData);
 
+  const transactionRowIds = [];
   const insertRowsByTable = {};
 
   for (const auditRow of audit_rows) {
-    // Match this string to EXACTLY what your backend stores in audit_log
-    if (String(auditRow.action_type).toUpperCase() !== 'INSERT') continue;
+    const actionType = String(auditRow.action_type).toUpperCase();
+
+    if (auditRow.table_name === 'transactions' && (actionType === 'INSERT' || actionType === 'UPDATE')) {
+      transactionRowIds.push(auditRow.row_id);
+      continue;
+    }
+
+    if (actionType !== 'INSERT') continue;
 
     if (!insertRowsByTable[auditRow.table_name]) {
       insertRowsByTable[auditRow.table_name] = [];
@@ -1234,24 +1440,13 @@ export async function syncFromAuditLog(localData) {
     insertRowsByTable[auditRow.table_name].push(auditRow.row_id);
   }
 
+  if (transactionRowIds.length > 0) {
+    const rows = await fetchRowsByIds('transactions', [...new Set(transactionRowIds)]);
+    updatedData = mergeTransactionRows(updatedData, rows);
+  }
+
   for (const [tableName, rowIds] of Object.entries(insertRowsByTable)) {
-    const uniqueIds = [...new Set(rowIds)];
-
-    const rowResponse = await fetch('http://localhost:3000/api/sync/rows-by-ids', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        table_name: tableName,
-        row_ids: uniqueIds
-      })
-    });
-
-    if (!rowResponse.ok) {
-      throw new Error(`Failed to fetch inserted rows for ${tableName}`);
-    }
-
-    const { rows } = await rowResponse.json();
-
+    const rows = await fetchRowsByIds(tableName, [...new Set(rowIds)]);
     updatedData = mergeInsertedRows(updatedData, tableName, rows);
   }
 
@@ -1261,61 +1456,94 @@ export async function syncFromAuditLog(localData) {
   return updatedData;
 }
 
+async function fetchRowsByIds(tableName, rowIds) {
+  const rowResponse = await fetch('http://localhost:3000/api/sync/rows-by-ids', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      table_name: tableName,
+      row_ids: rowIds,
+    }),
+  });
+
+  if (!rowResponse.ok) {
+    throw new Error(`Failed to fetch rows for ${tableName}`);
+  }
+
+  const { rows } = await rowResponse.json();
+  return rows || [];
+}
+
+function mergeTransactionRows(appData, rows) {
+  const nextData = structuredClone(appData);
+
+  for (const row of rows) {
+    const corp = nextData.corp_data.find((currentCorp) => currentCorp.id === row.corp_id);
+    if (!corp) continue;
+
+    const hydratedRow = hydrateStoredTransaction(row, {
+      isForeign: Number(corp.is_foreign) === 1,
+    });
+
+    const existingIndex = (corp.transactions || []).findIndex((tx) => tx.id === hydratedRow.id);
+
+    if (existingIndex === -1) {
+      corp.transactions = [...(corp.transactions || []), hydratedRow];
+      Object.assign(corp, applyTransactionDeltaToCorp(corp, null, hydratedRow));
+      continue;
+    }
+
+    const oldTx = corp.transactions[existingIndex];
+    const nextTransactions = [...corp.transactions];
+    nextTransactions[existingIndex] = hydratedRow;
+
+    Object.assign(
+      corp,
+      applyTransactionDeltaToCorp(
+        {
+          ...corp,
+          transactions: nextTransactions,
+        },
+        oldTx,
+        hydratedRow
+      )
+    );
+
+    corp.transactions = nextTransactions;
+  }
+
+  if (rows.length > 0 && nextData.max_ids) {
+    const maxInsertedId = Math.max(...rows.map((row) => row.id));
+    nextData.max_ids.transactions = Math.max(
+      nextData.max_ids.transactions || 0,
+      maxInsertedId
+    );
+  }
+
+  return nextData;
+}
+
 function mergeInsertedRows(appData, tableName, rows) {
   const nextData = structuredClone(appData);
 
   switch (tableName) {
-    case 'transactions': {
-      for (const tx of rows) {
-        const corp = nextData.corp_data.find(c => c.id === tx.corp_id);
-        if (!corp) continue;
-
-        const exists = corp.transactions.some(existing => existing.id === tx.id);
-        if (exists) continue;
-
-        const isForeign = Number(corp.is_foreign) === 1;
-        const amount = currency(tx.amount || 0);
-        const rate = currency(tx.rate || 0);
-        const adjustment = currency(tx.adjustment || 0);
-
-        const total_mmk = isForeign
-        ? amount.multiply(rate.value).add(adjustment.value).value
-        : amount.add(adjustment.value).value;
-
-        corp.transactions.push({
-          ...tx,
-          total_mmk
-        });
-      }
-
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
-        nextData.max_ids.transactions = Math.max(
-          nextData.max_ids.transactions,
-          maxInsertedId
-        );
-      }
-
-      break;
-    }
-
     case 'corp_data': {
       for (const corp of rows) {
-        const exists = nextData.corp_data.some(existing => existing.id === corp.id);
+        const exists = nextData.corp_data.some((existing) => existing.id === corp.id);
         if (exists) continue;
 
         nextData.corp_data.push({
           ...corp,
           local_tree: [],
           employees: [],
-          transactions: []
+          transactions: [],
         });
       }
 
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.corp_data = Math.max(
-          nextData.max_ids.corp_data,
+          nextData.max_ids.corp_data || 0,
           maxInsertedId
         );
       }
@@ -1326,21 +1554,26 @@ function mergeInsertedRows(appData, tableName, rows) {
     case 'employee': {
       for (const emp of rows) {
         if (emp.corp_id == null) {
-          const exists = nextData.unassigned_employees.some(e => e.id === emp.id);
-          if (!exists) nextData.unassigned_employees.push(emp);
-        } else {
-          const corp = nextData.corp_data.find(c => c.id === emp.corp_id);
-          if (!corp) continue;
+          const exists = (nextData.unassigned_employees || []).some((row) => row.id === emp.id);
+          if (!exists) {
+            nextData.unassigned_employees = [...(nextData.unassigned_employees || []), emp];
+          }
+          continue;
+        }
 
-          const exists = corp.employees.some(e => e.id === emp.id);
-          if (!exists) corp.employees.push(emp);
+        const corp = nextData.corp_data.find((row) => row.id === emp.corp_id);
+        if (!corp) continue;
+
+        const exists = (corp.employees || []).some((row) => row.id === emp.id);
+        if (!exists) {
+          corp.employees = [...(corp.employees || []), emp];
         }
       }
 
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.employees = Math.max(
-          nextData.max_ids.employees,
+          nextData.max_ids.employees || 0,
           maxInsertedId
         );
       }
@@ -1350,14 +1583,16 @@ function mergeInsertedRows(appData, tableName, rows) {
 
     case 'assets': {
       for (const asset of rows) {
-        const exists = nextData.assets.some(existing => existing.id === asset.id);
-        if (!exists) nextData.assets.push(asset);
+        const exists = (nextData.assets || []).some((row) => row.id === asset.id);
+        if (!exists) {
+          nextData.assets = [...(nextData.assets || []), asset];
+        }
       }
 
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.assets = Math.max(
-          nextData.max_ids.assets,
+          nextData.max_ids.assets || 0,
           maxInsertedId
         );
       }
@@ -1367,14 +1602,16 @@ function mergeInsertedRows(appData, tableName, rows) {
 
     case 'global_tree': {
       for (const node of rows) {
-        const exists = nextData.global_tree.some(existing => existing.id === node.id);
-        if (!exists) nextData.global_tree.push(node);
+        const exists = (nextData.global_tree || []).some((row) => row.id === node.id);
+        if (!exists) {
+          nextData.global_tree = [...(nextData.global_tree || []), node];
+        }
       }
 
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.global_tree = Math.max(
-          nextData.max_ids.global_tree,
+          nextData.max_ids.global_tree || 0,
           maxInsertedId
         );
       }
@@ -1384,17 +1621,19 @@ function mergeInsertedRows(appData, tableName, rows) {
 
     case 'local_tree': {
       for (const node of rows) {
-        const corp = nextData.corp_data.find(c => c.id === node.corp_id);
+        const corp = nextData.corp_data.find((row) => row.id === node.corp_id);
         if (!corp) continue;
 
-        const exists = corp.local_tree.some(existing => existing.id === node.id);
-        if (!exists) corp.local_tree.push(node);
+        const exists = (corp.local_tree || []).some((row) => row.id === node.id);
+        if (!exists) {
+          corp.local_tree = [...(corp.local_tree || []), node];
+        }
       }
 
-      if (rows.length > 0) {
-        const maxInsertedId = Math.max(...rows.map(r => r.id));
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.local_tree = Math.max(
-          nextData.max_ids.local_tree,
+          nextData.max_ids.local_tree || 0,
           maxInsertedId
         );
       }
@@ -1410,6 +1649,7 @@ function mergeInsertedRows(appData, tableName, rows) {
 }
 
 
+
 ==================================================
 FILE: src\data_management\data_save.js
 ==================================================
@@ -1417,6 +1657,136 @@ FILE: src\data_management\data_save.js
 import { useState, useEffect } from 'react';
 import { queueUpdate, queueInsert, removeDirtyEntry } from './syncOperations';
 import { pushSyncPayload } from './syncNetwork';
+import { hydrateAppDataTransactions } from '../components/transaction_table/transactionTableHelpers';
+
+function extractServerIdMappings(serverResponse = {}) {
+  const mappings = [];
+  const seen = new Set();
+
+  const visit = (node, inheritedTableName = null) => {
+    if (!node || typeof node !== 'object') {
+      return;
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((item) => visit(item, inheritedTableName));
+      return;
+    }
+
+    const tableName =
+      node.table_name ||
+      node.tableName ||
+      node.entity_name ||
+      node.entityName ||
+      inheritedTableName;
+
+    const tempId =
+      node.temp_id ??
+      node.tempId ??
+      node.client_temp_id ??
+      node.clientTempId ??
+      node.old_id ??
+      node.oldId ??
+      node.client_id ??
+      node.clientId;
+
+    const realId =
+      node.real_id ??
+      node.realId ??
+      node.new_id ??
+      node.newId ??
+      node.inserted_id ??
+      node.insertedId ??
+      node.server_id ??
+      node.serverId ??
+      node.id;
+
+    if (tableName && Number(tempId) < 0 && Number(realId) > 0) {
+      const key = `${tableName}_${tempId}_${realId}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        mappings.push({
+          tableName,
+          tempId: Number(tempId),
+          realId: Number(realId),
+        });
+      }
+    }
+
+    Object.values(node).forEach((value) => visit(value, tableName));
+  };
+
+  visit(serverResponse);
+  return mappings;
+}
+
+function applyServerIdMappings(appData, mappings) {
+  if (!appData || mappings.length === 0) {
+    return appData;
+  }
+
+  const corpIdMap = new Map();
+  const transactionIdMap = new Map();
+
+  mappings.forEach(({ tableName, tempId, realId }) => {
+    if (tableName === 'corp_data') {
+      corpIdMap.set(tempId, realId);
+    }
+
+    if (tableName === 'transactions') {
+      transactionIdMap.set(tempId, realId);
+    }
+  });
+
+  const nextData = {
+    ...appData,
+    corp_data: (appData.corp_data || []).map((corp) => {
+      const nextCorpId = corpIdMap.get(corp.id) ?? corp.id;
+
+      return {
+        ...corp,
+        id: nextCorpId,
+        transactions: (corp.transactions || []).map((tx) => ({
+          ...tx,
+          id: transactionIdMap.get(tx.id) ?? tx.id,
+          corp_id: corpIdMap.get(tx.corp_id) ?? nextCorpId,
+        })),
+        local_tree: (corp.local_tree || []).map((node) => ({
+          ...node,
+          corp_id: corpIdMap.get(node.corp_id) ?? nextCorpId,
+        })),
+        employees: (corp.employees || []).map((employee) => ({
+          ...employee,
+          corp_id: corpIdMap.get(employee.corp_id) ?? nextCorpId,
+        })),
+      };
+    }),
+  };
+
+  if (nextData.max_ids) {
+    if (corpIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        corp_data: Math.max(
+          nextData.max_ids.corp_data || 0,
+          ...Array.from(corpIdMap.values())
+        ),
+      };
+    }
+
+    if (transactionIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        transactions: Math.max(
+          nextData.max_ids.transactions || 0,
+          ...Array.from(transactionIdMap.values())
+        ),
+      };
+    }
+  }
+
+  return nextData;
+}
 
 export function useSyncManager(initialData, refreshDataFn = async () => {}) {
   const [originalData, setOriginalData] = useState(initialData || null);
@@ -1425,8 +1795,9 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
 
   useEffect(() => {
     if (initialData) {
-      setOriginalData(initialData);
-      setDraftData(initialData);
+      const hydratedData = hydrateAppDataTransactions(initialData);
+      setOriginalData(hydratedData);
+      setDraftData(hydratedData);
       setDirtyMap({});
     }
   }, [initialData]);
@@ -1470,19 +1841,19 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
       transactions: [],
     };
 
-    setDraftData(prev => ({
+    setDraftData((prev) => ({
       ...prev,
-      corp_data: [...(prev?.corp_data || []), newCorpRow]
+      corp_data: [...(prev?.corp_data || []), newCorpRow],
     }));
 
-    setDirtyMap(prev => ({
+    setDirtyMap((prev) => ({
       ...prev,
       [`corp_data_${tempId}_INSERT`]: {
         table_name: 'corp_data',
         row_id: tempId,
         action_type: 'INSERT',
-        changes: insertPayload
-      }
+        changes: insertPayload,
+      },
     }));
   };
 
@@ -1500,22 +1871,29 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
     );
 
     if (result.success) {
-      const nextData = {
-        ...draftData,
-        current_audit_id: result.current_audit_id ?? draftData.current_audit_id
-      };
+      const idMappings = extractServerIdMappings(result.server_response || result.simulated_backend || {});
+
+      const nextData = hydrateAppDataTransactions(
+        applyServerIdMappings(
+          {
+            ...draftData,
+            current_audit_id: result.current_audit_id ?? draftData.current_audit_id,
+          },
+          idMappings
+        )
+      );
 
       setOriginalData(nextData);
       setDraftData(nextData);
       setDirtyMap({});
       localStorage.setItem('app_sync_state', JSON.stringify(nextData));
     } else if (result.retryNeeded) {
-      alert("The database was updated by someone else. Please review and save again.");
+      alert('The database was updated by someone else. Please review and save again.');
     } else {
-      alert(result.error || "Save failed.");
+      alert(result.error || 'Save failed.');
     }
   };
-  
+
   return {
     draftData,
     setDraftData,
@@ -1525,9 +1903,10 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
     handleRemoveDirtyRow,
     handleSave,
     handleInsertCorp,
-    handleCancel
+    handleCancel,
   };
 }
+
 
 
 ==================================================
@@ -1545,8 +1924,8 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       client_audit_id: currentAuditId,
-      actions: payload
-    })
+      actions: payload,
+    }),
   });
 
   const result = await response.json().catch(() => ({}));
@@ -1559,16 +1938,19 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
   if (!response.ok) {
     return {
       success: false,
-      error: result.error || 'Failed to save changes'
+      error: result.error || 'Failed to save changes',
+      server_response: result,
     };
   }
 
   return {
     success: true,
     current_audit_id: result.current_audit_id,
-    simulated_backend: result.simulated_backend
+    simulated_backend: result.simulated_backend,
+    server_response: result,
   };
 }
+
 
 
 ==================================================
@@ -1601,11 +1983,9 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
     const next = { ...prev };
     const existing = next[entityKey];
 
-    // If this row already has an update queued, compare against its ORIGINAL old state
     const baseOldData = existing?.changed_data?.old || oldData || {};
     const { changedOld, changedNew } = buildChangedData(baseOldData, newData || {});
 
-    // Net zero change: remove the queued update entirely
     if (Object.keys(changedNew).length === 0) {
       delete next[entityKey];
       return next;
@@ -1626,29 +2006,48 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
 }
 
 export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) {
-  const additions = {};
-  additions[`${tableName}_${rowId}_DELETE`] = {
-    table_name: tableName,
-    row_id: rowId,
-    action_type: 'DELETE' // Treat as soft-delete on backend
+  const queueSoftDelete = (oldRow) => {
+    if (!oldRow) return;
+
+    queueUpdate(
+      dirtyMap,
+      setDirtyMap,
+      tableName,
+      rowId,
+      oldRow,
+      {
+        ...oldRow,
+        soft_delete: 1,
+      }
+    );
   };
 
-  // 2. Handling "Orphaned" Data
   if (tableName === 'corp_data') {
-    const corp = draftData.corp_data.find(c => c.id === rowId);
-    if (corp) {
-      corp.transactions.forEach(tx => {
-        additions[`transactions_${tx.id}_DELETE`] = {
-          table_name: 'transactions',
-          row_id: tx.id,
-          action_type: 'DELETE'
-        };
-      });
-      // Do the same for employees if needed
-    }
+    const corp = draftData?.corp_data?.find((row) => row.id === rowId);
+    queueSoftDelete(corp);
+
+    (corp?.transactions || []).forEach((tx) => {
+      queueUpdate(
+        dirtyMap,
+        setDirtyMap,
+        'transactions',
+        tx.id,
+        tx,
+        {
+          ...tx,
+          soft_delete: 1,
+        }
+      );
+    });
+
+    return;
   }
 
-  setDirtyMap(prev => ({ ...prev, ...additions }));
+  const row = tableName === 'transactions'
+    ? draftData?.corp_data?.flatMap((corp) => corp.transactions || []).find((item) => item.id === rowId)
+    : draftData?.[tableName]?.find?.((item) => item.id === rowId);
+
+  queueSoftDelete(row);
 }
 
 export function queueInsert(setDirtyMap, tableName, rowId, changes) {
@@ -1672,49 +2071,71 @@ export function removeDirtyEntry(setDirtyMap, actionType, tableName, rowId) {
     const next = { ...prev };
     delete next[entityKey];
     delete next[`${tableName}_${rowId}_UPDATE`];
-    delete next[`${tableName}_${rowId}_DELETE`];
     return next;
   });
 }
+
 
 
 ==================================================
 FILE: src\data_management\syncSimplifier.js
 ==================================================
 
+function normalizeAction(action) {
+  if (action.action_type !== 'DELETE') {
+    return action;
+  }
+
+  return {
+    ...action,
+    action_type: 'UPDATE',
+    changed_data: {
+      old: {
+        soft_delete: 0,
+      },
+      new: {
+        soft_delete: 1,
+      },
+    },
+  };
+}
+
 export function simplifyQueue(dirtyMap) {
   const simplified = {};
 
-  Object.values(dirtyMap).forEach((action) => {
+  Object.values(dirtyMap).forEach((rawAction) => {
+    const action = normalizeAction(rawAction);
     const key = `${action.table_name}_${action.row_id}`;
     const existing = simplified[key];
 
     if (!existing) {
-      simplified[key] = action;
+      simplified[key] = { ...action };
       return;
     }
 
-    // Insert + Update = Insert (with merged new data)
     if (existing.action_type === 'INSERT' && action.action_type === 'UPDATE') {
-      existing.changes = { ...existing.changes, ...action.changed_data.new };
+      existing.changes = {
+        ...existing.changes,
+        ...action.changed_data.new,
+      };
+      return;
     }
-    // Insert + Delete = Remove entirely from queue (Never happened)
-    else if (existing.action_type === 'INSERT' && action.action_type === 'DELETE') {
-      delete simplified[key];
-    }
-    // Update + Delete = Delete
-    else if (existing.action_type === 'UPDATE' && action.action_type === 'DELETE') {
-      simplified[key] = { ...action, action_type: 'DELETE' };
-    }
-    // Update + Update = Update (Merge changed fields)
-    else if (existing.action_type === 'UPDATE' && action.action_type === 'UPDATE') {
-      existing.changed_data.old = { ...existing.changed_data.old, ...action.changed_data.old };
-      existing.changed_data.new = { ...existing.changed_data.new, ...action.changed_data.new };
+
+    if (existing.action_type === 'UPDATE' && action.action_type === 'UPDATE') {
+      existing.changed_data.old = {
+        ...existing.changed_data.old,
+        ...action.changed_data.old,
+      };
+      existing.changed_data.new = {
+        ...existing.changed_data.new,
+        ...action.changed_data.new,
+      };
     }
   });
 
   return Object.values(simplified);
 }
+
 
 
 ==================================================
@@ -1731,6 +2152,7 @@ function Home() {
 }
 
 export default Home;
+
 
 
 ==================================================
@@ -1755,7 +2177,7 @@ function Sheets({
   onAddCorp,
   onQueueUpdate,
   onQueueInsert,
-  onRemoveDirtyRow, // optional: only needed for temp insert -> delete cleanup
+  onRemoveDirtyRow,
   setDraftData,
 }) {
   const [showAddCorpForm, setShowAddCorpForm] = useState(false);
@@ -1774,8 +2196,7 @@ function Sheets({
     }
   }, [corps, selectedCorpId]);
 
-  const selectedCorp =
-    corps.find((corp) => corp.id === selectedCorpId) || null;
+  const selectedCorp = corps.find((corp) => corp.id === selectedCorpId) || null;
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
@@ -1797,12 +2218,10 @@ function Sheets({
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = [...(corp.transactions || []), draftTx];
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: [...(corp.transactions || []), draftTx],
           },
           null,
           draftTx
@@ -1813,20 +2232,16 @@ function Sheets({
     onQueueInsert?.('transactions', tempId, insertPayload);
   };
 
-  const handleUpdateTransaction = (originalIndex, editFormData) => {
+  const handleUpdateTransaction = (txId, editFormData) => {
     if (!selectedCorp) return;
 
-    const oldTx = selectedCorp.transactions?.[originalIndex];
+    const oldTx = (selectedCorp.transactions || []).find((tx) => tx.id === txId);
     if (!oldTx) return;
 
-    const { draftTx, dirtyTx } = buildUpdatedTransaction(
-      oldTx,
-      editFormData,
-      {
-        isForeign: selectedCorp.is_foreign,
-        isInverse: selectedCorp.inverse,
-      }
-    );
+    const { draftTx, dirtyTx } = buildUpdatedTransaction(oldTx, editFormData, {
+      isForeign: selectedCorp.is_foreign,
+      isInverse: selectedCorp.inverse,
+    });
 
     if (areTransactionsEqual(oldTx, draftTx)) {
       return;
@@ -1837,13 +2252,12 @@ function Sheets({
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = [...(corp.transactions || [])];
-        nextTransactions[originalIndex] = draftTx;
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: (corp.transactions || []).map((tx) =>
+              tx.id === txId ? draftTx : tx
+            ),
           },
           oldTx,
           draftTx
@@ -1859,42 +2273,52 @@ function Sheets({
     );
   };
 
-  const handleDeleteTransaction = (originalIndex) => {
+  const handleDeleteTransaction = (txId) => {
     if (!selectedCorp) return;
 
-    const oldTx = selectedCorp.transactions?.[originalIndex];
+    const oldTx = (selectedCorp.transactions || []).find((tx) => tx.id === txId);
     if (!oldTx) return;
 
-    // Remove it from local draft immediately either way
+    if (oldTx.id < 0) {
+      setDraftData((prev) => ({
+        ...prev,
+        corp_data: prev.corp_data.map((corp) => {
+          if (corp.id !== selectedCorp.id) return corp;
+
+          return applyTransactionDeltaToCorp(
+            {
+              ...corp,
+              transactions: (corp.transactions || []).filter((tx) => tx.id !== txId),
+            },
+            oldTx,
+            null
+          );
+        }),
+      }));
+
+      onRemoveDirtyRow?.('INSERT', 'transactions', oldTx.id);
+      return;
+    }
+
+    const { draftTx, dirtyTx } = buildSoftDeletedTransaction(oldTx);
+
     setDraftData((prev) => ({
       ...prev,
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = (corp.transactions || []).filter(
-          (_, index) => index !== originalIndex
-        );
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: (corp.transactions || []).map((tx) =>
+              tx.id === txId ? draftTx : tx
+            ),
           },
           oldTx,
-          null
+          draftTx
         );
       }),
     }));
-
-    // FIX 2:
-    // If this was a temp inserted row, treat it as "never happened".
-    // This fully clears dirty state only if parent passes onRemoveDirtyRow.
-    if (oldTx.id < 0) {
-      onRemoveDirtyRow?.('INSERT', 'transactions', oldTx.id);
-      return;
-    }
-
-    const { dirtyTx } = buildSoftDeletedTransaction(oldTx);
 
     onQueueUpdate?.(
       'transactions',
@@ -1926,6 +2350,7 @@ function Sheets({
 }
 
 export default Sheets;
+
 
 
 ==================================================
@@ -2067,6 +2492,7 @@ function AddCorpForm({ onAdd, onCancel }) {
 export default AddCorpForm;
 
 
+
 ==================================================
 FILE: src\sheets\corp_details.jsx
 ==================================================
@@ -2122,11 +2548,8 @@ function CorpDetails({
       : '-';
 
   const visibleTransactions = (selectedCorp.transactions || [])
-    .filter(tx => Number(tx.soft_delete) !== 1)
-    .map((tx, index) => toDisplayTransaction(tx, index, { isInverse }));
-
-  const incomeTx = visibleTransactions.filter(tx => Number(tx.amount) >= 0);
-  const expenseTx = visibleTransactions.filter(tx => Number(tx.amount) < 0);
+    .filter((tx) => Number(tx.soft_delete) !== 1)
+    .map((tx) => toDisplayTransaction(tx, { isInverse, isForeign }));
 
   return (
     <div className={styles.corpDetails}>
@@ -2136,22 +2559,22 @@ function CorpDetails({
 
       <div className={styles.balanceRow}>
         <div className={styles.balanceInfo}>
-        <span className={styles.balanceText}>
-          Balance: {currentBalance} MMK
-        </span>
+          <span className={styles.balanceText}>
+            Balance: {currentBalance} MMK
+          </span>
 
-        {isForeign && (
-          <>
-            <span className={styles.divider}>|</span>
-            <span className={styles.balanceText}>
-              {foreignLabel} Balance: {currentForeign}
-            </span>
-            <span className={styles.divider}>|</span>
-            <span className={styles.rateText}>
-              Rate: {rate}
-            </span>
-          </>
-        )}
+          {isForeign && (
+            <>
+              <span className={styles.divider}>|</span>
+              <span className={styles.balanceText}>
+                {foreignLabel} Balance: {currentForeign}
+              </span>
+              <span className={styles.divider}>|</span>
+              <span className={styles.rateText}>
+                Rate: {rate}
+              </span>
+            </>
+          )}
         </div>
 
         <button
@@ -2180,7 +2603,7 @@ function CorpDetails({
           minHeight: 0,
         }}
       >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div >
           <TransactionTable
             title="Transactions"
             data={visibleTransactions}
@@ -2198,6 +2621,7 @@ function CorpDetails({
 }
 
 export default CorpDetails;
+
 
 
 ==================================================
@@ -2273,4 +2697,5 @@ function CorpList({
 }
 
 export default CorpList;
+
 

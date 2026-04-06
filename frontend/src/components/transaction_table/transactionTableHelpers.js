@@ -4,6 +4,31 @@ export function normalizeBool(value) {
   return value === true || value === 1 || value === '1';
 }
 
+export function toMoney(value) {
+  return currency(value || 0).value;
+}
+
+export function cleanNumericInput(value = '') {
+  return String(value).replace(/,/g, '').trim();
+}
+
+export function isValidPartialNumber(value) {
+  return /^-?\d*\.?\d*$/.test(cleanNumericInput(value));
+}
+
+export function isUsableNumberInput(value) {
+  const cleaned = cleanNumericInput(value);
+  return cleaned !== '' && cleaned !== '-' && cleaned !== '.' && cleaned !== '-.';
+}
+
+export function parseEditableNumber(value, fallback = 0) {
+  if (!isUsableNumberInput(value)) {
+    return toMoney(fallback);
+  }
+
+  return toMoney(cleanNumericInput(value));
+}
+
 export function flipByInverse(value, isInverse) {
   return normalizeBool(isInverse)
     ? currency(value || 0).multiply(-1).value
@@ -12,16 +37,75 @@ export function flipByInverse(value, isInverse) {
 
 export function formatTxDateForInput(txDate) {
   if (!txDate) return '';
+
   const clean = String(txDate).split('T')[0];
   const [year, month, day] = clean.split('-');
+
   if (!year || !month || !day) return '';
+
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 export function formatTxDateForSave(inputDate) {
   if (!inputDate) return null;
-  const [year, month, day] = inputDate.split('-');
-  return `${year}-${Number(month)}-${Number(day)}`;
+
+  const [year, month, day] = String(inputDate).split('-');
+
+  if (!year || !month || !day) return null;
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+export function getDisplayedBaseTotal({ amount, rate, isForeign }) {
+  if (!isForeign) {
+    return parseEditableNumber(amount, 0);
+  }
+
+  if (!isUsableNumberInput(amount) || !isUsableNumberInput(rate)) {
+    return null;
+  }
+
+  return currency(parseEditableNumber(amount, 0))
+    .multiply(parseEditableNumber(rate, 0))
+    .value;
+}
+
+export function calculateTransactionValues(
+  { amount = 0, rate = 0, manualTotal, adjustment },
+  { isForeign }
+) {
+  const normalizedAmount = toMoney(amount);
+  const normalizedRate = isForeign ? toMoney(rate) : 0;
+
+  const baseTotalMmk = isForeign
+    ? currency(normalizedAmount).multiply(normalizedRate).value
+    : normalizedAmount;
+
+  let normalizedAdjustment = 0;
+  let normalizedTotalMmk = baseTotalMmk;
+
+  const hasManualTotal = manualTotal !== undefined && manualTotal !== null && manualTotal !== '';
+  const hasAdjustment = adjustment !== undefined && adjustment !== null && adjustment !== '';
+
+  if (hasManualTotal) {
+    normalizedTotalMmk = toMoney(manualTotal);
+    normalizedAdjustment = currency(normalizedTotalMmk)
+      .subtract(baseTotalMmk)
+      .value;
+  } else if (hasAdjustment) {
+    normalizedAdjustment = toMoney(adjustment);
+    normalizedTotalMmk = currency(baseTotalMmk)
+      .add(normalizedAdjustment)
+      .value;
+  }
+
+  return {
+    amount: normalizedAmount,
+    rate: normalizedRate,
+    base_total_mmk: baseTotalMmk,
+    adjustment: normalizedAdjustment,
+    total_mmk: normalizedTotalMmk,
+  };
 }
 
 export function sanitizeTransactionForDirty(tx) {
@@ -32,9 +116,9 @@ export function sanitizeTransactionForDirty(tx) {
     corp_id: tx.corp_id,
     tx_date: tx.tx_date,
     description: tx.description,
-    amount: currency(tx.amount || 0).value,
-    rate: currency(tx.rate || 0).value,
-    adjustment: currency(tx.adjustment || 0).value,
+    amount: toMoney(tx.amount),
+    rate: toMoney(tx.rate),
+    adjustment: toMoney(tx.adjustment),
     global_tree_id: tx.global_tree_id ?? null,
     local_tree_id: tx.local_tree_id ?? null,
     employee_id: tx.employee_id ?? null,
@@ -44,63 +128,93 @@ export function sanitizeTransactionForDirty(tx) {
   };
 }
 
-export function toDisplayTransaction(tx, originalIndex, { isInverse }) {
+export function hydrateStoredTransaction(tx, { isForeign }) {
+  if (!tx) return null;
+
+  const { amount, rate, adjustment, total_mmk } = calculateTransactionValues(
+    {
+      amount: tx.amount,
+      rate: tx.rate,
+      adjustment: tx.adjustment,
+      manualTotal:
+        tx.total_mmk != null && tx.adjustment == null
+          ? tx.total_mmk
+          : undefined,
+    },
+    { isForeign }
+  );
+
   return {
     ...tx,
-    originalIndex,
-    tx_date: tx.tx_date,
-    amount: flipByInverse(tx.amount || 0, isInverse),
-    total_mmk: flipByInverse(tx.total_mmk || 0, isInverse),
+    amount,
+    rate,
+    adjustment,
+    total_mmk,
+  };
+}
+
+export function toDisplayTransaction(tx, { isInverse, isForeign }) {
+  const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
+
+  return {
+    ...hydratedTx,
+    tx_date: hydratedTx.tx_date,
+    amount: flipByInverse(hydratedTx.amount || 0, isInverse),
+    total_mmk: flipByInverse(hydratedTx.total_mmk || 0, isInverse),
   };
 }
 
 export function buildEditFormData(tx, { isInverse, isForeign }) {
+  const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
+
   return {
-    date: formatTxDateForInput(tx.tx_date),
-    description: tx.description || '',
-    amount: flipByInverse(tx.amount || 0, isInverse),
-    rate: isForeign ? currency(tx.rate || 0).value : '',
+    date: formatTxDateForInput(hydratedTx.tx_date),
+    description: hydratedTx.description || '',
+    amount: String(flipByInverse(hydratedTx.amount || 0, isInverse)),
+    rate: isForeign ? String(toMoney(hydratedTx.rate)) : '',
     total_mmk: isForeign
-      ? flipByInverse(tx.total_mmk || 0, isInverse)
+      ? String(flipByInverse(hydratedTx.total_mmk || 0, isInverse))
       : '',
   };
 }
 
 export function buildUpdatedTransaction(oldTx, editFormData, { isForeign, isInverse }) {
-  const rawAmount = flipByInverse(editFormData.amount || 0, isInverse);
-  const rawRate = isForeign ? currency(editFormData.rate || 0).value : 0;
+  const rawAmount = flipByInverse(parseEditableNumber(editFormData.amount, 0), isInverse);
+  const rawRate = isForeign ? parseEditableNumber(editFormData.rate, 0) : toMoney(oldTx.rate);
 
-  const expectedRawTotal = isForeign
-    ? currency(rawAmount).multiply(rawRate).value
-    : currency(rawAmount).value;
+  const rawManualTotal = isForeign && isUsableNumberInput(editFormData.total_mmk)
+    ? flipByInverse(parseEditableNumber(editFormData.total_mmk, 0), isInverse)
+    : undefined;
 
-  const rawManualTotal = isForeign
-    ? flipByInverse(editFormData.total_mmk || expectedRawTotal, isInverse)
-    : expectedRawTotal;
+  const didAmountChange = !isForeign && toMoney(rawAmount) !== toMoney(oldTx.amount);
 
-  const rawAdjustment = isForeign
-    ? currency(rawManualTotal).subtract(expectedRawTotal).value
-    : currency(oldTx.adjustment || 0).value;
-
-  const rawTotalMmk = isForeign
-    ? currency(expectedRawTotal).add(rawAdjustment).value
-    : currency(rawAmount).add(rawAdjustment).value;
+  const calculated = calculateTransactionValues(
+    {
+      amount: rawAmount,
+      rate: rawRate,
+      manualTotal: rawManualTotal,
+      adjustment: isForeign
+        ? undefined
+        : didAmountChange
+          ? 0
+          : oldTx.adjustment,
+    },
+    { isForeign }
+  );
 
   const draftTx = {
     ...oldTx,
     tx_date: formatTxDateForSave(editFormData.date),
     description: editFormData.description,
-    amount: rawAmount,
-    rate: rawRate,
-    adjustment: rawAdjustment,
-    total_mmk: rawTotalMmk,
+    amount: calculated.amount,
+    rate: calculated.rate,
+    adjustment: calculated.adjustment,
+    total_mmk: calculated.total_mmk,
   };
-
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
 
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
   };
 }
 
@@ -110,33 +224,46 @@ export function buildSoftDeletedTransaction(oldTx) {
     soft_delete: 1,
   };
 
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
-
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
+  };
+}
+
+function getTransactionContribution(tx, corp) {
+  if (!tx || Number(tx.soft_delete) === 1) {
+    return {
+      totalMmk: 0,
+      foreignAmount: 0,
+    };
+  }
+
+  const hydratedTx = hydrateStoredTransaction(tx, {
+    isForeign: normalizeBool(corp?.is_foreign),
+  });
+
+  return {
+    totalMmk: toMoney(hydratedTx?.total_mmk),
+    foreignAmount: toMoney(hydratedTx?.amount),
   };
 }
 
 export function applyTransactionDeltaToCorp(corp, oldTx, newTx) {
-  const oldTotal = currency(oldTx?.total_mmk || 0).value;
-  const newTotal = currency(newTx?.total_mmk || 0).value;
+  const oldContribution = getTransactionContribution(oldTx, corp);
+  const newContribution = getTransactionContribution(newTx, corp);
 
   const nextCorp = {
     ...corp,
     current_balance: currency(corp.current_balance || 0)
-      .add(newTotal)
-      .subtract(oldTotal)
+      .add(newContribution.totalMmk)
+      .subtract(oldContribution.totalMmk)
       .value,
   };
 
   if (normalizeBool(corp.is_foreign)) {
-    const oldForeign = currency(oldTx?.amount || 0).value;
-    const newForeign = currency(newTx?.amount || 0).value;
-
     nextCorp.current_foreign = currency(corp.current_foreign || 0)
-      .add(newForeign)
-      .subtract(oldForeign)
+      .add(newContribution.foreignAmount)
+      .subtract(oldContribution.foreignAmount)
       .value;
   }
 
@@ -149,39 +276,35 @@ export function buildInsertedTransaction(
     corpId,
     isForeign,
     isInverse,
-    globalTreeId = 1, // change this if your fallback tree id is different
+    globalTreeId = 1,
     localTreeId = null,
     employeeId = null,
     assetId = null,
   }
 ) {
-  const rawAmount = flipByInverse(formTx.amount || 0, isInverse);
-  const rawRate = isForeign ? currency(formTx.rate || 0).value : 0;
+  const rawAmount = flipByInverse(toMoney(formTx.amount), isInverse);
+  const rawRate = isForeign ? toMoney(formTx.rate) : 0;
 
-  const expectedRawTotal = isForeign
-    ? currency(rawAmount).multiply(rawRate).value
-    : currency(rawAmount).value;
+  const rawManualTotal = isForeign && formTx.total_mmk != null && formTx.total_mmk !== ''
+    ? flipByInverse(toMoney(formTx.total_mmk), isInverse)
+    : undefined;
 
-  const rawManualTotal = flipByInverse(
-    formTx.total_mmk || expectedRawTotal,
-    isInverse
+  const calculated = calculateTransactionValues(
+    {
+      amount: rawAmount,
+      rate: rawRate,
+      manualTotal: rawManualTotal,
+    },
+    { isForeign }
   );
-
-  const rawAdjustment = isForeign
-    ? currency(rawManualTotal).subtract(expectedRawTotal).value
-    : 0;
-
-  const rawTotalMmk = isForeign
-    ? currency(expectedRawTotal).add(rawAdjustment).value
-    : currency(rawAmount).value;
 
   const insertPayload = {
     corp_id: corpId,
     tx_date: formTx.tx_date,
     description: formTx.description,
-    amount: rawAmount,
-    rate: rawRate,
-    adjustment: rawAdjustment,
+    amount: calculated.amount,
+    rate: calculated.rate,
+    adjustment: calculated.adjustment,
     global_tree_id: globalTreeId,
     local_tree_id: localTreeId,
     employee_id: employeeId,
@@ -193,17 +316,16 @@ export function buildInsertedTransaction(
   const draftTx = {
     id: formTx.id,
     ...insertPayload,
-    total_mmk: rawTotalMmk,
+    total_mmk: calculated.total_mmk,
   };
-
-  const dirtyTx = sanitizeTransactionForDirty(draftTx);
 
   return {
     draftTx,
-    dirtyTx,
+    dirtyTx: sanitizeTransactionForDirty(draftTx),
     insertPayload,
   };
 }
+
 export function areTransactionsEqual(txA, txB) {
   const a = sanitizeTransactionForDirty(txA);
   const b = sanitizeTransactionForDirty(txB);
@@ -220,4 +342,22 @@ export function areTransactionsEqual(txA, txB) {
   }
 
   return true;
+}
+
+export function hydrateAppDataTransactions(appData) {
+  if (!appData?.corp_data) {
+    return appData;
+  }
+
+  return {
+    ...appData,
+    corp_data: appData.corp_data.map((corp) => ({
+      ...corp,
+      transactions: (corp.transactions || []).map((tx) =>
+        hydrateStoredTransaction(tx, {
+          isForeign: normalizeBool(corp.is_foreign),
+        })
+      ),
+    })),
+  };
 }

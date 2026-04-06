@@ -1,47 +1,77 @@
 import styles from './transactiontable.module.css';
 
 export default function TransactionRow({
-  tx, type, isForeign, isTableEditMode, isEditing, 
+  tx, type, isForeign, isTableEditMode, isEditing,
   editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete
 }) {
-  const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0)) 
-    ? 'var(--success-color)' 
-    : (type === 'expense' || (type === 'all' && Number(tx.amount) < 0)) 
-      ? '#ef4444' 
+  const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
+    ? 'var(--success-color)'
+    : (type === 'expense' || (type === 'all' && Number(tx.amount) < 0))
+      ? '#ef4444'
       : 'inherit';
 
   if (isEditing) {
     return (
       <tr>
         <td>
-          <input type="date" value={editFormData.date} onChange={(e) => onInputChange(e, 'date')} />
+          <input
+            className={`${styles.editInput} ${styles.editInputDate}`}
+            type="date"
+            value={editFormData.date}
+            onChange={(e) => onInputChange(e, 'date')}
+          />
         </td>
+
         <td>
-          <input type="text" value={editFormData.description} onChange={(e) => onInputChange(e, 'description')} />
+          <input
+            className={`${styles.editInput} ${styles.editInputText}`}
+            type="text"
+            value={editFormData.description}
+            onChange={(e) => onInputChange(e, 'description')}
+          />
         </td>
+
         {isForeign ? (
           <>
             <td style={{ textAlign: 'right' }}>
-              <input style={{ textAlign: 'right', width: '80px' }} type="number" value={editFormData.amount} onChange={(e) => onInputChange(e, 'amount')} />
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputSm}`}
+                type="number"
+                value={editFormData.amount}
+                onChange={(e) => onInputChange(e, 'amount')}
+              />
             </td>
+
             <td style={{ textAlign: 'right' }}>
-              <input style={{ textAlign: 'right', width: '60px' }} type="number" value={editFormData.rate} onChange={(e) => onInputChange(e, 'rate')} />
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputXs}`}
+                type="number"
+                value={editFormData.rate}
+                onChange={(e) => onInputChange(e, 'rate')}
+              />
             </td>
+
             <td style={{ textAlign: 'right' }}>
-              <input 
-                style={{ textAlign: 'right', width: '100px', fontWeight: 'bold' }} 
-                type="number" 
-                value={editFormData.total_mmk} 
-                onChange={(e) => onInputChange(e, 'total_mmk')} 
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd} ${styles.editInputBold}`}
+                type="number"
+                value={editFormData.total_mmk}
+                onChange={(e) => onInputChange(e, 'total_mmk')}
               />
             </td>
           </>
         ) : (
           <td style={{ textAlign: 'right' }}>
-            <input style={{ textAlign: 'right', width: '100px' }} type="number" value={editFormData.amount} onChange={(e) => onInputChange(e, 'amount')} />
+            <input
+              className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd}`}
+              type="number"
+              value={editFormData.amount}
+              onChange={(e) => onInputChange(e, 'amount')}
+            />
           </td>
         )}
-        <td className={styles.actionCell} style={{ textAlign: 'center', width: '150px' }}>
+
+        <td className={styles.actionCell}>
           <div className={styles.actionCellButtons}>
             <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onSave}>Save</button>
             <button className={`${styles.actionBtn} ${styles.cancelBtn}`} onClick={onCancel}>Cancel</button>
@@ -78,7 +108,7 @@ export default function TransactionRow({
           </span>
         </td>
       )}
-      <td className={styles.actionCell} style={{ textAlign: 'center', width: '150px' }}>
+      <td className={styles.actionCell}>
         {isTableEditMode ? (
           <div className={styles.actionCellButtons}>
             <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onEditClick}>Edit</button>

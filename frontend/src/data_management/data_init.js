@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { syncFromAuditLog } from './data_refresh';
+import { hydrateAppDataTransactions } from '../components/transaction_table/transactionTableHelpers';
 
 export function useSyncState() {
   const [appData, setAppData] = useState(null);
@@ -14,9 +15,9 @@ export function useSyncState() {
         const storedData = localStorage.getItem('app_sync_state');
 
         if (storedData) {
-          const parsedData = JSON.parse(storedData);
+          const parsedData = hydrateAppDataTransactions(JSON.parse(storedData));
           const syncedData = await syncFromAuditLog(parsedData);
-          setAppData(syncedData);
+          setAppData(hydrateAppDataTransactions(syncedData));
         } else {
           await initializeData();
         }
@@ -41,7 +42,7 @@ export function useSyncState() {
         throw new Error('Failed to fetch initial database state');
       }
 
-      const initialPayload = await response.json();
+      const initialPayload = hydrateAppDataTransactions(await response.json());
 
       localStorage.setItem('app_sync_state', JSON.stringify(initialPayload));
       setAppData(initialPayload);

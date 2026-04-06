@@ -49,11 +49,8 @@ function CorpDetails({
       : '-';
 
   const visibleTransactions = (selectedCorp.transactions || [])
-    .filter(tx => Number(tx.soft_delete) !== 1)
-    .map((tx, index) => toDisplayTransaction(tx, index, { isInverse }));
-
-  const incomeTx = visibleTransactions.filter(tx => Number(tx.amount) >= 0);
-  const expenseTx = visibleTransactions.filter(tx => Number(tx.amount) < 0);
+    .filter((tx) => Number(tx.soft_delete) !== 1)
+    .map((tx) => toDisplayTransaction(tx, { isInverse, isForeign }));
 
   return (
     <div className={styles.corpDetails}>
@@ -63,22 +60,22 @@ function CorpDetails({
 
       <div className={styles.balanceRow}>
         <div className={styles.balanceInfo}>
-        <span className={styles.balanceText}>
-          Balance: {currentBalance} MMK
-        </span>
+          <span className={styles.balanceText}>
+            Balance: {currentBalance} MMK
+          </span>
 
-        {isForeign && (
-          <>
-            <span className={styles.divider}>|</span>
-            <span className={styles.balanceText}>
-              {foreignLabel} Balance: {currentForeign}
-            </span>
-            <span className={styles.divider}>|</span>
-            <span className={styles.rateText}>
-              Rate: {rate}
-            </span>
-          </>
-        )}
+          {isForeign && (
+            <>
+              <span className={styles.divider}>|</span>
+              <span className={styles.balanceText}>
+                {foreignLabel} Balance: {currentForeign}
+              </span>
+              <span className={styles.divider}>|</span>
+              <span className={styles.rateText}>
+                Rate: {rate}
+              </span>
+            </>
+          )}
         </div>
 
         <button
@@ -94,20 +91,12 @@ function CorpDetails({
             boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
           }}
         >
-          Split View
+          Change View
         </button>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '20px',
-          marginTop: '15px',
-          flex: 1,
-          minHeight: 0,
-        }}
-      >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className={styles.tablecontainer}>
+        <div className={styles.tablecontent}>
           <TransactionTable
             title="Transactions"
             data={visibleTransactions}

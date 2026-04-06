@@ -1,5 +1,5 @@
 const db = require('../db');
-const currency = require('currency.js'); // <-- Changed this line
+const currency = require('currency.js');
 
 async function getCurrentAuditId() {
   const [[{ current_audit_id }]] = await db.query(
@@ -26,11 +26,11 @@ async function getBaseData() {
 
 function getTransactionFetchInfo(corps) {
   const verifiedDates = corps
-    .map(corp => corp.last_verified_date)
-    .filter(date => date != null);
+    .map((corp) => corp.last_verified_date)
+    .filter((date) => date != null);
 
   const hasAnyNullVerifiedDate = corps.some(
-    corp => corp.last_verified_date == null
+    (corp) => corp.last_verified_date == null
   );
 
   if (hasAnyNullVerifiedDate) {
@@ -113,26 +113,62 @@ function splitEmployees(employees) {
 
 function filterTransactionsForCorp(transactions, corp) {
   if (!corp.last_verified_date) return transactions;
-  return transactions.filter(tx => tx.tx_date > corp.last_verified_date);
+  return transactions.filter((tx) => tx.tx_date > corp.last_verified_date);
 }
 
-function addComputedTransactionFields(transactions, corp) {
+/*
+  One pass:
+  - compute total_mmk for each transaction
+  - build formatted transaction array
+  - accumulate live deltas to add on top of checkpoint balances
+
+  current_balance = stored checkpoint current_balance + balanceDelta
+  current_foreign = stored checkpoint current_foreign + foreignDelta
+*/
+function addComputedTransactionFieldsAndDeltas(transactions, corp) {
   const isForeign = Number(corp.is_foreign) === 1;
 
-  return transactions.map(tx => {
-    const amount = currency(tx.amount || 0);
-    const rate = currency(tx.rate || 0);
-    const adjustment = currency(tx.adjustment || 0);
+  const result = transactions.reduce(
+    (acc, tx) => {
+      const amount = currency(tx.amount || 0);
+      const rate = currency(tx.rate || 0);
+      const adjustment = currency(tx.adjustment || 0);
 
-    const total_mmk = isForeign
-      ? amount.multiply(rate.value).add(adjustment.value).value
-      : amount.add(adjustment.value).value;
+      const total_mmk = isForeign
+        ? amount.multiply(rate.value).add(adjustment.value).value
+        : amount.add(adjustment.value).value;
 
-    return {
-      ...tx,
-      total_mmk
-    };
-  });
+      const formattedTx = {
+        ...tx,
+        total_mmk
+      };
+
+      acc.formattedTransactions.push(formattedTx);
+
+      // Soft-deleted rows should still exist in the payload,
+      // but they should NOT affect live checkpoint-derived balances.
+      if (Number(tx.soft_delete) !== 1) {
+        acc.balanceDelta = acc.balanceDelta.add(total_mmk);
+
+        if (isForeign) {
+          acc.foreignDelta = acc.foreignDelta.add(amount.value);
+        }
+      }
+
+      return acc;
+    },
+    {
+      formattedTransactions: [],
+      balanceDelta: currency(0),
+      foreignDelta: currency(0)
+    }
+  );
+
+  return {
+    formattedTransactions: result.formattedTransactions,
+    balanceDelta: result.balanceDelta.value,
+    foreignDelta: result.foreignDelta.value
+  };
 }
 
 function assembleCorps({
@@ -141,16 +177,24 @@ function assembleCorps({
   employeesByCorp,
   transactionsByCorp
 }) {
-  return corps.map(corp => {
+  return corps.map((corp) => {
     const corpTransactions = transactionsByCorp[corp.id] || [];
     const filteredTransactions = filterTransactionsForCorp(corpTransactions, corp);
-    const formattedTransactions = addComputedTransactionFields(
-      filteredTransactions,
-      corp
-    );
+
+    const {
+      formattedTransactions,
+      balanceDelta,
+      foreignDelta
+    } = addComputedTransactionFieldsAndDeltas(filteredTransactions, corp);
 
     return {
       ...corp,
+      current_balance: currency(corp.current_balance || 0)
+        .add(balanceDelta)
+        .value,
+      current_foreign: Number(corp.is_foreign) === 1
+        ? currency(corp.current_foreign || 0).add(foreignDelta).value
+        : corp.current_foreign,
       local_tree: localTreeByCorp[corp.id] || [],
       employees: employeesByCorp[corp.id] || [],
       transactions: formattedTransactions
@@ -192,6 +236,7 @@ async function getCurrentTableMaxIds() {
     local_tree
   };
 }
+
 async function getAuditChangesAfterId(afterId) {
   const [[{ current_audit_id }]] = await db.query(
     'SELECT COALESCE(MAX(id), 0) AS current_audit_id FROM audit_log'

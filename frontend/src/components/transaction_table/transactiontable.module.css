@@ -23,7 +23,6 @@
 }
 
 .tableTitle {
-  margin-bottom: 12px;
   color: var(--text-main);
   font-size: 1.15rem;
   font-weight: 700;
@@ -32,7 +31,12 @@
 
 .tableScroll {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background-color: white;
@@ -40,18 +44,19 @@
   scrollbar-width: none;
 }
 
-.tableScroll:hover {
-  scrollbar-width: thin;
-}
-
 .tableScroll::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
   background-color: transparent;
 }
 
 .tableScroll::-webkit-scrollbar-thumb {
   background-color: transparent;
   border-radius: 10px;
+}
+
+.tableScroll:hover {
+  scrollbar-width: thin;
 }
 
 .tableScroll:hover::-webkit-scrollbar-thumb {
@@ -63,8 +68,10 @@
 }
 
 .txTable {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .txTable th,
@@ -72,6 +79,9 @@
   padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .txTable th {
@@ -90,18 +100,26 @@
 .actionCell {
   vertical-align: middle;
   text-align: center;
-  min-width: 150px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
 }
 
 .actionCellButtons {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 5px;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .actionBtn {
-  padding: 6px 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  white-space: nowrap;
+  padding: 6px 0;
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: #f8f9fa;
@@ -149,29 +167,59 @@
   border-color: #94a3b8;
 }
 
+.editInput {
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  color: var(--text-main);
+  font-size: 0.92rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.editInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.editInputDate {
+  width: 138px;
+}
+
+.editInputText {
+  width: 100%;
+  min-width: 0;
+}
+
+.editInputNumber {
+  text-align: right;
+}
+
+.editInputXs {
+  width: 68px;
+}
+
+.editInputSm {
+  width: 78px;
+}
+
+.editInputMd {
+  width: 96px;
+}
+
+.editInputBold {
+  font-weight: 700;
+}
+
 @media (max-width: 1300px) {
   .tableScroll {
-    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
   }
 
-  .tableScroll::-webkit-scrollbar {
-    display: block;
-    height: 8px;
-  }
-
-  .tableScroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .tableScroll::-webkit-scrollbar-thumb {
+  .tableScroll:hover::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-  }
-
-  .tableScroll::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 0.5);
   }
 }

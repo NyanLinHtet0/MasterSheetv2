@@ -16,7 +16,7 @@ function Sheets({
   onAddCorp,
   onQueueUpdate,
   onQueueInsert,
-  onRemoveDirtyRow, // optional: only needed for temp insert -> delete cleanup
+  onRemoveDirtyRow,
   setDraftData,
 }) {
   const [showAddCorpForm, setShowAddCorpForm] = useState(false);
@@ -35,8 +35,7 @@ function Sheets({
     }
   }, [corps, selectedCorpId]);
 
-  const selectedCorp =
-    corps.find((corp) => corp.id === selectedCorpId) || null;
+  const selectedCorp = corps.find((corp) => corp.id === selectedCorpId) || null;
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
@@ -58,12 +57,10 @@ function Sheets({
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = [...(corp.transactions || []), draftTx];
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: [...(corp.transactions || []), draftTx],
           },
           null,
           draftTx
@@ -74,20 +71,16 @@ function Sheets({
     onQueueInsert?.('transactions', tempId, insertPayload);
   };
 
-  const handleUpdateTransaction = (originalIndex, editFormData) => {
+  const handleUpdateTransaction = (txId, editFormData) => {
     if (!selectedCorp) return;
 
-    const oldTx = selectedCorp.transactions?.[originalIndex];
+    const oldTx = (selectedCorp.transactions || []).find((tx) => tx.id === txId);
     if (!oldTx) return;
 
-    const { draftTx, dirtyTx } = buildUpdatedTransaction(
-      oldTx,
-      editFormData,
-      {
-        isForeign: selectedCorp.is_foreign,
-        isInverse: selectedCorp.inverse,
-      }
-    );
+    const { draftTx, dirtyTx } = buildUpdatedTransaction(oldTx, editFormData, {
+      isForeign: selectedCorp.is_foreign,
+      isInverse: selectedCorp.inverse,
+    });
 
     if (areTransactionsEqual(oldTx, draftTx)) {
       return;
@@ -98,13 +91,12 @@ function Sheets({
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = [...(corp.transactions || [])];
-        nextTransactions[originalIndex] = draftTx;
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: (corp.transactions || []).map((tx) =>
+              tx.id === txId ? draftTx : tx
+            ),
           },
           oldTx,
           draftTx
@@ -120,42 +112,52 @@ function Sheets({
     );
   };
 
-  const handleDeleteTransaction = (originalIndex) => {
+  const handleDeleteTransaction = (txId) => {
     if (!selectedCorp) return;
 
-    const oldTx = selectedCorp.transactions?.[originalIndex];
+    const oldTx = (selectedCorp.transactions || []).find((tx) => tx.id === txId);
     if (!oldTx) return;
 
-    // Remove it from local draft immediately either way
+    if (oldTx.id < 0) {
+      setDraftData((prev) => ({
+        ...prev,
+        corp_data: prev.corp_data.map((corp) => {
+          if (corp.id !== selectedCorp.id) return corp;
+
+          return applyTransactionDeltaToCorp(
+            {
+              ...corp,
+              transactions: (corp.transactions || []).filter((tx) => tx.id !== txId),
+            },
+            oldTx,
+            null
+          );
+        }),
+      }));
+
+      onRemoveDirtyRow?.('INSERT', 'transactions', oldTx.id);
+      return;
+    }
+
+    const { draftTx, dirtyTx } = buildSoftDeletedTransaction(oldTx);
+
     setDraftData((prev) => ({
       ...prev,
       corp_data: prev.corp_data.map((corp) => {
         if (corp.id !== selectedCorp.id) return corp;
 
-        const nextTransactions = (corp.transactions || []).filter(
-          (_, index) => index !== originalIndex
-        );
-
         return applyTransactionDeltaToCorp(
           {
             ...corp,
-            transactions: nextTransactions,
+            transactions: (corp.transactions || []).map((tx) =>
+              tx.id === txId ? draftTx : tx
+            ),
           },
           oldTx,
-          null
+          draftTx
         );
       }),
     }));
-
-    // FIX 2:
-    // If this was a temp inserted row, treat it as "never happened".
-    // This fully clears dirty state only if parent passes onRemoveDirtyRow.
-    if (oldTx.id < 0) {
-      onRemoveDirtyRow?.('INSERT', 'transactions', oldTx.id);
-      return;
-    }
-
-    const { dirtyTx } = buildSoftDeletedTransaction(oldTx);
 
     onQueueUpdate?.(
       'transactions',
