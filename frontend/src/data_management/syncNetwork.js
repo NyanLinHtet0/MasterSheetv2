@@ -4,7 +4,7 @@ export async function pushSyncPayload(dirtyMap, currentAuditId, fetchLatestAudit
   const payload = simplifyQueue(dirtyMap);
   if (payload.length === 0) return { success: true };
 
-  const response = await fetch('http://localhost:3000/api/sync/push', {
+  const response = await fetch('/api/sync/push', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

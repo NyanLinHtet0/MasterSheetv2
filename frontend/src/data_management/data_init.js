@@ -36,10 +36,15 @@ export function useSyncState() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('http://localhost:3000/api/sync/initialize');
+      const response = await fetch('/api/sync/initialize');
 
       if (!response.ok) {
         throw new Error('Failed to fetch initial database state');
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Sync API returned non-JSON data. Confirm backend is running on http://localhost:3000.');
       }
 
       const initialPayload = hydrateAppDataTransactions(await response.json());
