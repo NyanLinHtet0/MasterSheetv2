@@ -28,8 +28,11 @@ function CorpDetails({
   globalTree = [],
   onUpdateTransaction,
   onDeleteTransaction,
+  onInsertLocalTreeNode,
+  onRenameLocalTreeNode,
 }) {
   const [viewMode, setViewMode] = useState(VIEW_MODES.LIVE);
+  const [isEditTableMode, setIsEditTableMode] = useState(false);
   const [selectedLayer1Key, setSelectedLayer1Key] = useState(null);
   const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
   const [selectedLayer3Key, setSelectedLayer3Key] = useState(null);
@@ -283,6 +286,47 @@ function CorpDetails({
     }
   };
 
+  const handleAddLayer3 = (name) => {
+    if (!selectedCorp || !selectedLayer2Node || !onInsertLocalTreeNode) {
+      return;
+    }
+
+    if (selectedLayer2Node.source === 'global') {
+      onInsertLocalTreeNode({
+        corpId: selectedCorp.id,
+        name,
+        parentId: null,
+        globalParentId: selectedLayer2Node.globalId,
+      });
+      return;
+    }
+
+    onInsertLocalTreeNode({
+      corpId: selectedCorp.id,
+      name,
+      parentId: selectedLayer2Node.localId,
+      globalParentId: selectedLayer2Node.globalId ?? null,
+    });
+  };
+
+  const handleRenameLayer3 = (layer3Key, nextName) => {
+    if (!selectedCorp || !onRenameLocalTreeNode) {
+      return;
+    }
+
+    const node = assembledTree.nodeMap.get(layer3Key);
+
+    if (!node || node.source !== 'local') {
+      return;
+    }
+
+    onRenameLocalTreeNode({
+      corpId: selectedCorp.id,
+      localTreeId: node.localId,
+      name: nextName,
+    });
+  };
+
   const titleParts = [];
 
   if (selectedLayer1Node) {
@@ -296,6 +340,15 @@ function CorpDetails({
   if (selectedLayer3Node) {
     titleParts.push(selectedLayer3Node.label);
   }
+
+  const layer3OptionsWithEditState = layer3Options.map((option) => {
+    const node = assembledTree.nodeMap.get(option.key);
+
+    return {
+      ...option,
+      editable: node?.source === 'local',
+    };
+  });
 
   if (!selectedCorp) {
     return (
@@ -337,9 +390,13 @@ function CorpDetails({
           layer2Options={layer2Options}
           selectedLayer2Key={selectedLayer2Key}
           onSelectLayer2={handleSelectLayer2}
-          layer3Options={layer3Options}
+          layer3Options={layer3OptionsWithEditState}
           selectedLayer3Key={selectedLayer3Key}
           onSelectLayer3={handleSelectLayer3}
+          isEditTableMode={isEditTableMode}
+          onToggleEditTableMode={() => setIsEditTableMode((prev) => !prev)}
+          onAddLayer3={handleAddLayer3}
+          onRenameLayer3={handleRenameLayer3}
         />
       </div>
 

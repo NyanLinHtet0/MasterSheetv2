@@ -55,8 +55,14 @@ function ChangeViewControl({
   layer3Options = [],
   selectedLayer3Key = null,
   onSelectLayer3,
+  isEditTableMode = false,
+  onToggleEditTableMode,
+  onAddLayer3,
+  onRenameLayer3,
 }) {
   const [showViewPopup, setShowViewPopup] = useState(false);
+  const [newLayer3Name, setNewLayer3Name] = useState('');
+  const [editingLabels, setEditingLabels] = useState({});
   const viewPopupRef = useRef(null);
 
   useEffect(() => {
@@ -74,6 +80,43 @@ function ChangeViewControl({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showViewPopup]);
 
+  const handleRenameBlur = (option) => {
+    if (!option?.editable || !onRenameLayer3) {
+      return;
+    }
+
+    const draftName = (editingLabels[option.key] ?? option.label ?? '').trim();
+    const originalName = (option.label || '').trim();
+
+    if (!draftName || draftName === originalName) {
+      setEditingLabels((prev) => {
+        const next = { ...prev };
+        delete next[option.key];
+        return next;
+      });
+      return;
+    }
+
+    onRenameLayer3(option.key, draftName);
+
+    setEditingLabels((prev) => {
+      const next = { ...prev };
+      delete next[option.key];
+      return next;
+    });
+  };
+
+  const handleAddLayer3 = () => {
+    const nextName = newLayer3Name.trim();
+
+    if (!nextName || !onAddLayer3) {
+      return;
+    }
+
+    onAddLayer3(nextName);
+    setNewLayer3Name('');
+  };
+
   return (
     <div className={styles.viewControlWrap} ref={viewPopupRef}>
       <button
@@ -87,7 +130,18 @@ function ChangeViewControl({
       {showViewPopup && (
         <div className={styles.viewPopup}>
           <div className={styles.viewPopupHeader}>
-            <span className={styles.viewPopupTitle}>Change View</span>
+            <div className={styles.viewHeaderTopRow}>
+              <span className={styles.viewPopupTitle}>Change View</span>
+              <button
+                type="button"
+                className={`${styles.editTableButton} ${
+                  isEditTableMode ? styles.editTableButtonActive : ''
+                }`}
+                onClick={() => onToggleEditTableMode?.()}
+              >
+                {isEditTableMode ? 'Done Editing' : 'Edit Table'}
+              </button>
+            </div>
 
             <div className={styles.viewPopupCurrentBlock}>
               <button
@@ -129,13 +183,97 @@ function ChangeViewControl({
               emptyLabel: 'No layer 2 items.',
             })}
 
-            {renderSingleChoiceColumn({
-              title: 'Layer 3',
-              options: layer3Options,
-              selectedValue: selectedLayer3Key,
-              onSelect: onSelectLayer3,
-              emptyLabel: 'No layer 3 items.',
-            })}
+            <div className={styles.viewColumn}>
+              <div className={styles.viewSectionTitle}>Layer 3</div>
+
+              {isEditTableMode ? (
+                <>
+                  <div className={styles.editInlineRow}>
+                    <input
+                      type="text"
+                      value={newLayer3Name}
+                      className={styles.editTextInput}
+                      placeholder="Add local layer 3..."
+                      onChange={(event) => setNewLayer3Name(event.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      className={styles.addButton}
+                      onClick={handleAddLayer3}
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  <div className={styles.viewOptionsList}>
+                    {layer3Options.length === 0 ? (
+                      <div className={styles.viewEmptyState}>No layer 3 items.</div>
+                    ) : (
+                      layer3Options.map((option) => {
+                        const draftValue = editingLabels[option.key] ?? option.label;
+
+                        return (
+                          <div key={option.key} className={styles.viewOptionRow}>
+                            <input
+                              type="checkbox"
+                              checked={selectedLayer3Key === option.key}
+                              onChange={() => onSelectLayer3(option.key)}
+                            />
+
+                            {option.editable ? (
+                              <input
+                                type="text"
+                                value={draftValue}
+                                className={styles.editTextInput}
+                                onChange={(event) =>
+                                  setEditingLabels((prev) => ({
+                                    ...prev,
+                                    [option.key]: event.target.value,
+                                  }))
+                                }
+                                onBlur={() => handleRenameBlur(option)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.currentTarget.blur();
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span className={styles.viewOptionLabel}>{option.label}</span>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className={styles.viewOptionsList}>
+                  {layer3Options.length === 0 ? (
+                    <div className={styles.viewEmptyState}>No layer 3 items.</div>
+                  ) : (
+                    layer3Options.map((option) => {
+                      const isSelected = selectedLayer3Key === option.key;
+
+                      return (
+                        <label key={option.key} className={styles.viewOptionRow}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onSelectLayer3(option.key)}
+                          />
+
+                          <span className={styles.viewOptionLabel}>
+                            {option.label}
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
