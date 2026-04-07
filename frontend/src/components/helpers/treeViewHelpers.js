@@ -1,5 +1,6 @@
 import {
   buildChildrenMap,
+  buildRowMap,
   buildTreeScope,
   filterTransactionsByScope,
   getDescendantIds,

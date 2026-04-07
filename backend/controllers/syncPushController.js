@@ -119,11 +119,14 @@ exports.pushChanges = async (req, res) => {
       }
 
       const resolvedRowId = mapper.resolveId(action.row_id);
+      const incomingActionType = String(action.action_type || '').toUpperCase();
+      const isSoftDeleteAction = incomingActionType === 'DELETE';
+      const auditActionType = isSoftDeleteAction ? 'UPDATE' : incomingActionType;
       let auditRowId = resolvedRowId;
       let oldData = null;
       let newData = null;
 
-      if (action.action_type === 'INSERT') {
+      if (incomingActionType === 'INSERT') {
         let insertData = sanitizeFields(action.table_name, action.changes || {});
         insertData = resolveForeignKeys(action.table_name, insertData, mapper);
 
@@ -142,7 +145,7 @@ exports.pushChanges = async (req, res) => {
         newData = insertData;
       }
 
-      else if (action.action_type === 'UPDATE') {
+      else if (incomingActionType === 'UPDATE') {
         const [existingRows] = await connection.query(
           `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
           [resolvedRowId]
@@ -165,7 +168,7 @@ exports.pushChanges = async (req, res) => {
         }
       }
 
-      else if (action.action_type === 'DELETE') {
+      else if (isSoftDeleteAction) {
         const [existingRows] = await connection.query(
           `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
           [resolvedRowId]
@@ -180,6 +183,9 @@ exports.pushChanges = async (req, res) => {
 
         newData = { soft_delete: 1 };
       }
+      else {
+        throw new Error(`Invalid action type: ${action.action_type}`);
+      }
 
       await connection.query(
         `INSERT INTO audit_log
@@ -188,7 +194,7 @@ exports.pushChanges = async (req, res) => {
         [
           action.table_name,
           auditRowId,
-          String(action.action_type).toUpperCase(),
+          auditActionType,
           oldData ? JSON.stringify(oldData) : null,
           newData ? JSON.stringify(newData) : null
         ]

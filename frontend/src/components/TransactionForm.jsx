@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import styles from './TransactionForm.module.css';
 import {
   calculateTransactionValues,
@@ -93,11 +93,10 @@ export default function TransactionForm({
     return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
   }, [assembledTree, layer2Key]);
 
-  useEffect(() => {
-    if (day > daysInSelectedMonth) {
-      setDay(daysInSelectedMonth);
-    }
-  }, [year, month, day, daysInSelectedMonth]);
+  const clampDayToMonth = (nextYear, nextMonth, currentDay) => {
+    const maxDay = new Date(nextYear, nextMonth, 0).getDate();
+    return Math.min(currentDay, maxDay);
+  };
 
   const syncForeignTotal = (nextAmount, nextRate) => {
     if (!isForeign) return;
@@ -189,9 +188,11 @@ export default function TransactionForm({
 
     if (isShiftEnter) {
       const nextDate = new Date(year, month - 1, day + 1);
-      setYear(nextDate.getFullYear());
-      setMonth(nextDate.getMonth() + 1);
-      setDay(nextDate.getDate());
+      const nextYear = nextDate.getFullYear();
+      const nextMonth = nextDate.getMonth() + 1;
+      setYear(nextYear);
+      setMonth(nextMonth);
+      setDay(clampDayToMonth(nextYear, nextMonth, nextDate.getDate()));
       descriptionInputRef.current?.focus();
     } else {
       dayInputRef.current?.focus();
@@ -276,7 +277,11 @@ export default function TransactionForm({
           <div className={styles.inputDatefields}>
             <select
               value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
+              onChange={(e) => {
+                const nextYear = Number(e.target.value);
+                setYear(nextYear);
+                setDay((currentDay) => clampDayToMonth(nextYear, month, currentDay));
+              }}
               className={styles.flexInput}
             >
               {years.map((y) => (
@@ -288,7 +293,11 @@ export default function TransactionForm({
 
             <select
               value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
+              onChange={(e) => {
+                const nextMonth = Number(e.target.value);
+                setMonth(nextMonth);
+                setDay((currentDay) => clampDayToMonth(year, nextMonth, currentDay));
+              }}
               className={styles.flexInput}
             >
               {months.map((m) => (
