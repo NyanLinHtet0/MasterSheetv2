@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './Sheets.module.css';
 import CorpList from '../sheets/corp_list';
 import CorpDetails from '../sheets/corp_details';
@@ -29,20 +29,10 @@ function Sheets({
   const [selectedCorpId, setSelectedCorpId] = useState(null);
   const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES.ENG);
 
-  useEffect(() => {
-    if (!corps.length) {
-      setSelectedCorpId(null);
-      return;
-    }
-
-    const stillExists = corps.some((corp) => corp.id === selectedCorpId);
-
-    if (!stillExists) {
-      setSelectedCorpId(corps[0].id);
-    }
-  }, [corps, selectedCorpId]);
-
-  const selectedCorp = corps.find((corp) => corp.id === selectedCorpId) || null;
+  const selectedCorp =
+    corps.find((corp) => corp.id === selectedCorpId) ||
+    corps[0] ||
+    null;
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
