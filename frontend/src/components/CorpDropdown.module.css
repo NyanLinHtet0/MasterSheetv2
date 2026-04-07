@@ -140,6 +140,8 @@
   font-weight: 700;
 }
 
+
+
 @media (max-width: 1300px) {
   .inputGroup {
     flex-direction: column;
