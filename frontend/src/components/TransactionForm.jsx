@@ -11,6 +11,7 @@ import {
 import {
   buildAssembledTree,
   buildLayerOptions,
+  buildNodePathLabel,
 } from './helpers/treeViewHelpers';
 
 const today = new Date();
@@ -72,6 +73,38 @@ export default function TransactionForm({
 
   const layer3Options = useMemo(() => {
     if (!layer2Key) return [];
+    const directChildren = assembledTree.childrenByKey.get(layer2Key) || [];
+    const collectedLocalNodes = [];
+
+    const collectLocalDescendants = (parentKey) => {
+      const children = assembledTree.childrenByKey.get(parentKey) || [];
+      children.forEach((child) => {
+        if (child.source === 'local') {
+          collectedLocalNodes.push(child);
+        }
+
+        collectLocalDescendants(child.key);
+      });
+    };
+
+    directChildren.forEach((child) => {
+      if (child.source === 'local') {
+        collectedLocalNodes.push(child);
+      }
+      collectLocalDescendants(child.key);
+    });
+
+    const dedupedLocalOptions = Array.from(
+      new Map(collectedLocalNodes.map((node) => [node.key, node])).values()
+    );
+
+    if (dedupedLocalOptions.length > 0) {
+      return dedupedLocalOptions.map((node) => ({
+        key: node.key,
+        label: buildNodePathLabel(node, assembledTree.nodeMap),
+      }));
+    }
+
     return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
   }, [assembledTree, layer2Key]);
 
@@ -132,7 +165,7 @@ export default function TransactionForm({
     if (!trimmedDescription) return;
     if (!isUsableNumberInput(amount)) return;
     if (isForeign && !isUsableNumberInput(rate)) return;
-    if (!layer1Key || !layer2Key) return;
+    if (!layer1Key) return;
 
     const tx_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -148,7 +181,7 @@ export default function TransactionForm({
       { isForeign }
     );
 
-    const deepestSelectionKey = layer3Key || layer2Key;
+    const deepestSelectionKey = layer3Key || layer2Key || layer1Key;
     const selectedTagNode = assembledTree.nodeMap.get(deepestSelectionKey) || null;
 
     const txData = {
@@ -204,7 +237,7 @@ export default function TransactionForm({
         }}
         required
       >
-        <option value="">Type Tag</option>
+        <option value="">-</option>
         {layer1Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -219,10 +252,9 @@ export default function TransactionForm({
           setLayer2Key(e.target.value);
           setLayer3Key('');
         }}
-        required
         disabled={!layer1Key}
       >
-        <option value="">Global Tag</option>
+        <option value="">-</option>
         {layer2Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -236,7 +268,7 @@ export default function TransactionForm({
         onChange={(e) => setLayer3Key(e.target.value)}
         disabled={!layer2Key}
       >
-        <option value="">Local Tag (Optional)</option>
+        <option value="">-</option>
         {layer3Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
