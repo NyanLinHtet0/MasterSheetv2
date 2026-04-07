@@ -195,7 +195,7 @@ export default function TransactionForm({
   const renderTagFields = () => (
     <div className={styles.tagFields}>
       <select
-        style={{ flex: 1 }}
+        className={styles.tagSelect}
         value={layer1Key}
         onChange={(e) => {
           setLayer1Key(e.target.value);
@@ -204,7 +204,7 @@ export default function TransactionForm({
         }}
         required
       >
-        <option value="">Layer 1 (Type)</option>
+        <option value="">Type Tag</option>
         {layer1Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -213,7 +213,7 @@ export default function TransactionForm({
       </select>
 
       <select
-        style={{ flex: 1 }}
+        className={styles.tagSelect}
         value={layer2Key}
         onChange={(e) => {
           setLayer2Key(e.target.value);
@@ -222,7 +222,7 @@ export default function TransactionForm({
         required
         disabled={!layer1Key}
       >
-        <option value="">Layer 2</option>
+        <option value="">Global Tag</option>
         {layer2Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -231,12 +231,12 @@ export default function TransactionForm({
       </select>
 
       <select
-        style={{ flex: 1 }}
+        className={styles.tagSelect}
         value={layer3Key}
         onChange={(e) => setLayer3Key(e.target.value)}
         disabled={!layer2Key}
       >
-        <option value="">Layer 3 (Optional)</option>
+        <option value="">Local Tag (Optional)</option>
         {layer3Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
