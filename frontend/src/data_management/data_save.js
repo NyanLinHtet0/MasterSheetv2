@@ -99,6 +99,33 @@ function extractServerIdMappings(serverResponse = {}, dirtyMap = {}) {
   };
 
   visit(serverResponse);
+
+  const explicitMappings = Array.isArray(serverResponse?.id_mappings)
+    ? serverResponse.id_mappings
+    : [];
+
+  explicitMappings.forEach((mapping) => {
+    const tableName = mapping?.table_name || mapping?.tableName;
+    const tempId = Number(mapping?.temp_id ?? mapping?.tempId);
+    const realId = Number(mapping?.real_id ?? mapping?.realId);
+
+    if (!tableName || tempId >= 0 || realId <= 0) {
+      return;
+    }
+
+    const key = `${tableName}_${tempId}_${realId}`;
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    mappings.push({
+      tableName,
+      tempId,
+      realId,
+    });
+  });
+
   return mappings;
 }
 
