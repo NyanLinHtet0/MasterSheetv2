@@ -52,6 +52,8 @@ function ChangeViewControl({
   layer2Options = [],
   selectedLayer2Key = null,
   onSelectLayer2,
+  onAddLayer2,
+  onRenameLayer2,
   layer3Options = [],
   selectedLayer3Key = null,
   onSelectLayer3,
@@ -61,6 +63,7 @@ function ChangeViewControl({
   onRenameLayer3,
 }) {
   const [showViewPopup, setShowViewPopup] = useState(false);
+  const [newLayer2Name, setNewLayer2Name] = useState('');
   const [newLayer3Name, setNewLayer3Name] = useState('');
   const [editingLabels, setEditingLabels] = useState({});
   const viewPopupRef = useRef(null);
@@ -80,8 +83,8 @@ function ChangeViewControl({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showViewPopup]);
 
-  const handleRenameBlur = (option) => {
-    if (!option?.editable || !onRenameLayer3) {
+  const handleRenameBlur = (option, renameHandler) => {
+    if (!option?.editable || !renameHandler) {
       return;
     }
 
@@ -97,7 +100,7 @@ function ChangeViewControl({
       return;
     }
 
-    onRenameLayer3(option.key, draftName);
+    renameHandler(option.key, draftName);
 
     setEditingLabels((prev) => {
       const next = { ...prev };
@@ -115,6 +118,17 @@ function ChangeViewControl({
 
     onAddLayer3(nextName);
     setNewLayer3Name('');
+  };
+
+  const handleAddLayer2 = () => {
+    const nextName = newLayer2Name.trim();
+
+    if (!nextName || !onAddLayer2) {
+      return;
+    }
+
+    onAddLayer2(nextName);
+    setNewLayer2Name('');
   };
 
   return (
@@ -175,13 +189,97 @@ function ChangeViewControl({
               emptyLabel: 'No layer 1 items.',
             })}
 
-            {renderSingleChoiceColumn({
-              title: 'Layer 2',
-              options: layer2Options,
-              selectedValue: selectedLayer2Key,
-              onSelect: onSelectLayer2,
-              emptyLabel: 'No layer 2 items.',
-            })}
+            <div className={styles.viewColumn}>
+              <div className={styles.viewSectionTitle}>Layer 2</div>
+
+              {isEditTableMode ? (
+                <>
+                  <div className={styles.editInlineRow}>
+                    <input
+                      type="text"
+                      value={newLayer2Name}
+                      className={styles.editTextInput}
+                      placeholder="Add local layer 2..."
+                      onChange={(event) => setNewLayer2Name(event.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      className={styles.addButton}
+                      onClick={handleAddLayer2}
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  <div className={styles.viewOptionsList}>
+                    {layer2Options.length === 0 ? (
+                      <div className={styles.viewEmptyState}>No layer 2 items.</div>
+                    ) : (
+                      layer2Options.map((option) => {
+                        const draftValue = editingLabels[option.key] ?? option.label;
+
+                        return (
+                          <div key={option.key} className={styles.viewOptionRow}>
+                            <input
+                              type="checkbox"
+                              checked={selectedLayer2Key === option.key}
+                              onChange={() => onSelectLayer2(option.key)}
+                            />
+
+                            {option.editable ? (
+                              <input
+                                type="text"
+                                value={draftValue}
+                                className={styles.editTextInput}
+                                onChange={(event) =>
+                                  setEditingLabels((prev) => ({
+                                    ...prev,
+                                    [option.key]: event.target.value,
+                                  }))
+                                }
+                                onBlur={() => handleRenameBlur(option, onRenameLayer2)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.currentTarget.blur();
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span className={styles.viewOptionLabel}>{option.label}</span>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className={styles.viewOptionsList}>
+                  {layer2Options.length === 0 ? (
+                    <div className={styles.viewEmptyState}>No layer 2 items.</div>
+                  ) : (
+                    layer2Options.map((option) => {
+                      const isSelected = selectedLayer2Key === option.key;
+
+                      return (
+                        <label key={option.key} className={styles.viewOptionRow}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onSelectLayer2(option.key)}
+                          />
+
+                          <span className={styles.viewOptionLabel}>
+                            {option.label}
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className={styles.viewColumn}>
               <div className={styles.viewSectionTitle}>Layer 3</div>
@@ -232,7 +330,7 @@ function ChangeViewControl({
                                     [option.key]: event.target.value,
                                   }))
                                 }
-                                onBlur={() => handleRenameBlur(option)}
+                                onBlur={() => handleRenameBlur(option, onRenameLayer3)}
                                 onKeyDown={(event) => {
                                   if (event.key === 'Enter') {
                                     event.currentTarget.blur();
