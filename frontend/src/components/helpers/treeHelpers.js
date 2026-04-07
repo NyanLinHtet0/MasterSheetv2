@@ -438,30 +438,63 @@ export function attachTransactionTagNames(
   const globalMap = buildRowMap(globalTree, { includeSoftDeleted });
   const localMap = buildRowMap(localTree, { includeSoftDeleted });
 
-  const getRootGlobalName = (globalId) => {
-    if (globalId == null) return '';
+  const getGlobalPathToRoot = (globalId) => {
+    if (globalId == null) return [];
 
+    const path = [];
     let current = globalMap.get(globalId) || null;
     let guard = 0;
 
-    while (current?.parent_id != null && guard < 1000) {
-      current = globalMap.get(current.parent_id) || null;
+    while (current && guard < 1000) {
+      path.unshift(current);
+      current = current.parent_id != null ? (globalMap.get(current.parent_id) || null) : null;
       guard += 1;
     }
 
-    return current?.name || '';
+    return path;
   };
 
-  return transactions.map((tx) => ({
-    ...tx,
-    global_tag_root_name: getRootGlobalName(tx.global_tree_id),
-    global_tag_name:
-      tx.global_tree_id != null
-        ? (globalMap.get(tx.global_tree_id)?.name || '')
-        : '',
-    local_tag_name:
-      tx.local_tree_id != null
-        ? (localMap.get(tx.local_tree_id)?.name || '')
-        : '',
-  }));
+  const getLocalPathToRoot = (localId) => {
+    if (localId == null) return [];
+
+    const path = [];
+    let current = localMap.get(localId) || null;
+    let guard = 0;
+
+    while (current && guard < 1000) {
+      path.unshift(current);
+      current = current.parent_id != null ? (localMap.get(current.parent_id) || null) : null;
+      guard += 1;
+    }
+
+    return path;
+  };
+
+  const getAssembledPath = (tx) => {
+    if (tx?.local_tree_id != null) {
+      const localPath = getLocalPathToRoot(tx.local_tree_id);
+      const localRoot = localPath[0] || null;
+      const globalPath = localRoot
+        ? getGlobalPathToRoot(localRoot.global_parent_id)
+        : getGlobalPathToRoot(tx.global_tree_id);
+
+      return [
+        ...globalPath.map((row) => ({ source: 'global', row })),
+        ...localPath.map((row) => ({ source: 'local', row })),
+      ];
+    }
+
+    return getGlobalPathToRoot(tx?.global_tree_id).map((row) => ({ source: 'global', row }));
+  };
+
+  return transactions.map((tx) => {
+    const assembledPath = getAssembledPath(tx);
+
+    return {
+      ...tx,
+      global_tag_root_name: assembledPath[0]?.row?.name || '',
+      global_tag_name: assembledPath[1]?.row?.name || '',
+      local_tag_name: assembledPath[2]?.row?.name || '',
+    };
+  });
 }
