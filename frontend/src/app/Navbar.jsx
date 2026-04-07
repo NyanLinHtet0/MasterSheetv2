@@ -9,6 +9,7 @@ function Navbar({ isDirty, onSave, onCancel }) {
       <div className={styles.navLinks}>
         <Link to="/" className={location.pathname === '/' ? `${styles.link} ${styles.activeLink}` : styles.link}>Home</Link>
         <Link to="/Sheets" className={location.pathname === '/Sheets' ? `${styles.link} ${styles.activeLink}` : styles.link}>Sheets</Link>
+        <Link to="/View" className={location.pathname === '/View' ? `${styles.link} ${styles.activeLink}` : styles.link}>View</Link>
       </div>
 
       {/* Renders Div Block Conditionally Once Modified */}
