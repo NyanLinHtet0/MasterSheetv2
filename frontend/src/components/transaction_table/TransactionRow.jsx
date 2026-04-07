@@ -2,7 +2,8 @@ import styles from './transactiontable.module.css';
 
 export default function TransactionRow({
   tx, type, isForeign, isTableEditMode, isEditing,
-  editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete
+  editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete,
+  typeOptions = [], globalOptions = [], localOptions = [],
 }) {
   const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
     ? 'var(--success-color)'
@@ -16,7 +17,6 @@ export default function TransactionRow({
         <td>
           <input
             translate="no"
-            class="notranslate"
             className={`${styles.editInput} ${styles.editInputDate}`}
             type="date"
             value={editFormData.date}
@@ -73,8 +73,48 @@ export default function TransactionRow({
           </td>
         )}
 
-        <td>{tx.global_tag_name || ''}</td>
-        <td>{tx.local_tag_name || ''}</td>
+        <td>
+          <select
+            className={styles.editInput}
+            value={editFormData.type_id}
+            onChange={(e) => onInputChange(e, 'type_id')}
+          >
+            <option value="">-</option>
+            {typeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td>
+          <select
+            className={styles.editInput}
+            value={editFormData.global_tree_id}
+            onChange={(e) => onInputChange(e, 'global_tree_id')}
+          >
+            <option value="">-</option>
+            {globalOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td>
+          <select
+            className={styles.editInput}
+            value={editFormData.local_tree_id}
+            onChange={(e) => onInputChange(e, 'local_tree_id')}
+          >
+            <option value="">-</option>
+            {localOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </td>
 
         <td className={styles.actionCell}>
           <div className={styles.actionCellButtons}>
@@ -115,8 +155,9 @@ export default function TransactionRow({
         </td>
       )}
 
-      <td>{tx.global_tag_name || ''}</td>
-      <td>{tx.local_tag_name || ''}</td>
+      {isTableEditMode && <td>{tx.global_tag_root_name || '-'}</td>}
+      <td>{tx.global_tag_name || '-'}</td>
+      <td>{tx.local_tag_name || '-'}</td>
       {isTableEditMode &&
         <td className={styles.actionCell}>
           {isTableEditMode ? (

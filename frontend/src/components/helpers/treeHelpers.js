@@ -438,8 +438,23 @@ export function attachTransactionTagNames(
   const globalMap = buildRowMap(globalTree, { includeSoftDeleted });
   const localMap = buildRowMap(localTree, { includeSoftDeleted });
 
+  const getRootGlobalName = (globalId) => {
+    if (globalId == null) return '';
+
+    let current = globalMap.get(globalId) || null;
+    let guard = 0;
+
+    while (current?.parent_id != null && guard < 1000) {
+      current = globalMap.get(current.parent_id) || null;
+      guard += 1;
+    }
+
+    return current?.name || '';
+  };
+
   return transactions.map((tx) => ({
     ...tx,
+    global_tag_root_name: getRootGlobalName(tx.global_tree_id),
     global_tag_name:
       tx.global_tree_id != null
         ? (globalMap.get(tx.global_tree_id)?.name || '')
@@ -450,4 +465,3 @@ export function attachTransactionTagNames(
         : '',
   }));
 }
-

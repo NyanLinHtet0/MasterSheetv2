@@ -17,6 +17,7 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
           <th style={{ textAlign: 'right' }}>Amount</th>
         )}
 
+        {isTableEditMode && <th>Type</th>}
         <th>Global Tag</th>
         <th>Local Tag</th>
         {isTableEditMode && 

@@ -6,7 +6,7 @@ import {
   isValidPartialNumber,
 } from './transactionTableHelpers';
 
-export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
+export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTypeId }) {
   const [isTableEditMode, setIsTableEditMode] = useState(false);
   const [editingRowId, setEditingRowId] = useState(null);
 
@@ -16,14 +16,22 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
     amount: '',
     rate: '',
     total_mmk: '',
+    type_id: '',
+    global_tree_id: '',
+    local_tree_id: '',
   });
 
   const handleEditClick = (tx) => {
     setEditingRowId(tx.id);
-    setEditFormData(buildEditFormData(tx, { isForeign, isInverse }));
+    setEditFormData(buildEditFormData(tx, { isForeign, isInverse, resolveTypeId }));
   };
 
   const handleSaveEdit = (rowId) => {
+    if (!editFormData.type_id || !editFormData.global_tree_id) {
+      alert('Please select Type and Global Tag before saving.');
+      return;
+    }
+
     onSaveRow(rowId, editFormData);
     setEditingRowId(null);
   };
@@ -44,6 +52,15 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow }) {
         ...prev,
         [field]: rawValue,
       };
+
+      if (field === 'type_id') {
+        next.global_tree_id = '';
+        next.local_tree_id = '';
+      }
+
+      if (field === 'global_tree_id') {
+        next.local_tree_id = '';
+      }
 
       if (isForeign && (field === 'amount' || field === 'rate')) {
         const nextBaseTotal = getDisplayedBaseTotal({
