@@ -22,12 +22,13 @@
 
 .formContainer input,
 .formContainer select {
-  padding: 12px 16px;
+  padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 0;
 }
 
 .formContainer input:focus,
@@ -77,9 +78,17 @@
 }
 .tagFields {
   display: flex;
-  flex: 2;
-  gap: 12px;
-  min-width: 320px;
+  flex: 1.7;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tagSelect {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.88rem;
+  padding: 8px 10px !important;
 }
 
 @media (max-width: 900px) {
