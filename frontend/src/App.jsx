@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './app/Navbar';
 import Sheets from './pages/Sheets';
 import Home from './pages/Home';
+import View from './pages/View';
 import { useSyncState } from './data_management/data_init'; // <-- Import the hook
 import { useSyncManager } from './data_management/data_save';
 
@@ -49,6 +49,10 @@ function App() {
                 setDraftData={setDraftData}
               />
             }
+          />
+          <Route
+            path="/View"
+            element={<View corps={draftData?.corp_data || []} />}
           />
         </Routes>
       </div>
