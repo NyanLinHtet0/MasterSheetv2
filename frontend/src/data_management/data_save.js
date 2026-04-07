@@ -3,9 +3,20 @@ import { queueUpdate, queueInsert, removeDirtyEntry } from './syncOperations';
 import { pushSyncPayload } from './syncNetwork';
 import { hydrateAppDataTransactions } from '../components/transaction_table/transactionTableHelpers';
 
-function extractServerIdMappings(serverResponse = {}) {
+function extractServerIdMappings(serverResponse = {}, dirtyMap = {}) {
   const mappings = [];
   const seen = new Set();
+  const insertTableByTempId = new Map();
+
+  Object.values(dirtyMap || {}).forEach((action) => {
+    if (
+      action?.action_type === 'INSERT' &&
+      Number(action?.row_id) < 0 &&
+      action?.table_name
+    ) {
+      insertTableByTempId.set(Number(action.row_id), action.table_name);
+    }
+  });
 
   const visit = (node, inheritedTableName = null) => {
     if (!node || typeof node !== 'object') {
@@ -17,12 +28,12 @@ function extractServerIdMappings(serverResponse = {}) {
       return;
     }
 
-    const tableName =
+    const explicitTableName =
       node.table_name ||
       node.tableName ||
       node.entity_name ||
       node.entityName ||
-      inheritedTableName;
+      null;
 
     const tempId =
       node.temp_id ??
@@ -45,19 +56,46 @@ function extractServerIdMappings(serverResponse = {}) {
       node.serverId ??
       node.id;
 
-    if (tableName && Number(tempId) < 0 && Number(realId) > 0) {
-      const key = `${tableName}_${tempId}_${realId}`;
+    const resolvedTableName =
+      explicitTableName ??
+      (Number(tempId) < 0 ? insertTableByTempId.get(Number(tempId)) : null) ??
+      inheritedTableName;
+
+    if (node.id_maps && typeof node.id_maps === 'object' && !Array.isArray(node.id_maps)) {
+      Object.entries(node.id_maps).forEach(([rawTempId, rawRealId]) => {
+        const parsedTempId = Number(rawTempId);
+        const parsedRealId = Number(rawRealId);
+        const mappedTableName = insertTableByTempId.get(parsedTempId) || inheritedTableName;
+
+        if (!mappedTableName || parsedTempId >= 0 || parsedRealId <= 0) {
+          return;
+        }
+
+        const key = `${mappedTableName}_${parsedTempId}_${parsedRealId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          mappings.push({
+            tableName: mappedTableName,
+            tempId: parsedTempId,
+            realId: parsedRealId,
+          });
+        }
+      });
+    }
+
+    if (resolvedTableName && Number(tempId) < 0 && Number(realId) > 0) {
+      const key = `${resolvedTableName}_${tempId}_${realId}`;
       if (!seen.has(key)) {
         seen.add(key);
         mappings.push({
-          tableName,
+          tableName: resolvedTableName,
           tempId: Number(tempId),
           realId: Number(realId),
         });
       }
     }
 
-    Object.values(node).forEach((value) => visit(value, tableName));
+    Object.values(node).forEach((value) => visit(value, resolvedTableName));
   };
 
   visit(serverResponse);
@@ -71,6 +109,9 @@ function applyServerIdMappings(appData, mappings) {
 
   const corpIdMap = new Map();
   const transactionIdMap = new Map();
+  const localTreeIdMap = new Map();
+  const employeeIdMap = new Map();
+  const assetIdMap = new Map();
 
   mappings.forEach(({ tableName, tempId, realId }) => {
     if (tableName === 'corp_data') {
@@ -79,6 +120,18 @@ function applyServerIdMappings(appData, mappings) {
 
     if (tableName === 'transactions') {
       transactionIdMap.set(tempId, realId);
+    }
+
+    if (tableName === 'local_tree') {
+      localTreeIdMap.set(tempId, realId);
+    }
+
+    if (tableName === 'employee') {
+      employeeIdMap.set(tempId, realId);
+    }
+
+    if (tableName === 'assets') {
+      assetIdMap.set(tempId, realId);
     }
   });
 
@@ -94,13 +147,19 @@ function applyServerIdMappings(appData, mappings) {
           ...tx,
           id: transactionIdMap.get(tx.id) ?? tx.id,
           corp_id: corpIdMap.get(tx.corp_id) ?? nextCorpId,
+          local_tree_id: localTreeIdMap.get(tx.local_tree_id) ?? tx.local_tree_id,
+          employee_id: employeeIdMap.get(tx.employee_id) ?? tx.employee_id,
+          asset_id: assetIdMap.get(tx.asset_id) ?? tx.asset_id,
         })),
         local_tree: (corp.local_tree || []).map((node) => ({
           ...node,
+          id: localTreeIdMap.get(node.id) ?? node.id,
           corp_id: corpIdMap.get(node.corp_id) ?? nextCorpId,
+          parent_id: localTreeIdMap.get(node.parent_id) ?? node.parent_id,
         })),
         employees: (corp.employees || []).map((employee) => ({
           ...employee,
+          id: employeeIdMap.get(employee.id) ?? employee.id,
           corp_id: corpIdMap.get(employee.corp_id) ?? nextCorpId,
         })),
       };
@@ -124,6 +183,36 @@ function applyServerIdMappings(appData, mappings) {
         transactions: Math.max(
           nextData.max_ids.transactions || 0,
           ...Array.from(transactionIdMap.values())
+        ),
+      };
+    }
+
+    if (localTreeIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        local_tree: Math.max(
+          nextData.max_ids.local_tree || 0,
+          ...Array.from(localTreeIdMap.values())
+        ),
+      };
+    }
+
+    if (employeeIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        employee: Math.max(
+          nextData.max_ids.employee || 0,
+          ...Array.from(employeeIdMap.values())
+        ),
+      };
+    }
+
+    if (assetIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        assets: Math.max(
+          nextData.max_ids.assets || 0,
+          ...Array.from(assetIdMap.values())
         ),
       };
     }
@@ -215,7 +304,10 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
     );
 
     if (result.success) {
-      const idMappings = extractServerIdMappings(result.server_response || result.simulated_backend || {});
+      const idMappings = extractServerIdMappings(
+        result.server_response || result.simulated_backend || {},
+        dirtyMap
+      );
 
       const nextData = hydrateAppDataTransactions(
         applyServerIdMappings(
