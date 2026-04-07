@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import styles from './TransactionForm.module.css';
 import {
   calculateTransactionValues,
@@ -12,7 +12,6 @@ import {
   buildAssembledTree,
   buildLayerOptions,
 } from './helpers/treeViewHelpers';
-import { LANGUAGE_MODES } from './helpers/nameLocalization';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
@@ -33,7 +32,6 @@ export default function TransactionForm({
   isForeign: isForeignProp,
   globalTree = [],
   localTree = [],
-  languageMode = LANGUAGE_MODES.ENG,
 }) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -59,8 +57,8 @@ export default function TransactionForm({
   const days = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
 
   const assembledTree = useMemo(
-    () => buildAssembledTree(globalTree, localTree, { languageMode }),
-    [globalTree, localTree, languageMode]
+    () => buildAssembledTree(globalTree, localTree),
+    [globalTree, localTree]
   );
 
   const layer1Options = useMemo(() => {
@@ -93,10 +91,11 @@ export default function TransactionForm({
     return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
   }, [assembledTree, layer2Key]);
 
-  const clampDayToMonth = (nextYear, nextMonth, currentDay) => {
-    const maxDay = new Date(nextYear, nextMonth, 0).getDate();
-    return Math.min(currentDay, maxDay);
-  };
+  useEffect(() => {
+    if (day > daysInSelectedMonth) {
+      setDay(daysInSelectedMonth);
+    }
+  }, [year, month, day, daysInSelectedMonth]);
 
   const syncForeignTotal = (nextAmount, nextRate) => {
     if (!isForeign) return;
@@ -188,11 +187,9 @@ export default function TransactionForm({
 
     if (isShiftEnter) {
       const nextDate = new Date(year, month - 1, day + 1);
-      const nextYear = nextDate.getFullYear();
-      const nextMonth = nextDate.getMonth() + 1;
-      setYear(nextYear);
-      setMonth(nextMonth);
-      setDay(clampDayToMonth(nextYear, nextMonth, nextDate.getDate()));
+      setYear(nextDate.getFullYear());
+      setMonth(nextDate.getMonth() + 1);
+      setDay(nextDate.getDate());
       descriptionInputRef.current?.focus();
     } else {
       dayInputRef.current?.focus();
@@ -277,11 +274,7 @@ export default function TransactionForm({
           <div className={styles.inputDatefields}>
             <select
               value={year}
-              onChange={(e) => {
-                const nextYear = Number(e.target.value);
-                setYear(nextYear);
-                setDay((currentDay) => clampDayToMonth(nextYear, month, currentDay));
-              }}
+              onChange={(e) => setYear(Number(e.target.value))}
               className={styles.flexInput}
             >
               {years.map((y) => (
@@ -293,11 +286,7 @@ export default function TransactionForm({
 
             <select
               value={month}
-              onChange={(e) => {
-                const nextMonth = Number(e.target.value);
-                setMonth(nextMonth);
-                setDay((currentDay) => clampDayToMonth(year, nextMonth, currentDay));
-              }}
+              onChange={(e) => setMonth(Number(e.target.value))}
               className={styles.flexInput}
             >
               {months.map((m) => (

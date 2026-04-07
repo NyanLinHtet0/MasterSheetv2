@@ -256,7 +256,6 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
   useEffect(() => {
     if (initialData) {
       const hydratedData = hydrateAppDataTransactions(initialData);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOriginalData(hydratedData);
       setDraftData(hydratedData);
       setDirtyMap({});

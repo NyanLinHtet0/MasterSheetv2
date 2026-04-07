@@ -57,12 +57,6 @@
   font-weight: 800;
 }
 
-.headerActionButtons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .viewPopupCurrentBlock {
   display: flex;
   flex-wrap: wrap;
@@ -218,17 +212,6 @@
   border-radius: 8px;
   padding: 6px 12px;
   font-weight: 700;
-  cursor: pointer;
-}
-
-.languageToggleButton {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(15, 23, 42, 0.45);
-  color: #f8fafc;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-weight: 700;
-  min-width: 52px;
   cursor: pointer;
 }
 

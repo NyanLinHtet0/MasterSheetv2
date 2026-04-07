@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { syncFromAuditLog } from './data_refresh';
 import { hydrateAppDataTransactions } from '../components/transaction_table/transactionTableHelpers';
-import { fetchJson } from './apiClient';
 
 export function useSyncState() {
   const [appData, setAppData] = useState(null);
@@ -37,9 +36,13 @@ export function useSyncState() {
     try {
       setIsLoading(true);
 
-      const initialPayload = hydrateAppDataTransactions(
-        await fetchJson('/api/sync/initialize', {}, 'Initial sync fetch')
-      );
+      const response = await fetch('http://localhost:3000/api/sync/initialize');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch initial database state');
+      }
+
+      const initialPayload = hydrateAppDataTransactions(await response.json());
 
       localStorage.setItem('app_sync_state', JSON.stringify(initialPayload));
       setAppData(initialPayload);

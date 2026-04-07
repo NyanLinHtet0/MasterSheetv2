@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import currency from 'currency.js';
 import styles from './CorpDropdown.module.css';
 
@@ -60,15 +60,11 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
       : foreign.format();
   };
 
-  const handleOpenDropdown = () => {
-    setIsOpen(true);
-    setSearchTerm('');
-  };
-
-  const handleCloseDropdown = useCallback(() => {
-    setIsOpen(false);
-    setSearchTerm(selectedCorp ? selectedCorp.name : '');
-  }, [selectedCorp]);
+  useEffect(() => {
+    if (selectedCorp && !isOpen) {
+      setSearchTerm(selectedCorp.name);
+    }
+  }, [selectedCorp, isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -79,7 +75,17 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [handleCloseDropdown]);
+  }, [selectedCorp]);
+
+  const handleOpenDropdown = () => {
+    setIsOpen(true);
+    setSearchTerm('');
+  };
+
+  const handleCloseDropdown = () => {
+    setIsOpen(false);
+    setSearchTerm(selectedCorp ? selectedCorp.name : '');
+  };
 
   const filteredCorps = corps.filter((corp) =>
     (corp.name || '').toLowerCase().includes(searchTerm.toLowerCase())

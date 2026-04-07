@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Sheets.module.css';
 import CorpList from '../sheets/corp_list';
 import CorpDetails from '../sheets/corp_details';
@@ -10,10 +10,6 @@ import {
   applyTransactionDeltaToCorp,
   areTransactionsEqual,
 } from '../components/transaction_table/transactionTableHelpers';
-import {
-  LANGUAGE_MODES,
-  splitBilingualName,
-} from '../components/helpers/nameLocalization';
 
 function Sheets({
   corps = [],
@@ -27,12 +23,21 @@ function Sheets({
 }) {
   const [showAddCorpForm, setShowAddCorpForm] = useState(false);
   const [selectedCorpId, setSelectedCorpId] = useState(null);
-  const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES.ENG);
 
-  const selectedCorp =
-    corps.find((corp) => corp.id === selectedCorpId) ||
-    corps[0] ||
-    null;
+  useEffect(() => {
+    if (!corps.length) {
+      setSelectedCorpId(null);
+      return;
+    }
+
+    const stillExists = corps.some((corp) => corp.id === selectedCorpId);
+
+    if (!stillExists) {
+      setSelectedCorpId(corps[0].id);
+    }
+  }, [corps, selectedCorpId]);
+
+  const selectedCorp = corps.find((corp) => corp.id === selectedCorpId) || null;
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
@@ -167,8 +172,6 @@ function Sheets({
 
   const handleInsertLocalTreeNode = ({ corpId, name, parentId = null, globalParentId = null }) => {
     if (!corpId || !name) return;
-    const { englishName, burmeseName } = splitBilingualName(name);
-    const nextEnglishName = englishName || name;
 
     const tempId = -Math.abs(Date.now() + Math.floor(Math.random() * 1000));
     const nextNode = {
@@ -176,8 +179,7 @@ function Sheets({
       corp_id: corpId,
       parent_id: parentId,
       global_parent_id: globalParentId,
-      name: nextEnglishName,
-      burmese_name: burmeseName || null,
+      name,
       soft_delete: 0,
     };
 
@@ -196,23 +198,18 @@ function Sheets({
       corp_id: corpId,
       parent_id: parentId,
       global_parent_id: globalParentId,
-      name: nextEnglishName,
-      burmese_name: burmeseName || null,
+      name,
       soft_delete: 0,
     });
   };
 
   const handleRenameLocalTreeNode = ({ corpId, localTreeId, name }) => {
     if (!corpId || !localTreeId || !name) return;
-    const { englishName, burmeseName } = splitBilingualName(name);
-    const nextEnglishName = englishName || name;
 
     const corp = corps.find((row) => row.id === corpId);
     const oldNode = (corp?.local_tree || []).find((row) => row.id === localTreeId);
 
-    const oldBurmeseName = String(oldNode?.burmese_name || '').trim();
-
-    if (!oldNode || (oldNode.name === nextEnglishName && oldBurmeseName === burmeseName)) {
+    if (!oldNode || oldNode.name === name) {
       return;
     }
 
@@ -224,9 +221,7 @@ function Sheets({
         return {
           ...row,
           local_tree: (row.local_tree || []).map((node) =>
-            node.id === localTreeId
-              ? { ...node, name: nextEnglishName, burmese_name: burmeseName || null }
-              : node
+            node.id === localTreeId ? { ...node, name } : node
           ),
         };
       }),
@@ -237,8 +232,7 @@ function Sheets({
         corp_id: oldNode.corp_id,
         parent_id: oldNode.parent_id,
         global_parent_id: oldNode.global_parent_id,
-        name: nextEnglishName,
-        burmese_name: burmeseName || null,
+        name,
         soft_delete: oldNode.soft_delete ?? 0,
       });
       return;
@@ -252,15 +246,13 @@ function Sheets({
         parent_id: oldNode.parent_id,
         global_parent_id: oldNode.global_parent_id,
         name: oldNode.name,
-        burmese_name: oldNode.burmese_name ?? null,
         soft_delete: oldNode.soft_delete ?? 0,
       },
       {
         corp_id: oldNode.corp_id,
         parent_id: oldNode.parent_id,
         global_parent_id: oldNode.global_parent_id,
-        name: nextEnglishName,
-        burmese_name: burmeseName || null,
+        name,
         soft_delete: oldNode.soft_delete ?? 0,
       }
     );
@@ -277,7 +269,6 @@ function Sheets({
         onSelectCorp={setSelectedCorpId}
         onAddTransaction={handleInsertTransaction}
         globalTree={globalTree}
-        languageMode={languageMode}
       />
 
       <CorpDetails
@@ -288,12 +279,6 @@ function Sheets({
         onDeleteTransaction={handleDeleteTransaction}
         onInsertLocalTreeNode={handleInsertLocalTreeNode}
         onRenameLocalTreeNode={handleRenameLocalTreeNode}
-        languageMode={languageMode}
-        onToggleLanguageMode={() =>
-          setLanguageMode((prev) =>
-            prev === LANGUAGE_MODES.ENG ? LANGUAGE_MODES.BUR : LANGUAGE_MODES.ENG
-          )
-        }
       />
     </div>
   );
