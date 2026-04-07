@@ -51,6 +51,7 @@ function Sheets({
         isForeign: selectedCorp.is_foreign,
         isInverse: selectedCorp.inverse,
         globalTreeId: txData.global_tree_id ?? 1,
+        localTreeId: txData.local_tree_id ?? null,
       }
     );
 
