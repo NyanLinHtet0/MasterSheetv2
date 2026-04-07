@@ -12,6 +12,7 @@ import {
   buildAssembledTree,
   buildLayerOptions,
 } from './helpers/treeViewHelpers';
+import { LANGUAGE_MODES } from './helpers/nameLocalization';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
@@ -32,6 +33,7 @@ export default function TransactionForm({
   isForeign: isForeignProp,
   globalTree = [],
   localTree = [],
+  languageMode = LANGUAGE_MODES.ENG,
 }) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -57,8 +59,8 @@ export default function TransactionForm({
   const days = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
 
   const assembledTree = useMemo(
-    () => buildAssembledTree(globalTree, localTree),
-    [globalTree, localTree]
+    () => buildAssembledTree(globalTree, localTree, { languageMode }),
+    [globalTree, localTree, languageMode]
   );
 
   const layer1Options = useMemo(() => {

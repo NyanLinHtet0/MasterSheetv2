@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './ChangeViewControl.module.css';
+import { LANGUAGE_MODES } from '../helpers/nameLocalization';
 
 const VIEW_MODES = {
   LIVE: 'live',
@@ -61,6 +62,8 @@ function ChangeViewControl({
   onToggleEditTableMode,
   onAddLayer3,
   onRenameLayer3,
+  languageMode = LANGUAGE_MODES.ENG,
+  onToggleLanguageMode,
 }) {
   const [showViewPopup, setShowViewPopup] = useState(false);
   const [newLayer2Name, setNewLayer2Name] = useState('');
@@ -146,15 +149,24 @@ function ChangeViewControl({
           <div className={styles.viewPopupHeader}>
             <div className={styles.viewHeaderTopRow}>
               <span className={styles.viewPopupTitle}>Change View</span>
-              <button
-                type="button"
-                className={`${styles.editTableButton} ${
-                  isEditTableMode ? styles.editTableButtonActive : ''
-                }`}
-                onClick={() => onToggleEditTableMode?.()}
-              >
-                {isEditTableMode ? 'Done Editing' : 'Edit Table'}
-              </button>
+              <div className={styles.headerActionButtons}>
+                <button
+                  type="button"
+                  className={styles.languageToggleButton}
+                  onClick={() => onToggleLanguageMode?.()}
+                >
+                  {languageMode === LANGUAGE_MODES.ENG ? 'ENG' : 'BUR'}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.editTableButton} ${
+                    isEditTableMode ? styles.editTableButtonActive : ''
+                  }`}
+                  onClick={() => onToggleEditTableMode?.()}
+                >
+                  {isEditTableMode ? 'Done Editing' : 'Edit Table'}
+                </button>
+              </div>
             </div>
 
             <div className={styles.viewPopupCurrentBlock}>
@@ -199,7 +211,7 @@ function ChangeViewControl({
                       type="text"
                       value={newLayer2Name}
                       className={styles.editTextInput}
-                      placeholder="Add local layer 2..."
+                      placeholder="Add local layer 2 (ENG | BUR)..."
                       onChange={(event) => setNewLayer2Name(event.target.value)}
                     />
 
@@ -291,7 +303,7 @@ function ChangeViewControl({
                       type="text"
                       value={newLayer3Name}
                       className={styles.editTextInput}
-                      placeholder="Add local layer 3..."
+                      placeholder="Add local layer 3 (ENG | BUR)..."
                       onChange={(event) => setNewLayer3Name(event.target.value)}
                     />
 
