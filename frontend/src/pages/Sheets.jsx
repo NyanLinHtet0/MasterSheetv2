@@ -267,6 +267,7 @@ function Sheets({
         selectedCorp={selectedCorp}
         onSelectCorp={setSelectedCorpId}
         onAddTransaction={handleInsertTransaction}
+        globalTree={globalTree}
       />
 
       <CorpDetails
