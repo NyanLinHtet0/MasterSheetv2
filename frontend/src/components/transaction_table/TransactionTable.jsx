@@ -36,7 +36,27 @@ export default function TransactionTable({
   });
 
   const globalOptions = getGlobalOptionsByType(editFormData.type_id);
-  const localOptions = getLocalOptionsByGlobal(editFormData.global_tree_id);
+  const selectedGlobalOptionValue = (() => {
+    const matchedLocalOption = globalOptions.find(
+      (option) =>
+        option.localId != null &&
+        String(option.localId) === String(editFormData.local_tree_id) &&
+        String(option.globalId) === String(editFormData.global_tree_id)
+    );
+
+    if (matchedLocalOption) {
+      return matchedLocalOption.value;
+    }
+
+    const matchedGlobalOption = globalOptions.find(
+      (option) =>
+        option.localId == null &&
+        String(option.globalId) === String(editFormData.global_tree_id)
+    );
+
+    return matchedGlobalOption?.value || '';
+  })();
+  const localOptions = getLocalOptionsByGlobal(selectedGlobalOptionValue);
 
   return (
     <>
@@ -94,6 +114,7 @@ export default function TransactionTable({
                   onInputChange={handleInputChange}
                   typeOptions={typeOptions}
                   globalOptions={globalOptions}
+                  selectedGlobalOptionValue={selectedGlobalOptionValue}
                   localOptions={localOptions}
                   onSave={() => handleSaveEdit(tx.id)}
                   onCancel={handleCancelEdit}

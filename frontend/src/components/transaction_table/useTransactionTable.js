@@ -59,7 +59,17 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
       }
 
       if (field === 'global_tree_id') {
-        next.local_tree_id = '';
+        if (typeof rawValue === 'string' && rawValue.startsWith('l:')) {
+          const [, localIdPart, globalIdPart] = rawValue.split(':');
+          next.global_tree_id = globalIdPart || '';
+          next.local_tree_id = localIdPart || '';
+        } else if (typeof rawValue === 'string' && rawValue.startsWith('g:')) {
+          const [, globalIdPart] = rawValue.split(':');
+          next.global_tree_id = globalIdPart || '';
+          next.local_tree_id = '';
+        } else {
+          next.local_tree_id = '';
+        }
       }
 
       if (isForeign && (field === 'amount' || field === 'rate')) {

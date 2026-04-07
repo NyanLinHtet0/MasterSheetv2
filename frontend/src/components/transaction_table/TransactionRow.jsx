@@ -3,7 +3,7 @@ import styles from './transactiontable.module.css';
 export default function TransactionRow({
   tx, type, isForeign, isTableEditMode, isEditing,
   editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete,
-  typeOptions = [], globalOptions = [], localOptions = [],
+  typeOptions = [], globalOptions = [], selectedGlobalOptionValue = '', localOptions = [],
 }) {
   const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
     ? 'var(--success-color)'
@@ -90,7 +90,7 @@ export default function TransactionRow({
         <td>
           <select
             className={styles.editInput}
-            value={editFormData.global_tree_id}
+            value={selectedGlobalOptionValue}
             onChange={(e) => onInputChange(e, 'global_tree_id')}
           >
             <option value="">-</option>
