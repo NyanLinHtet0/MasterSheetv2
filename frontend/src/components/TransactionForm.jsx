@@ -11,7 +11,6 @@ import {
 import {
   buildAssembledTree,
   buildLayerOptions,
-  buildNodePathLabel,
 } from './helpers/treeViewHelpers';
 
 const today = new Date();
@@ -74,25 +73,9 @@ export default function TransactionForm({
   const layer3Options = useMemo(() => {
     if (!layer2Key) return [];
     const directChildren = assembledTree.childrenByKey.get(layer2Key) || [];
-    const collectedLocalNodes = [];
-
-    const collectLocalDescendants = (parentKey) => {
-      const children = assembledTree.childrenByKey.get(parentKey) || [];
-      children.forEach((child) => {
-        if (child.source === 'local') {
-          collectedLocalNodes.push(child);
-        }
-
-        collectLocalDescendants(child.key);
-      });
-    };
-
-    directChildren.forEach((child) => {
-      if (child.source === 'local') {
-        collectedLocalNodes.push(child);
-      }
-      collectLocalDescendants(child.key);
-    });
+    const collectedLocalNodes = directChildren.filter(
+      (child) => child.source === 'local'
+    );
 
     const dedupedLocalOptions = Array.from(
       new Map(collectedLocalNodes.map((node) => [node.key, node])).values()
@@ -101,7 +84,7 @@ export default function TransactionForm({
     if (dedupedLocalOptions.length > 0) {
       return dedupedLocalOptions.map((node) => ({
         key: node.key,
-        label: buildNodePathLabel(node, assembledTree.nodeMap),
+        label: node.label,
       }));
     }
 
