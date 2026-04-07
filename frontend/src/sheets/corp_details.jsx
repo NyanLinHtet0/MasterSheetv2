@@ -75,6 +75,7 @@ function CorpDetails({
   const liveGlobalTree = useMemo(() => normalizeRows(globalTree), [globalTree]);
   const liveLocalTree = useMemo(() => normalizeRows(localTree), [localTree]);
   const globalRowMap = useMemo(() => buildRowMap(liveGlobalTree), [liveGlobalTree]);
+  const localRowMap = useMemo(() => buildRowMap(liveLocalTree), [liveLocalTree]);
   const localChildrenByParent = useMemo(
     () => buildChildrenMap(liveLocalTree, 'parent_id'),
     [liveLocalTree]
@@ -174,12 +175,6 @@ function CorpDetails({
     selectedLayer3Node,
   ]);
 
-  const visibleTransactions = useMemo(() => {
-    return filteredTransactions.map((tx) =>
-      toDisplayTransaction(tx, { isInverse, isForeign })
-    );
-  }, [filteredTransactions, isInverse, isForeign]);
-
   const displayTransactions = useMemo(() => {
     return attachTransactionTagNames(
       filteredTransactions.map((tx) =>
@@ -199,20 +194,35 @@ function CorpDetails({
 
   const getGlobalOptionsByType = (typeId) => {
     if (!typeId) return [];
+    const typeNodeKey = `g-${Number(typeId)}`;
+    const layer2Nodes = assembledTree.childrenByKey.get(typeNodeKey) || [];
 
-    return (globalChildrenByParent.get(Number(typeId)) || []).map((row) => ({
-      value: String(row.id),
-      label: row.name || `ID ${row.id}`,
+    return layer2Nodes.map((node) => ({
+      value:
+        node.source === 'local'
+          ? `l:${node.localId}:${node.globalId ?? ''}`
+          : `g:${node.globalId}`,
+      label: node.label,
+      globalId: node.globalId ?? null,
+      localId: node.localId ?? null,
     }));
   };
 
-  const getLocalOptionsByGlobal = (globalId) => {
-    if (!globalId) return [];
+  const getLocalOptionsByGlobal = (globalSelection) => {
+    if (!globalSelection) return [];
 
     const rows = [];
-    const roots = liveLocalTree.filter(
-      (row) => row.parent_id == null && row.global_parent_id === Number(globalId)
-    );
+    let roots = [];
+
+    if (String(globalSelection).startsWith('g:')) {
+      const [, globalId] = String(globalSelection).split(':');
+      roots = liveLocalTree.filter(
+        (row) => row.parent_id == null && row.global_parent_id === Number(globalId)
+      );
+    } else if (String(globalSelection).startsWith('l:')) {
+      const [, localId] = String(globalSelection).split(':');
+      roots = localChildrenByParent.get(Number(localId)) || [];
+    }
 
     const walk = (node, prefix = '') => {
       const nextLabel = prefix ? `${prefix} > ${node.name || `ID ${node.id}`}` : (node.name || `ID ${node.id}`);
@@ -231,8 +241,12 @@ function CorpDetails({
 
   const resolveTypeId = (globalId) => {
     if (globalId == null) return null;
+    const normalizedGlobalId = Number(globalId);
+    const localRow = localRowMap.get(normalizedGlobalId);
+    const effectiveGlobalId = localRow?.global_parent_id ?? normalizedGlobalId;
+
     const ancestors = Array.from(
-      getAncestorIds(liveGlobalTree, Number(globalId), { includeSelf: true })
+      getAncestorIds(liveGlobalTree, Number(effectiveGlobalId), { includeSelf: true })
     );
 
     const typeAncestor = ancestors.find(
@@ -309,6 +323,37 @@ function CorpDetails({
     });
   };
 
+  const handleAddLayer2 = (name) => {
+    if (!selectedCorp || !selectedLayer1Node || !onInsertLocalTreeNode) {
+      return;
+    }
+
+    onInsertLocalTreeNode({
+      corpId: selectedCorp.id,
+      name,
+      parentId: null,
+      globalParentId: selectedLayer1Node.globalId ?? null,
+    });
+  };
+
+  const handleRenameLayer2 = (layer2Key, nextName) => {
+    if (!selectedCorp || !onRenameLocalTreeNode) {
+      return;
+    }
+
+    const node = assembledTree.nodeMap.get(layer2Key);
+
+    if (!node || node.source !== 'local') {
+      return;
+    }
+
+    onRenameLocalTreeNode({
+      corpId: selectedCorp.id,
+      localTreeId: node.localId,
+      name: nextName,
+    });
+  };
+
   const handleRenameLayer3 = (layer3Key, nextName) => {
     if (!selectedCorp || !onRenameLocalTreeNode) {
       return;
@@ -340,6 +385,15 @@ function CorpDetails({
   if (selectedLayer3Node) {
     titleParts.push(selectedLayer3Node.label);
   }
+
+  const layer2OptionsWithEditState = layer2Options.map((option) => {
+    const node = assembledTree.nodeMap.get(option.key);
+
+    return {
+      ...option,
+      editable: node?.source === 'local',
+    };
+  });
 
   const layer3OptionsWithEditState = layer3Options.map((option) => {
     const node = assembledTree.nodeMap.get(option.key);
@@ -387,9 +441,11 @@ function CorpDetails({
           layer1Options={layer1Options}
           selectedLayer1Key={selectedLayer1Key}
           onSelectLayer1={handleSelectLayer1}
-          layer2Options={layer2Options}
+          layer2Options={layer2OptionsWithEditState}
           selectedLayer2Key={selectedLayer2Key}
           onSelectLayer2={handleSelectLayer2}
+          onAddLayer2={handleAddLayer2}
+          onRenameLayer2={handleRenameLayer2}
           layer3Options={layer3OptionsWithEditState}
           selectedLayer3Key={selectedLayer3Key}
           onSelectLayer3={handleSelectLayer3}
