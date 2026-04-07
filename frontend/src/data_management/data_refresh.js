@@ -2,16 +2,19 @@ import {
   applyTransactionDeltaToCorp,
   hydrateStoredTransaction,
 } from '../components/transaction_table/transactionTableHelpers';
-import { fetchJson } from './apiClient';
 
 export async function syncFromAuditLog(localData) {
   const currentLocalAuditId = localData.current_audit_id || 0;
 
-  const { current_audit_id, audit_rows } = await fetchJson(
-    `/api/sync/audit/changes?after_id=${currentLocalAuditId}`,
-    {},
-    'Audit log sync'
+  const auditResponse = await fetch(
+    `http://localhost:3000/api/sync/audit/changes?after_id=${currentLocalAuditId}`
   );
+
+  if (!auditResponse.ok) {
+    throw new Error('Failed to fetch audit changes');
+  }
+
+  const { current_audit_id, audit_rows } = await auditResponse.json();
 
   if (!audit_rows || audit_rows.length === 0) {
     return localData;
@@ -56,18 +59,20 @@ export async function syncFromAuditLog(localData) {
 }
 
 async function fetchRowsByIds(tableName, rowIds) {
-  const { rows } = await fetchJson(
-    '/api/sync/rows-by-ids',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        table_name: tableName,
-        row_ids: rowIds,
-      }),
-    },
-    `Row sync for ${tableName}`
-  );
+  const rowResponse = await fetch('http://localhost:3000/api/sync/rows-by-ids', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      table_name: tableName,
+      row_ids: rowIds,
+    }),
+  });
+
+  if (!rowResponse.ok) {
+    throw new Error(`Failed to fetch rows for ${tableName}`);
+  }
+
+  const { rows } = await rowResponse.json();
   return rows || [];
 }
 

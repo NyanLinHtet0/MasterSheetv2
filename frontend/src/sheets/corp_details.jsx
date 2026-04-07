@@ -22,7 +22,6 @@ import {
   filterTransactionsByTreeSelection,
   filterTransactionsByViewMode,
 } from '../components/helpers/treeViewHelpers';
-import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
 
 function CorpDetails({
   selectedCorp,
@@ -31,8 +30,6 @@ function CorpDetails({
   onDeleteTransaction,
   onInsertLocalTreeNode,
   onRenameLocalTreeNode,
-  languageMode = LANGUAGE_MODES.ENG,
-  onToggleLanguageMode,
 }) {
   const [viewMode, setViewMode] = useState(VIEW_MODES.LIVE);
   const [isEditTableMode, setIsEditTableMode] = useState(false);
@@ -77,8 +74,8 @@ function CorpDetails({
   })();
 
   const assembledTree = useMemo(() => {
-    return buildAssembledTree(globalTree, localTree, { languageMode });
-  }, [globalTree, localTree, languageMode]);
+    return buildAssembledTree(globalTree, localTree);
+  }, [globalTree, localTree]);
 
   const liveGlobalTree = useMemo(() => normalizeRows(globalTree), [globalTree]);
   const liveLocalTree = useMemo(() => normalizeRows(localTree), [localTree]);
@@ -189,17 +186,16 @@ function CorpDetails({
         toDisplayTransaction(tx, { isInverse, isForeign })
       ),
       globalTree,
-      localTree,
-      { languageMode }
+      localTree
     );
-  }, [filteredTransactions, isInverse, isForeign, globalTree, localTree, languageMode]);
+  }, [filteredTransactions, isInverse, isForeign, globalTree, localTree]);
 
   const typeOptions = useMemo(() => {
     return (globalChildrenByParent.get(null) || []).map((row) => ({
       value: String(row.id),
-      label: getLocalizedName(row, languageMode) || `ID ${row.id}`,
+      label: row.name || `ID ${row.id}`,
     }));
-  }, [globalChildrenByParent, languageMode]);
+  }, [globalChildrenByParent]);
 
   const getGlobalOptionsByType = (typeId) => {
     if (!typeId) return [];
@@ -234,8 +230,7 @@ function CorpDetails({
     }
 
     const walk = (node, prefix = '') => {
-      const nodeLabel = getLocalizedName(node, languageMode) || `ID ${node.id}`;
-      const nextLabel = prefix ? `${prefix} > ${nodeLabel}` : nodeLabel;
+      const nextLabel = prefix ? `${prefix} > ${node.name || `ID ${node.id}`}` : (node.name || `ID ${node.id}`);
       rows.push({
         value: String(node.id),
         label: nextLabel,
@@ -463,8 +458,6 @@ function CorpDetails({
           onToggleEditTableMode={() => setIsEditTableMode((prev) => !prev)}
           onAddLayer3={handleAddLayer3}
           onRenameLayer3={handleRenameLayer3}
-          languageMode={languageMode}
-          onToggleLanguageMode={onToggleLanguageMode}
         />
       </div>
 
