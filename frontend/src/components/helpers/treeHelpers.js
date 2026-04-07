@@ -1,6 +1,7 @@
 // src/components/helpers/treeHelpers.js
 
 import currency from 'currency.js';
+import { getLocalizedName, LANGUAGE_MODES } from './nameLocalization';
 
 function isLiveRow(row) {
   return Number(row?.soft_delete) !== 1;
@@ -433,7 +434,7 @@ export function attachTransactionTagNames(
   transactions = [],
   globalTree = [],
   localTree = [],
-  { includeSoftDeleted = false } = {}
+  { includeSoftDeleted = false, languageMode = LANGUAGE_MODES.ENG } = {}
 ) {
   const globalMap = buildRowMap(globalTree, { includeSoftDeleted });
   const localMap = buildRowMap(localTree, { includeSoftDeleted });
@@ -492,9 +493,9 @@ export function attachTransactionTagNames(
 
     return {
       ...tx,
-      global_tag_root_name: assembledPath[0]?.row?.name || '',
-      global_tag_name: assembledPath[1]?.row?.name || '',
-      local_tag_name: assembledPath[2]?.row?.name || '',
+      global_tag_root_name: getLocalizedName(assembledPath[0]?.row, languageMode) || '',
+      global_tag_name: getLocalizedName(assembledPath[1]?.row, languageMode) || '',
+      local_tag_name: getLocalizedName(assembledPath[2]?.row, languageMode) || '',
     };
   });
 }

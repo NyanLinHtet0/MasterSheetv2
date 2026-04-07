@@ -5,6 +5,7 @@ import {
   getDescendantIds,
   normalizeRows,
 } from './treeHelpers';
+import { getLocalizedName, LANGUAGE_MODES } from './nameLocalization';
 
 export const VIEW_MODES = {
   LIVE: 'live',
@@ -33,7 +34,11 @@ export function filterTransactionsByViewMode(transactions = [], viewMode) {
   return transactions.filter((tx) => Number(tx.soft_delete) !== 1);
 }
 
-export function buildAssembledTree(globalTree = [], localTree = []) {
+export function buildAssembledTree(
+  globalTree = [],
+  localTree = [],
+  { languageMode = LANGUAGE_MODES.ENG } = {}
+) {
   const liveGlobalRows = normalizeRows(globalTree);
   const liveLocalRows = normalizeRows(localTree);
 
@@ -59,7 +64,7 @@ export function buildAssembledTree(globalTree = [], localTree = []) {
     const node = {
       key: `l-${localRow.id}`,
       parentKey,
-      label: localRow.name || `ID ${localRow.id}`,
+      label: getLocalizedName(localRow, languageMode) || `ID ${localRow.id}`,
       depth,
       source: 'local',
       globalId: localRow.global_parent_id ?? rootGlobalId ?? null,
@@ -80,7 +85,7 @@ export function buildAssembledTree(globalTree = [], localTree = []) {
     const node = {
       key: `g-${globalRow.id}`,
       parentKey,
-      label: globalRow.name || `ID ${globalRow.id}`,
+      label: getLocalizedName(globalRow, languageMode) || `ID ${globalRow.id}`,
       depth,
       source: 'global',
       globalId: globalRow.id,
