@@ -87,6 +87,7 @@ function resolveForeignKeys(tableName, rowData, mapper) {
 exports.pushChanges = async (req, res) => {
   const { client_audit_id, actions } = req.body;
   const connection = await db.getConnection();
+  const insertedIdMappings = [];
 
   try {
     await connection.beginTransaction();
@@ -133,6 +134,11 @@ exports.pushChanges = async (req, res) => {
 
         auditRowId = result.insertId;
         mapper.mapId(action.row_id, auditRowId);
+        insertedIdMappings.push({
+          table_name: action.table_name,
+          temp_id: Number(action.row_id),
+          real_id: Number(auditRowId),
+        });
         newData = insertData;
       }
 
@@ -198,7 +204,8 @@ exports.pushChanges = async (req, res) => {
     res.json({
       success: true,
       current_audit_id,
-      simulated_backend: { id_maps: mapper.getMap() }
+      simulated_backend: { id_maps: mapper.getMap() },
+      id_mappings: insertedIdMappings,
     });
 
   } catch (error) {
