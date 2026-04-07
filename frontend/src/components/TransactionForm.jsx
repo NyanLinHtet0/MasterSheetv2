@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import styles from './TransactionForm.module.css';
 import {
   calculateTransactionValues,
@@ -8,6 +8,10 @@ import {
   isValidPartialNumber,
   parseEditableNumber,
 } from './transaction_table/transactionTableHelpers';
+import {
+  buildAssembledTree,
+  buildLayerOptions,
+} from './helpers/treeViewHelpers';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
@@ -26,6 +30,8 @@ export default function TransactionForm({
   onSubmit,
   corpname = '',
   isForeign: isForeignProp,
+  globalTree = [],
+  localTree = [],
 }) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -35,6 +41,9 @@ export default function TransactionForm({
   const [amount, setAmount] = useState('');
   const [rate, setRate] = useState('');
   const [totalMMK, setTotalMMK] = useState('');
+  const [layer1Key, setLayer1Key] = useState('');
+  const [layer2Key, setLayer2Key] = useState('');
+  const [layer3Key, setLayer3Key] = useState('');
 
   const dayInputRef = useRef(null);
   const descriptionInputRef = useRef(null);
@@ -46,6 +55,25 @@ export default function TransactionForm({
 
   const daysInSelectedMonth = new Date(year, month, 0).getDate();
   const days = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
+
+  const assembledTree = useMemo(
+    () => buildAssembledTree(globalTree, localTree),
+    [globalTree, localTree]
+  );
+
+  const layer1Options = useMemo(() => {
+    return buildLayerOptions(assembledTree.childrenByKey, null);
+  }, [assembledTree]);
+
+  const layer2Options = useMemo(() => {
+    if (!layer1Key) return [];
+    return buildLayerOptions(assembledTree.childrenByKey, layer1Key);
+  }, [assembledTree, layer1Key]);
+
+  const layer3Options = useMemo(() => {
+    if (!layer2Key) return [];
+    return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
+  }, [assembledTree, layer2Key]);
 
   useEffect(() => {
     if (day > daysInSelectedMonth) {
@@ -93,6 +121,9 @@ export default function TransactionForm({
     setAmount('');
     setRate('');
     setTotalMMK('');
+    setLayer1Key('');
+    setLayer2Key('');
+    setLayer3Key('');
   };
 
   const processSubmit = (isShiftEnter) => {
@@ -101,6 +132,7 @@ export default function TransactionForm({
     if (!trimmedDescription) return;
     if (!isUsableNumberInput(amount)) return;
     if (isForeign && !isUsableNumberInput(rate)) return;
+    if (!layer1Key || !layer2Key) return;
 
     const tx_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -116,6 +148,9 @@ export default function TransactionForm({
       { isForeign }
     );
 
+    const deepestSelectionKey = layer3Key || layer2Key;
+    const selectedTagNode = assembledTree.nodeMap.get(deepestSelectionKey) || null;
+
     const txData = {
       tx_date,
       description: trimmedDescription,
@@ -124,6 +159,8 @@ export default function TransactionForm({
       total_mmk: calculated.total_mmk,
       soft_delete: 0,
       tx_status: 1,
+      global_tree_id: selectedTagNode?.globalId ?? null,
+      local_tree_id: selectedTagNode?.localId ?? null,
       ...(isForeign && {
         rate: calculated.rate,
       }),
@@ -154,6 +191,60 @@ export default function TransactionForm({
       processSubmit(true);
     }
   };
+
+  const renderTagFields = () => (
+    <div className={styles.tagFields}>
+      <select
+        style={{ flex: 1 }}
+        value={layer1Key}
+        onChange={(e) => {
+          setLayer1Key(e.target.value);
+          setLayer2Key('');
+          setLayer3Key('');
+        }}
+        required
+      >
+        <option value="">Layer 1 (Type)</option>
+        {layer1Options.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        style={{ flex: 1 }}
+        value={layer2Key}
+        onChange={(e) => {
+          setLayer2Key(e.target.value);
+          setLayer3Key('');
+        }}
+        required
+        disabled={!layer1Key}
+      >
+        <option value="">Layer 2</option>
+        {layer2Options.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        style={{ flex: 1 }}
+        value={layer3Key}
+        onChange={(e) => setLayer3Key(e.target.value)}
+        disabled={!layer2Key}
+      >
+        <option value="">Layer 3 (Optional)</option>
+        {layer3Options.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div className={styles.transactionFormWrapper}>
@@ -223,6 +314,8 @@ export default function TransactionForm({
             required
           />
 
+          {!isForeign && renderTagFields()}
+
           {isForeign && (
             <>
               <input
@@ -242,6 +335,8 @@ export default function TransactionForm({
                 onChange={handleTotalChange}
                 required
               />
+
+              {renderTagFields()}
             </>
           )}
         </div>

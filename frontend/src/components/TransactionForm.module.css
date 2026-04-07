@@ -75,3 +75,16 @@
     flex-direction: column;
   }
 }
+.tagFields {
+  display: flex;
+  flex: 2;
+  gap: 12px;
+  min-width: 320px;
+}
+
+@media (max-width: 900px) {
+  .tagFields {
+    flex-direction: column;
+    min-width: 100%;
+  }
+}

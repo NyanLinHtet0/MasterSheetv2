@@ -12,6 +12,7 @@ function CorpList({
   selectedCorp,
   onSelectCorp,
   onAddTransaction,
+  globalTree = [],
 }) {
   const grandTotal = corps.reduce((sum, corp) => {
     return currency(sum).add(corp.current_balance || 0).value;
@@ -59,6 +60,8 @@ function CorpList({
               selectedCorp.is_foreign === 1 ||
               selectedCorp.is_foreign === '1'
             }
+            globalTree={globalTree}
+            localTree={selectedCorp.local_tree || []}
           />
         </div>
       )}
