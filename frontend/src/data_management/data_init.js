@@ -36,7 +36,7 @@ export function useSyncState() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('http://localhost:3000/api/sync/initialize');
+      const response = await fetch('/api/sync/initialize');
 
       if (!response.ok) {
         throw new Error('Failed to fetch initial database state');

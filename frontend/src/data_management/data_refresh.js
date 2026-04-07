@@ -7,7 +7,7 @@ export async function syncFromAuditLog(localData) {
   const currentLocalAuditId = localData.current_audit_id || 0;
 
   const auditResponse = await fetch(
-    `http://localhost:3000/api/sync/audit/changes?after_id=${currentLocalAuditId}`
+    `/api/sync/audit/changes?after_id=${currentLocalAuditId}`
   );
 
   if (!auditResponse.ok) {
@@ -59,7 +59,7 @@ export async function syncFromAuditLog(localData) {
 }
 
 async function fetchRowsByIds(tableName, rowIds) {
-  const rowResponse = await fetch('http://localhost:3000/api/sync/rows-by-ids', {
+  const rowResponse = await fetch('/api/sync/rows-by-ids', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
