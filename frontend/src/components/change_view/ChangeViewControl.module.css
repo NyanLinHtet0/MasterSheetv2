@@ -45,6 +45,13 @@
   margin-bottom: 14px;
 }
 
+.viewHeaderTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .viewPopupTitle {
   font-size: 1rem;
   font-weight: 800;
@@ -196,4 +203,46 @@
   background: #1f6feb;
   color: #ffffff;
   border-color: #1f6feb;
+}
+
+.editTableButton {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editTableButtonActive {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.editInlineRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editTextInput {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 0.9rem;
+}
+
+.addButton {
+  border: 1px solid rgba(59, 130, 246, 0.8);
+  background: rgba(37, 99, 235, 0.9);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-weight: 700;
+  cursor: pointer;
 }

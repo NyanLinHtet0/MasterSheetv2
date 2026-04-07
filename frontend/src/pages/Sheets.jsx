@@ -169,6 +169,94 @@ function Sheets({
     );
   };
 
+  const handleInsertLocalTreeNode = ({ corpId, name, parentId = null, globalParentId = null }) => {
+    if (!corpId || !name) return;
+
+    const tempId = -Math.abs(Date.now() + Math.floor(Math.random() * 1000));
+    const nextNode = {
+      id: tempId,
+      corp_id: corpId,
+      parent_id: parentId,
+      global_parent_id: globalParentId,
+      name,
+      soft_delete: 0,
+    };
+
+    setDraftData((prev) => ({
+      ...prev,
+      corp_data: (prev.corp_data || []).map((corp) => {
+        if (corp.id !== corpId) return corp;
+        return {
+          ...corp,
+          local_tree: [...(corp.local_tree || []), nextNode],
+        };
+      }),
+    }));
+
+    onQueueInsert?.('local_tree', tempId, {
+      corp_id: corpId,
+      parent_id: parentId,
+      global_parent_id: globalParentId,
+      name,
+      soft_delete: 0,
+    });
+  };
+
+  const handleRenameLocalTreeNode = ({ corpId, localTreeId, name }) => {
+    if (!corpId || !localTreeId || !name) return;
+
+    const corp = corps.find((row) => row.id === corpId);
+    const oldNode = (corp?.local_tree || []).find((row) => row.id === localTreeId);
+
+    if (!oldNode || oldNode.name === name) {
+      return;
+    }
+
+    setDraftData((prev) => ({
+      ...prev,
+      corp_data: (prev.corp_data || []).map((row) => {
+        if (row.id !== corpId) return row;
+
+        return {
+          ...row,
+          local_tree: (row.local_tree || []).map((node) =>
+            node.id === localTreeId ? { ...node, name } : node
+          ),
+        };
+      }),
+    }));
+
+    if (oldNode.id < 0) {
+      onQueueInsert?.('local_tree', oldNode.id, {
+        corp_id: oldNode.corp_id,
+        parent_id: oldNode.parent_id,
+        global_parent_id: oldNode.global_parent_id,
+        name,
+        soft_delete: oldNode.soft_delete ?? 0,
+      });
+      return;
+    }
+
+    onQueueUpdate?.(
+      'local_tree',
+      oldNode.id,
+      {
+        corp_id: oldNode.corp_id,
+        parent_id: oldNode.parent_id,
+        global_parent_id: oldNode.global_parent_id,
+        name: oldNode.name,
+        soft_delete: oldNode.soft_delete ?? 0,
+      },
+      {
+        corp_id: oldNode.corp_id,
+        parent_id: oldNode.parent_id,
+        global_parent_id: oldNode.global_parent_id,
+        name,
+        soft_delete: oldNode.soft_delete ?? 0,
+      }
+    );
+  };
+
   return (
     <div className={styles.container}>
       <CorpList
@@ -187,6 +275,8 @@ function Sheets({
         assets={assets}
         onUpdateTransaction={handleUpdateTransaction}
         onDeleteTransaction={handleDeleteTransaction}
+        onInsertLocalTreeNode={handleInsertLocalTreeNode}
+        onRenameLocalTreeNode={handleRenameLocalTreeNode}
       />
     </div>
   );
