@@ -72,6 +72,38 @@ export default function TransactionForm({
 
   const layer3Options = useMemo(() => {
     if (!layer2Key) return [];
+    const directChildren = assembledTree.childrenByKey.get(layer2Key) || [];
+    const collectedLocalNodes = [];
+
+    const collectLocalDescendants = (parentKey) => {
+      const children = assembledTree.childrenByKey.get(parentKey) || [];
+      children.forEach((child) => {
+        if (child.source === 'local') {
+          collectedLocalNodes.push(child);
+        }
+
+        collectLocalDescendants(child.key);
+      });
+    };
+
+    directChildren.forEach((child) => {
+      if (child.source === 'local') {
+        collectedLocalNodes.push(child);
+      }
+      collectLocalDescendants(child.key);
+    });
+
+    const dedupedLocalOptions = Array.from(
+      new Map(collectedLocalNodes.map((node) => [node.key, node])).values()
+    );
+
+    if (dedupedLocalOptions.length > 0) {
+      return dedupedLocalOptions.map((node) => ({
+        key: node.key,
+        label: node.label,
+      }));
+    }
+
     return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
   }, [assembledTree, layer2Key]);
 
@@ -132,7 +164,7 @@ export default function TransactionForm({
     if (!trimmedDescription) return;
     if (!isUsableNumberInput(amount)) return;
     if (isForeign && !isUsableNumberInput(rate)) return;
-    if (!layer1Key || !layer2Key) return;
+    if (!layer1Key) return;
 
     const tx_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -148,8 +180,38 @@ export default function TransactionForm({
       { isForeign }
     );
 
-    const deepestSelectionKey = layer3Key || layer2Key;
+    const deepestSelectionKey = layer3Key || layer2Key || layer1Key;
     const selectedTagNode = assembledTree.nodeMap.get(deepestSelectionKey) || null;
+
+    const parseNodeKey = (key) => {
+      if (!key) return null;
+      const [prefix, rawId] = key.split('-');
+      const parsedId = Number(rawId);
+      if (!Number.isFinite(parsedId)) return null;
+      return { prefix, id: parsedId };
+    };
+
+    const parsedLayer1 = parseNodeKey(layer1Key);
+    const parsedLayer2 = parseNodeKey(layer2Key);
+    const parsedLayer3 = parseNodeKey(layer3Key);
+
+    let resolvedGlobalTreeId = null;
+    let resolvedLocalTreeId = null;
+
+    if (parsedLayer3?.prefix === 'l') {
+      resolvedLocalTreeId = parsedLayer3.id;
+      const localRow = localTree.find((row) => Number(row?.id) === parsedLayer3.id);
+      resolvedGlobalTreeId =
+        localRow?.global_parent_id ??
+        (parsedLayer2?.prefix === 'g' ? parsedLayer2.id : null) ??
+        (parsedLayer1?.prefix === 'g' ? parsedLayer1.id : null);
+    } else if (parsedLayer3?.prefix === 'g') {
+      resolvedGlobalTreeId = parsedLayer3.id;
+    } else if (parsedLayer2?.prefix === 'g') {
+      resolvedGlobalTreeId = parsedLayer2.id;
+    } else if (parsedLayer1?.prefix === 'g') {
+      resolvedGlobalTreeId = parsedLayer1.id;
+    }
 
     const txData = {
       tx_date,
@@ -159,8 +221,8 @@ export default function TransactionForm({
       total_mmk: calculated.total_mmk,
       soft_delete: 0,
       tx_status: 1,
-      global_tree_id: selectedTagNode?.globalId ?? null,
-      local_tree_id: selectedTagNode?.localId ?? null,
+      global_tree_id: resolvedGlobalTreeId ?? selectedTagNode?.globalId ?? null,
+      local_tree_id: resolvedLocalTreeId ?? selectedTagNode?.localId ?? null,
       ...(isForeign && {
         rate: calculated.rate,
       }),
@@ -204,7 +266,7 @@ export default function TransactionForm({
         }}
         required
       >
-        <option value="">Type Tag</option>
+        <option value="">-</option>
         {layer1Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -219,10 +281,9 @@ export default function TransactionForm({
           setLayer2Key(e.target.value);
           setLayer3Key('');
         }}
-        required
         disabled={!layer1Key}
       >
-        <option value="">Global Tag</option>
+        <option value="">-</option>
         {layer2Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
@@ -236,7 +297,7 @@ export default function TransactionForm({
         onChange={(e) => setLayer3Key(e.target.value)}
         disabled={!layer2Key}
       >
-        <option value="">Local Tag (Optional)</option>
+        <option value="">-</option>
         {layer3Options.map((option) => (
           <option key={option.key} value={option.key}>
             {option.label}
