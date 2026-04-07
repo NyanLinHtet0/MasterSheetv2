@@ -60,13 +60,18 @@ function CorpDetails({
   const foreignLabel =
     safeCorp.name?.split('ဝယ်စာရင်း')[0]?.trim() || 'Foreign';
 
-  const rate =
-    isForeign && Number(safeCorp.current_foreign)
-      ? Math.abs(
-          Number(safeCorp.current_balance || 0) /
-            Number(safeCorp.current_foreign || 0)
-        ).toLocaleString(undefined, { maximumFractionDigits: 2 })
-      : '-';
+  const rate = (() => {
+    if (!isForeign) return '-';
+
+    const foreignBalance = currency(safeCorp.current_foreign || 0).value;
+    if (!foreignBalance) return '-';
+
+    const derivedRate = currency(safeCorp.current_balance || 0)
+      .divide(foreignBalance)
+      .value;
+
+    return Math.abs(derivedRate).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  })();
 
   const assembledTree = useMemo(() => {
     return buildAssembledTree(globalTree, localTree);

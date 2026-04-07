@@ -1,6 +1,7 @@
+import currency from 'currency.js';
+
 export function normalizeNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
+  return currency(value || 0).value;
 }
 
 export function normalizeBool(value) {
@@ -12,17 +13,17 @@ export function summarizeCorps(corps = []) {
     const transactions = Array.isArray(corp.transactions) ? corp.transactions : [];
     const activeTransactions = transactions.filter((tx) => !normalizeBool(tx?.soft_delete));
 
-    const totalIn = activeTransactions.reduce(
-      (sum, tx) => sum + Math.max(0, normalizeNumber(tx?.in_amount)),
-      0
-    );
+    const totalIn = activeTransactions.reduce((sum, tx) => {
+      const amount = Math.max(0, normalizeNumber(tx?.in_amount));
+      return sum.add(amount);
+    }, currency(0));
 
-    const totalOut = activeTransactions.reduce(
-      (sum, tx) => sum + Math.max(0, normalizeNumber(tx?.out_amount)),
-      0
-    );
+    const totalOut = activeTransactions.reduce((sum, tx) => {
+      const amount = Math.max(0, normalizeNumber(tx?.out_amount));
+      return sum.add(amount);
+    }, currency(0));
 
-    const realizedProfit = totalIn - totalOut;
+    const realizedProfit = totalIn.subtract(totalOut).value;
 
     return {
       id: corp.id,
@@ -39,15 +40,13 @@ export function summarizeCorps(corps = []) {
 export function buildViewMetrics(corpSummaries = []) {
   const corporationCount = corpSummaries.length;
 
-  const combinedBalance = corpSummaries.reduce(
-    (sum, corp) => sum + normalizeNumber(corp.currentBalance),
-    0
-  );
+  const combinedBalance = corpSummaries
+    .reduce((sum, corp) => sum.add(normalizeNumber(corp.currentBalance)), currency(0))
+    .value;
 
-  const combinedProfit = corpSummaries.reduce(
-    (sum, corp) => sum + normalizeNumber(corp.realizedProfit),
-    0
-  );
+  const combinedProfit = corpSummaries
+    .reduce((sum, corp) => sum.add(normalizeNumber(corp.realizedProfit)), currency(0))
+    .value;
 
   const totalTransactions = corpSummaries.reduce(
     (sum, corp) => sum + normalizeNumber(corp.transactionCount),
