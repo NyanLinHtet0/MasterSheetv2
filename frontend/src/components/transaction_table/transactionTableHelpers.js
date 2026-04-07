@@ -164,8 +164,9 @@ export function toDisplayTransaction(tx, { isInverse, isForeign }) {
   };
 }
 
-export function buildEditFormData(tx, { isInverse, isForeign }) {
+export function buildEditFormData(tx, { isInverse, isForeign, resolveTypeId }) {
   const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
+  const typeId = resolveTypeId?.(hydratedTx.global_tree_id) ?? null;
 
   return {
     date: formatTxDateForInput(hydratedTx.tx_date),
@@ -175,6 +176,11 @@ export function buildEditFormData(tx, { isInverse, isForeign }) {
     total_mmk: isForeign
       ? String(flipByInverse(hydratedTx.total_mmk || 0, isInverse))
       : '',
+    type_id: typeId != null ? String(typeId) : '',
+    global_tree_id:
+      hydratedTx.global_tree_id != null ? String(hydratedTx.global_tree_id) : '',
+    local_tree_id:
+      hydratedTx.local_tree_id != null ? String(hydratedTx.local_tree_id) : '',
   };
 }
 
@@ -210,6 +216,10 @@ export function buildUpdatedTransaction(oldTx, editFormData, { isForeign, isInve
     rate: calculated.rate,
     adjustment: calculated.adjustment,
     total_mmk: calculated.total_mmk,
+    global_tree_id:
+      editFormData.global_tree_id === '' ? null : Number(editFormData.global_tree_id),
+    local_tree_id:
+      editFormData.local_tree_id === '' ? null : Number(editFormData.local_tree_id),
   };
 
   return {

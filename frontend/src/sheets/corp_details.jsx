@@ -5,6 +5,10 @@ import TransactionTable from '../components/transaction_table/TransactionTable';
 import ChangeViewControl from '../components/change_view/ChangeViewControl';
 import {
   attachTransactionTagNames,
+  buildChildrenMap,
+  buildRowMap,
+  getAncestorIds,
+  normalizeRows,
 } from '../components/helpers/treeHelpers';
 import {
   normalizeBool,
@@ -64,6 +68,18 @@ function CorpDetails({
   const assembledTree = useMemo(() => {
     return buildAssembledTree(globalTree, localTree);
   }, [globalTree, localTree]);
+
+  const liveGlobalTree = useMemo(() => normalizeRows(globalTree), [globalTree]);
+  const liveLocalTree = useMemo(() => normalizeRows(localTree), [localTree]);
+  const globalRowMap = useMemo(() => buildRowMap(liveGlobalTree), [liveGlobalTree]);
+  const localChildrenByParent = useMemo(
+    () => buildChildrenMap(liveLocalTree, 'parent_id'),
+    [liveLocalTree]
+  );
+  const globalChildrenByParent = useMemo(
+    () => buildChildrenMap(liveGlobalTree, 'parent_id'),
+    [liveGlobalTree]
+  );
 
   const selectedLayer1Node = assembledTree.nodeMap.get(selectedLayer1Key) || null;
   const selectedLayer2Node = assembledTree.nodeMap.get(selectedLayer2Key) || null;
@@ -170,6 +186,58 @@ function CorpDetails({
       localTree
     );
   }, [filteredTransactions, isInverse, isForeign, globalTree, localTree]);
+
+  const typeOptions = useMemo(() => {
+    return (globalChildrenByParent.get(null) || []).map((row) => ({
+      value: String(row.id),
+      label: row.name || `ID ${row.id}`,
+    }));
+  }, [globalChildrenByParent]);
+
+  const getGlobalOptionsByType = (typeId) => {
+    if (!typeId) return [];
+
+    return (globalChildrenByParent.get(Number(typeId)) || []).map((row) => ({
+      value: String(row.id),
+      label: row.name || `ID ${row.id}`,
+    }));
+  };
+
+  const getLocalOptionsByGlobal = (globalId) => {
+    if (!globalId) return [];
+
+    const rows = [];
+    const roots = liveLocalTree.filter(
+      (row) => row.parent_id == null && row.global_parent_id === Number(globalId)
+    );
+
+    const walk = (node, prefix = '') => {
+      const nextLabel = prefix ? `${prefix} > ${node.name || `ID ${node.id}`}` : (node.name || `ID ${node.id}`);
+      rows.push({
+        value: String(node.id),
+        label: nextLabel,
+      });
+
+      (localChildrenByParent.get(node.id) || []).forEach((child) => walk(child, nextLabel));
+    };
+
+    roots.forEach((root) => walk(root));
+
+    return rows;
+  };
+
+  const resolveTypeId = (globalId) => {
+    if (globalId == null) return null;
+    const ancestors = Array.from(
+      getAncestorIds(liveGlobalTree, Number(globalId), { includeSelf: true })
+    );
+
+    const typeAncestor = ancestors.find(
+      (ancestorId) => (globalRowMap.get(ancestorId)?.parent_id ?? null) == null
+    );
+
+    return typeAncestor ?? null;
+  };
 
   const handleSelectLayer1 = (nextKey) => {
     const resolvedKey = nextKey === selectedLayer1Key ? null : nextKey;
@@ -286,6 +354,10 @@ function CorpDetails({
             isInverse={isInverse}
             onUpdate={onUpdateTransaction}
             onDelete={onDeleteTransaction}
+            typeOptions={typeOptions}
+            getGlobalOptionsByType={getGlobalOptionsByType}
+            getLocalOptionsByGlobal={getLocalOptionsByGlobal}
+            resolveTypeId={resolveTypeId}
           />
         </div>
       </div>

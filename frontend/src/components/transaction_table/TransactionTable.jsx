@@ -12,6 +12,10 @@ export default function TransactionTable({
   isInverse,
   onDelete,
   onUpdate,
+  typeOptions = [],
+  getGlobalOptionsByType = () => [],
+  getLocalOptionsByGlobal = () => [],
+  resolveTypeId = () => null,
 }) {
   const isEmpty = data.length === 0;
 
@@ -28,7 +32,11 @@ export default function TransactionTable({
     isForeign,
     isInverse,
     onSaveRow: onUpdate,
+    resolveTypeId,
   });
+
+  const globalOptions = getGlobalOptionsByType(editFormData.type_id);
+  const localOptions = getLocalOptionsByGlobal(editFormData.global_tree_id);
 
   return (
     <>
@@ -62,6 +70,7 @@ export default function TransactionTable({
                 <col style={{ width: '120px' }} />
               )}
               <col style={{ width: '180px' }} />
+              {isTableEditMode && <col style={{ width: '180px' }} />}
               <col style={{ width: '180px' }} />
               {isTableEditMode &&
               <col style={{ width: '180px' }} />}
@@ -83,6 +92,9 @@ export default function TransactionTable({
                   isEditing={editingRowId === tx.id}
                   editFormData={editFormData}
                   onInputChange={handleInputChange}
+                  typeOptions={typeOptions}
+                  globalOptions={globalOptions}
+                  localOptions={localOptions}
                   onSave={() => handleSaveEdit(tx.id)}
                   onCancel={handleCancelEdit}
                   onEditClick={() => handleEditClick(tx)}
