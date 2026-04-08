@@ -48,12 +48,6 @@ export default function TransactionRow({
           />
         </td>
 
-        {isTableEditMode && (
-          <td style={{ textAlign: 'right' }}>
-            {formatCurrencyValue(tx.adjustment)}
-          </td>
-        )}
-
         {isForeign ? (
           <>
             <td style={{ textAlign: 'right' }}>
@@ -73,6 +67,11 @@ export default function TransactionRow({
                 onChange={(e) => onInputChange(e, 'rate')}
               />
             </td>
+            {isTableEditMode && isForeign && (
+              <td style={{ textAlign: 'right' }}>
+                {formatCurrencyValue(tx.adjustment)}
+              </td>
+            )}
 
             <td style={{ textAlign: 'right' }}>
               <input
@@ -153,11 +152,6 @@ export default function TransactionRow({
     <tr>
       <td>{tx.tx_date}</td>
       <td>{tx.description}</td>
-      {isTableEditMode && (
-        <td style={{ textAlign: 'right' }}>
-          {formatCurrencyValue(tx.adjustment)}
-        </td>
-      )}
 
       {isForeign ? (
         <>
@@ -169,6 +163,11 @@ export default function TransactionRow({
           <td style={{ textAlign: 'right' }}>
             {formatCurrencyValue(tx.rate)}
           </td>
+            {isTableEditMode && isForeign && (
+              <td style={{ textAlign: 'right' }}>
+                {formatCurrencyValue(tx.adjustment)}
+              </td>
+            )}
           <td style={{ textAlign: 'right' }}>
             <span style={{ color: amountColor, fontWeight: 'bold' }}>
               {formatCurrencyValue(tx.total_mmk)}

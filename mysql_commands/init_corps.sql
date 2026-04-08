@@ -20,7 +20,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 43264260, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 43264260, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -393,7 +393,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-03-21', 'Initial Balance', 10236779, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 10236779, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -606,7 +606,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 3119900, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 3119900, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -627,7 +627,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 500000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 500000, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -648,7 +648,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 232615171, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 232615171, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -941,7 +941,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 11000000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 11000000, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -962,7 +962,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -791301, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -791301, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1127,7 +1127,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -36873421, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -36873421, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1188,7 +1188,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -30791031, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -30791031, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1249,7 +1249,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -16904165, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -16904165, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1302,7 +1302,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 582536, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 582536, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1331,7 +1331,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 18670453, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 18670453, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1376,7 +1376,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -5141556, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -5141556, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -1645,7 +1645,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 6792178, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 6792178, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2010,7 +2010,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -21940000, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -21940000, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -2031,7 +2031,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 556282, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 556282, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2068,7 +2068,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 9801000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 9801000, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2113,7 +2113,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 10826950, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 10826950, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -2134,7 +2134,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 1960300, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 1960300, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -2155,7 +2155,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 9216024, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 9216024, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2216,7 +2216,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 43818168, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 43818168, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2781,7 +2781,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 22519, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 22519, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2810,7 +2810,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 2203700, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 2203700, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2935,7 +2935,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 78253828, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 78253828, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -2972,7 +2972,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -137445000, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -137445000, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
 
@@ -2993,7 +2993,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', 7641350, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', 7641350, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -3030,7 +3030,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-03-26', 'Initial Balance', -15823253, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -15823253, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -3067,7 +3067,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-03-26', 'Initial Balance', -9333700, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -9333700, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -3192,7 +3192,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-03-26', 'Initial Balance', -1388343, 123.93222136028345, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -1388343, 123.93222136028345, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -3397,7 +3397,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-02-25', 'Initial Balance', -2196410, 0, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -2196410, 0, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2
@@ -3519,7 +3519,7 @@ SET @current_corp_id = LAST_INSERT_ID();
 -- ---------------------------------------------
 INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
 VALUES
-(@current_corp_id, '2026-03-28', 'Initial Balance', -250000, 123.3, 0, 2, NULL, NULL, NULL, 0, 1);
+(@current_corp_id, '2026-03-25', 'Initial Balance', -250000, 123.3, 0, 3, NULL, NULL, NULL, 0, 1);
 
 -- ---------------------------------------------
 -- Transaction 2

@@ -6,12 +6,14 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
       <tr>
         <th>Date</th>
         <th>Description</th>
-        {isTableEditMode && <th style={{ textAlign: 'right' }}>Adjustment</th>}
 
         {isForeign ? (
           <>
             <th style={{ textAlign: 'right' }}>{currencyName}</th>
             <th style={{ textAlign: 'right' }}>Rate</th>
+            {isTableEditMode && isForeign && (
+              <th style={{ textAlign: 'right' }}>Adjustment</th>
+            )}
             <th style={{ textAlign: 'right' }}>Total MMK</th>
           </>
         ) : (
@@ -21,10 +23,12 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
         <th>Type</th>
         <th>Global Tag</th>
         <th>Local Tag</th>
-        {isTableEditMode && 
-        <th className={styles.actionCell}>
-          {isTableEditMode ? 'Actions' : '\u00A0'}
-        </th>}
+
+        {isTableEditMode && (
+          <th className={styles.actionCell}>
+            Actions
+          </th>
+        )}
       </tr>
     </thead>
   );

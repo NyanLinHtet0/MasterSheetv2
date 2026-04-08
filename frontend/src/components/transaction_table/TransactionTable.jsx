@@ -56,6 +56,7 @@ export default function TransactionTable({
 
     return matchedGlobalOption?.value || '';
   })();
+
   const localOptions = getLocalOptionsByGlobal(selectedGlobalOptionValue);
 
   return (
@@ -80,20 +81,24 @@ export default function TransactionTable({
             <colgroup>
               <col style={{ width: '140px' }} />
               <col style={{ width: '220px' }} />
-              {isTableEditMode && <col style={{ width: '120px' }} />}
+
+              
+
               {isForeign ? (
                 <>
                   <col style={{ width: '100px' }} />
                   <col style={{ width: '85px' }} />
+                  {isTableEditMode && isForeign && <col style={{ width: '120px' }} />}
                   <col style={{ width: '120px' }} />
                 </>
               ) : (
                 <col style={{ width: '120px' }} />
               )}
+
               <col style={{ width: '180px' }} />
               <col style={{ width: '180px' }} />
               <col style={{ width: '180px' }} />
-              <col style={{ width: '180px' }} />
+
               {isTableEditMode && <col style={{ width: '180px' }} />}
             </colgroup>
 
@@ -102,6 +107,7 @@ export default function TransactionTable({
               currencyName={currencyName}
               isTableEditMode={isTableEditMode}
             />
+
             <tbody>
               {data.map((tx) => (
                 <TransactionRow
