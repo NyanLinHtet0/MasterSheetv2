@@ -426,7 +426,10 @@ function CorpDetails({
   return (
     <div className={styles.corpDetails}>
       <div className={styles.headerbar}>
-        <h2>{safeCorp.name}</h2>
+        <h2>
+          {safeCorp.name}
+          {isInverse ? ' (Inverse)' : ''}
+        </h2>
       </div>
 
       <div className={styles.balanceRow}>
