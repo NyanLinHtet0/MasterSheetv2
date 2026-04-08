@@ -6,6 +6,7 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
       <tr>
         <th>Date</th>
         <th>Description</th>
+        {isTableEditMode && <th style={{ textAlign: 'right' }}>Adjustment</th>}
 
         {isForeign ? (
           <>
@@ -17,7 +18,7 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
           <th style={{ textAlign: 'right' }}>Amount</th>
         )}
 
-        {isTableEditMode && <th>Type</th>}
+        <th>Type</th>
         <th>Global Tag</th>
         <th>Local Tag</th>
         {isTableEditMode && 

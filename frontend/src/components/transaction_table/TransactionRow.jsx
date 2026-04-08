@@ -1,4 +1,19 @@
 import styles from './transactiontable.module.css';
+import currency from 'currency.js';
+
+function formatCurrencyValue(value, { fallback = '' } = {}) {
+  if (value === '-') return '-';
+  if (value == null || value === '') return fallback;
+
+  const numericValue = Number(value);
+  if (Number.isNaN(numericValue)) return fallback;
+
+  const hasDecimal = !Number.isInteger(numericValue);
+  return currency(numericValue, {
+    symbol: '',
+    precision: hasDecimal ? 2 : 0,
+  }).format();
+}
 
 export default function TransactionRow({
   tx, type, isForeign, isTableEditMode, isEditing,
@@ -32,6 +47,12 @@ export default function TransactionRow({
             onChange={(e) => onInputChange(e, 'description')}
           />
         </td>
+
+        {isTableEditMode && (
+          <td style={{ textAlign: 'right' }}>
+            {formatCurrencyValue(tx.adjustment)}
+          </td>
+        )}
 
         {isForeign ? (
           <>
@@ -87,6 +108,7 @@ export default function TransactionRow({
             ))}
           </select>
         </td>
+
         <td>
           <select
             className={styles.editInput}
@@ -101,6 +123,7 @@ export default function TransactionRow({
             ))}
           </select>
         </td>
+
         <td>
           <select
             className={styles.editInput}
@@ -130,32 +153,37 @@ export default function TransactionRow({
     <tr>
       <td>{tx.tx_date}</td>
       <td>{tx.description}</td>
+      {isTableEditMode && (
+        <td style={{ textAlign: 'right' }}>
+          {formatCurrencyValue(tx.adjustment)}
+        </td>
+      )}
 
       {isForeign ? (
         <>
           <td style={{ textAlign: 'right' }}>
             <span style={{ color: amountColor, fontWeight: 'bold' }}>
-              {tx.amount === '-' ? '-' : tx.amount ? Number(tx.amount).toLocaleString() : ''}
+              {formatCurrencyValue(tx.amount)}
             </span>
           </td>
           <td style={{ textAlign: 'right' }}>
-            {tx.rate === '-' ? '-' : tx.rate ? Number(tx.rate).toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
+            {formatCurrencyValue(tx.rate)}
           </td>
           <td style={{ textAlign: 'right' }}>
             <span style={{ color: amountColor, fontWeight: 'bold' }}>
-              {tx.total_mmk ? Math.round(Number(tx.total_mmk)).toLocaleString() : ''}
+              {formatCurrencyValue(tx.total_mmk)}
             </span>
           </td>
         </>
       ) : (
         <td style={{ textAlign: 'right' }}>
           <span style={{ color: amountColor, fontWeight: 'bold' }}>
-            {tx.amount === '-' ? '-' : tx.amount ? Number(tx.amount).toLocaleString() : ''}
+            {formatCurrencyValue(tx.amount)}
           </span>
         </td>
       )}
 
-      {isTableEditMode && <td>{tx.global_tag_root_name || '-'}</td>}
+      <td>{tx.global_tag_root_name || '-'}</td>
       <td>{tx.global_tag_name || '-'}</td>
       <td>{tx.local_tag_name || '-'}</td>
       {isTableEditMode &&

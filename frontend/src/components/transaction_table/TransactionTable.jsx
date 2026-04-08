@@ -80,6 +80,7 @@ export default function TransactionTable({
             <colgroup>
               <col style={{ width: '140px' }} />
               <col style={{ width: '220px' }} />
+              {isTableEditMode && <col style={{ width: '120px' }} />}
               {isForeign ? (
                 <>
                   <col style={{ width: '100px' }} />
@@ -90,10 +91,10 @@ export default function TransactionTable({
                 <col style={{ width: '120px' }} />
               )}
               <col style={{ width: '180px' }} />
-              {isTableEditMode && <col style={{ width: '180px' }} />}
               <col style={{ width: '180px' }} />
-              {isTableEditMode &&
-              <col style={{ width: '180px' }} />}
+              <col style={{ width: '180px' }} />
+              <col style={{ width: '180px' }} />
+              {isTableEditMode && <col style={{ width: '180px' }} />}
             </colgroup>
 
             <TransactionTableHeader
