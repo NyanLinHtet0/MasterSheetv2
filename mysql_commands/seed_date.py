@@ -59,13 +59,21 @@ def normalize_date(date_str):
     return "1970-01-01"
 
 
+def is_initial_balance_tx(tx):
+    return str(tx.get("description", "")).strip().lower() == "initial balance"
+
+
 def resolve_global_tree_id(tx, amount_val):
     """
     Priority:
-    1. explicit global_tree_id
-    2. explicit global tag field
-    3. fallback sign rule
+    1. force Initial Balance to global tag 3
+    2. explicit global_tree_id
+    3. explicit global tag field
+    4. fallback sign rule
     """
+    if is_initial_balance_tx(tx):
+        return 3
+
     explicit_global = (
         tx.get("global_tree_id")
         or tx.get("globalTag")
@@ -129,9 +137,11 @@ def build_corp_sql(corp, idx):
     transactions = corp.get("transactions", [])
     if transactions:
         cutoff_date = date(2026, 3, 20)
+        initial_balance_date = "2026-03-25"
 
         for tx_idx, tx in enumerate(transactions, start=1):
-            t_date = normalize_date(tx.get("date"))
+            is_initial_balance = is_initial_balance_tx(tx)
+            t_date = initial_balance_date if is_initial_balance else normalize_date(tx.get("date"))
 
             try:
                 y, m, d = map(int, t_date.split("-"))
@@ -139,7 +149,7 @@ def build_corp_sql(corp, idx):
             except ValueError:
                 continue
 
-            if tx_date_obj > cutoff_date and tx.get("description", "").strip() != "Initial Balance":
+            if tx_date_obj > cutoff_date and not is_initial_balance:
                 continue
 
             desc = tx.get("description", "")
@@ -156,9 +166,9 @@ def build_corp_sql(corp, idx):
             tx_status = parse_int(tx.get("tx_status", 1), 1)
             tx_soft_delete = parse_int(tx.get("soft_delete", 0), 0)
 
-            # If local_tree_id exists, derive global_tree_id from local_tree.global_parent_id.
-            # This is the important DB-correct behavior.
-            if local_tree_id is not None:
+            # Initial Balance always uses forced global_tree_id = 3.
+            # Otherwise, if local_tree_id exists, derive global_tree_id from local_tree.global_parent_id.
+            if local_tree_id is not None and not is_initial_balance:
                 sql.append(
                     "-- ---------------------------------------------\n"
                     f"-- Transaction {tx_idx}\n"
