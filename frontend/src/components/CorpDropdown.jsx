@@ -2,9 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import currency from 'currency.js';
 import styles from './CorpDropdown.module.css';
 
-function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
+function CorpDropdown({
+  corps = [],
+  selectedCorp,
+  onSelect,
+  onRename,
+  onDelete,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [contextMenu, setContextMenu] = useState(null);
 
   const dropdownRef = useRef(null);
 
@@ -83,11 +90,29 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         handleCloseDropdown();
       }
+
+      const clickedElement =
+        event.target instanceof Element ? event.target : null;
+
+      if (contextMenu && !clickedElement?.closest(`.${styles.contextMenu}`)) {
+        setContextMenu(null);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectedCorp]);
+  }, [selectedCorp, contextMenu]);
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const filteredCorps = corps.filter((corp) =>
     (corp.name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -102,6 +127,38 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
     if (!isOpen) setIsOpen(true);
+  };
+
+  const openContextMenu = (event, corp) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setContextMenu({
+      corp,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const handleRenameCorp = () => {
+    if (!contextMenu?.corp) return;
+
+    const nextName = window.prompt('Rename corporation:', contextMenu.corp.name || '');
+    if (!nextName || !nextName.trim()) return;
+
+    onRename?.({ corpId: contextMenu.corp.id, name: nextName.trim() });
+    setContextMenu(null);
+  };
+
+  const handleDeleteCorp = () => {
+    if (!contextMenu?.corp) return;
+
+    const confirmed = window.confirm(
+      `Delete "${contextMenu.corp.name}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    onDelete?.({ corpId: contextMenu.corp.id });
+    setContextMenu(null);
   };
 
   const selectedDisplay = getCorpDisplayData(selectedCorp);
@@ -161,6 +218,7 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
                     isInverseCorp(corp) ? styles.inverseItem : ''
                   }`}
                   onClick={() => handleSelectCorp(corp)}
+                  onContextMenu={(event) => openContextMenu(event, corp)}
                 >
                   <span
                     className={`${styles.corpName} ${
@@ -186,6 +244,23 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
           ) : (
             <li className={styles.noResults}>No corps found</li>
           )}
+        </ul>
+      )}
+
+      {contextMenu && (
+        <ul
+          className={styles.contextMenu}
+          style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
+        >
+          <li className={styles.contextMenuItem} onClick={handleRenameCorp}>
+            Rename
+          </li>
+          <li className={styles.contextMenuItem} onClick={handleDeleteCorp}>
+            Delete
+          </li>
+          <li className={`${styles.contextMenuItem} ${styles.contextMenuItemDisabled}`}>
+            Order
+          </li>
         </ul>
       )}
     </div>

@@ -11,6 +11,8 @@ function CorpList({
   onAddCorp,
   selectedCorp,
   onSelectCorp,
+  onRenameCorp,
+  onDeleteCorp,
   onAddTransaction,
   globalTree = [],
   languageMode,
@@ -48,6 +50,8 @@ function CorpList({
           corps={corps}
           selectedCorp={selectedCorp}
           onSelect={(corp) => onSelectCorp(corp.id)}
+          onRename={onRenameCorp}
+          onDelete={onDeleteCorp}
         />
       </div>
 
