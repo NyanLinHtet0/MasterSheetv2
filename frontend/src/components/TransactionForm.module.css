@@ -42,17 +42,47 @@
   gap: 12px;
   width: 100%;
   margin: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .inputDatefields {
   display: flex;
   gap: 12px;
-  flex: 1;
+  flex: 1.2;
 }
 
 .flexInput {
   flex: 1;
+}
+
+.textInput {
+  flex: 2;
+}
+
+.amountInput {
+  flex: 1;
+}
+
+.singleFieldRow {
+  width: 100%;
+  display: flex;
+}
+
+.fullWidthInput {
+  width: 100%;
+}
+
+.tagFields {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tagSelect {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .submitBtn {
@@ -72,36 +102,8 @@
 
 @media (max-width: 900px) {
   .inputRow,
-  .inputDatefields {
-    flex-direction: column;
-  }
-}
-.tagFields {
-  display: flex;
-  flex-wrap: wrap;
-  flex: 1.7;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tagSelect {
-  display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 100%;
-  font-size: 0.88rem;
-  padding: 8px 10px !important;
-}
-.tagFields{
-  display: flex;
-  width:auto;
-
-  overflow-x: auto; 
-}
-
-@media (max-width: 900px) {
+  .inputDatefields,
   .tagFields {
     flex-direction: column;
-    min-width: 100%;
   }
 }

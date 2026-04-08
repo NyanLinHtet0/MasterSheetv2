@@ -18,6 +18,11 @@ const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
+const TAG_HINTS = {
+  revenue: ['revenue', 'income', 'sales'],
+  expense: ['expense', 'expenses', 'cost', 'cogs'],
+};
+
 const formatDisplayValue = (value) => {
   if (value === '' || value === '-' || value === '.' || value === '-.') return value;
 
@@ -25,6 +30,16 @@ const formatDisplayValue = (value) => {
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   return decimalPart != null ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
+
+const findLayer1KeyByType = (options, type) => {
+  const hints = TAG_HINTS[type] || [];
+  return (
+    options.find((option) => {
+      const normalized = String(option.label || '').toLowerCase();
+      return hints.some((hint) => normalized.includes(hint));
+    })?.key || ''
+  );
 };
 
 export default function TransactionForm({
@@ -66,6 +81,16 @@ export default function TransactionForm({
   const layer1Options = useMemo(() => {
     return buildLayerOptions(assembledTree.childrenByKey, null);
   }, [assembledTree]);
+
+  const revenueLayer1Key = useMemo(
+    () => findLayer1KeyByType(layer1Options, 'revenue'),
+    [layer1Options]
+  );
+
+  const expenseLayer1Key = useMemo(
+    () => findLayer1KeyByType(layer1Options, 'expense'),
+    [layer1Options]
+  );
 
   const layer2Options = useMemo(() => {
     if (!layer1Key) return [];
@@ -117,6 +142,18 @@ export default function TransactionForm({
 
     setAmount(rawValue);
     syncForeignTotal(rawValue, rate);
+
+    if (isForeign) return;
+
+    const numericAmount = parseEditableNumber(rawValue, null);
+    if (numericAmount == null || numericAmount === 0) return;
+
+    const nextAutoLayer1 = numericAmount < 0 ? expenseLayer1Key : revenueLayer1Key;
+    if (!nextAutoLayer1 || nextAutoLayer1 === layer1Key) return;
+
+    setLayer1Key(nextAutoLayer1);
+    setLayer2Key('');
+    setLayer3Key('');
   };
 
   const handleRateChange = (e) => {
@@ -311,55 +348,56 @@ export default function TransactionForm({
               ))}
             </select>
           </div>
-          <div className={styles.inputRow}>
-            <input
-              ref={descriptionInputRef}
-              style={{ flex: 1 }}
-              type="text"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-            />
-          </div>
 
-          <div className={styles.inputRow}>
-            <input
-              style={{ flex: 1 }}
-              type="text"
-              placeholder="Amount"
-              value={formatDisplayValue(amount)}
-              onChange={handleAmountChange}
-              required
-            />
-          </div>
-          <div>{!isForeign && renderTagFields()}</div>
-          
+          <input
+            className={styles.textInput}
+            ref={descriptionInputRef}
+            type="text"
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
 
-          {isForeign && (
-            <>
+          <input
+            className={styles.amountInput}
+            type="text"
+            placeholder="Amount"
+            value={formatDisplayValue(amount)}
+            onChange={handleAmountChange}
+            required
+          />
+        </div>
+
+        {isForeign ? (
+          <>
+            <div className={styles.singleFieldRow}>
               <input
-                style={{ flex: 0.6 }}
+                className={styles.fullWidthInput}
                 type="text"
                 placeholder="Rate"
                 value={formatDisplayValue(rate)}
                 onChange={handleRateChange}
                 required
               />
+            </div>
 
+            <div className={styles.singleFieldRow}>
               <input
-                style={{ flex: 1, fontWeight: 'bold' }}
+                className={styles.fullWidthInput}
                 type="text"
                 placeholder="Total MMK"
                 value={formatDisplayValue(totalMMK)}
                 onChange={handleTotalChange}
                 required
               />
+            </div>
 
-              {renderTagFields()}
-            </>
-          )}
-        </div>
+            <div className={styles.singleFieldRow}>{renderTagFields()}</div>
+          </>
+        ) : (
+          <div className={styles.singleFieldRow}>{renderTagFields()}</div>
+        )}
 
         <button type="submit" className={styles.submitBtn}>
           Add Transaction
