@@ -108,12 +108,24 @@
   background-color: #f8fafc;
 }
 
+.inverseItem {
+  background-color: #f8fafc;
+}
+
+.inverseItem:hover {
+  background-color: #eef2ff;
+}
+
 .corpName {
   font-size: 18px; /* Increased by ~15% */
   font-weight: 900;
   color: #334155;
   line-height: 1.8; 
   padding: 1px 0;
+}
+
+.inverseCorpName {
+  color: #475569;
 }
 
 .corpBalance {
@@ -156,4 +168,3 @@
     padding: 0;
   }
 }
-

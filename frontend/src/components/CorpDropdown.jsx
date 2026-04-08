@@ -9,6 +9,8 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
   const dropdownRef = useRef(null);
 
   const hasValue = (val) => val !== null && val !== undefined && val !== '';
+  const isInverseCorp = (corp) =>
+    corp?.inverse === true || corp?.inverse === 1 || corp?.inverse === '1';
 
   const getCorpDisplayData = (corp) => {
     if (!corp) {
@@ -66,6 +68,16 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
     }
   }, [selectedCorp, isOpen]);
 
+  const handleOpenDropdown = () => {
+    setIsOpen(true);
+    setSearchTerm('');
+  };
+
+  const handleCloseDropdown = () => {
+    setIsOpen(false);
+    setSearchTerm(selectedCorp ? selectedCorp.name : '');
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -76,16 +88,6 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [selectedCorp]);
-
-  const handleOpenDropdown = () => {
-    setIsOpen(true);
-    setSearchTerm('');
-  };
-
-  const handleCloseDropdown = () => {
-    setIsOpen(false);
-    setSearchTerm(selectedCorp ? selectedCorp.name : '');
-  };
 
   const filteredCorps = corps.filter((corp) =>
     (corp.name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -155,10 +157,18 @@ function CorpDropdown({ corps = [], selectedCorp, onSelect }) {
               return (
                 <li
                   key={corp.id}
-                  className={styles.dropdownItem}
+                  className={`${styles.dropdownItem} ${
+                    isInverseCorp(corp) ? styles.inverseItem : ''
+                  }`}
                   onClick={() => handleSelectCorp(corp)}
                 >
-                  <span className={styles.corpName}>{corp.name}</span>
+                  <span
+                    className={`${styles.corpName} ${
+                      isInverseCorp(corp) ? styles.inverseCorpName : ''
+                    }`}
+                  >
+                    {corp.name}
+                  </span>
 
                   <div className={styles.corpBalance}>
                     <span>{formatMmk(display.mmkValue, display.showForeign)}</span>
