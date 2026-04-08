@@ -9,18 +9,18 @@
   align-items: center;
   justify-content: space-between;
   background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #94a3b8; /* clearer border */
   border-radius: 8px;
-  padding: 14px 16px; /* Increased by ~15% */
+  padding: 14px 16px;
   cursor: text;
   transition: all 0.2s ease;
 }
 
 .dropdownHeader:hover,
 .activeHeader {
-  border-color: #94a3b8;
+  border-color: #64748b; /* darker for clearer active state */
   background-color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
 .inputGroup {
@@ -34,7 +34,7 @@
   border: none;
   background: transparent;
   outline: none;
-  font-size: 18px; /* Increased by ~15% from 16px */
+  font-size: 18px;
   font-weight: 900;
   color: #334155;
   width: 100%;
@@ -50,16 +50,16 @@
 }
 
 .headerBalance {
-  color: #64748b;
-  font-weight: 700;
+  color: #475569; /* darker */
+  font-weight: 800;
   white-space: nowrap;
-  font-size: 18px; /* Increased by ~15% */
-  line-height: 1.8; 
+  font-size: 18px;
+  line-height: 1.8;
 }
 
 .caret {
-  color: #94a3b8;
-  font-size: 14px; /* Scaled up slightly */
+  color: #64748b; /* slightly darker */
+  font-size: 14px;
   cursor: pointer;
   padding-left: 10px;
   transition: transform 0.3s ease;
@@ -79,12 +79,12 @@
   left: 0;
   right: 0;
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #94a3b8; /* clearer outer edge */
   border-radius: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
-  max-height: 500px; /* Slightly taller to accommodate bigger items */
+  max-height: 500px;
   overflow-y: auto;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   z-index: 50;
@@ -94,10 +94,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 18px; /* Increased padding by ~15% */
+  padding: 16px 18px;
   cursor: pointer;
-  border-bottom: 1px solid #f1f5f9;
-  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #cbd5e1; /* stronger separation */
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .dropdownItem:last-child {
@@ -105,42 +105,41 @@
 }
 
 .dropdownItem:hover {
-  background-color: #f8fafc;
+  background-color: #bf959525; /* same family as your inverse bg */
 }
 
 .inverseItem {
-  background-color: #f8fafc;
+  background-color: #bf959525;
 }
 
 .inverseItem:hover {
-  background-color: #eef2ff;
+  background-color: #bf959540; /* stronger hover, still soft */
 }
 
 .corpName {
-  font-size: 18px; /* Increased by ~15% */
+  font-size: 18px;
   font-weight: 900;
   color: #334155;
-  line-height: 1.8; 
-  padding: 1px 0;
+  line-height: 1.8;
 }
 
 .inverseCorpName {
-  color: #475569;
+  color: #334155; /* same as normal */
 }
 
 .corpBalance {
-  color: #64748b;
-  font-size: 18px; /* Increased by ~15% */
-  font-weight: 700;
-  line-height: 1.4; /* Adjusted for stacked layout */
+  color: #334155; /* darker numbers */
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.4;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Keeps the numbers aligned on the right */
+  align-items: flex-end;
 }
 
 .foreignText {
-  font-size: 16px; 
-  color: #94a3b8;
+  font-size: 16px;
+  color: #64748b; /* slightly darker too */
 }
 
 .noResults {
@@ -152,18 +151,18 @@
   font-weight: 700;
 }
 
-
-
 @media (max-width: 1300px) {
   .inputGroup {
     flex-direction: column;
     align-items: center;
     gap: 1px;
   }
-  .searchInput{
+
+  .searchInput {
     align-items: center;
     margin: 0;
   }
+
   .dropdownWrapper {
     padding: 0;
   }
