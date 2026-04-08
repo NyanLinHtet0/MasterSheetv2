@@ -348,26 +348,26 @@ export default function TransactionForm({
               ))}
             </select>
           </div>
-
-          <input
-            className={styles.textInput}
-            ref={descriptionInputRef}
-            type="text"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-
-          <input
-            className={styles.amountInput}
-            type="text"
-            placeholder="Amount"
-            value={formatDisplayValue(amount)}
-            onChange={handleAmountChange}
-            required
-          />
         </div>
+        <input
+          className={styles.textInput}
+          ref={descriptionInputRef}
+          type="text"
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
+
+        <input
+          className={styles.amountInput}
+          type="text"
+          placeholder="Amount"
+          value={formatDisplayValue(amount)}
+          onChange={handleAmountChange}
+          required
+        />
+        
 
         {isForeign ? (
           <>
