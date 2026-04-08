@@ -29,20 +29,110 @@ function Sheets({
   const [selectedCorpId, setSelectedCorpId] = useState(null);
   const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES.ENG);
 
+  const visibleCorps = corps.filter(
+    (corp) =>
+      !(
+        corp.soft_delete === true ||
+        corp.soft_delete === 1 ||
+        corp.soft_delete === '1'
+      )
+  );
+
   useEffect(() => {
-    if (!corps.length) {
+    if (!visibleCorps.length) {
       setSelectedCorpId(null);
       return;
     }
 
-    const stillExists = corps.some((corp) => corp.id === selectedCorpId);
+    const stillExists = visibleCorps.some((corp) => corp.id === selectedCorpId);
 
     if (!stillExists) {
-      setSelectedCorpId(corps[0].id);
+      setSelectedCorpId(visibleCorps[0].id);
     }
-  }, [corps, selectedCorpId]);
+  }, [visibleCorps, selectedCorpId]);
 
-  const selectedCorp = corps.find((corp) => corp.id === selectedCorpId) || null;
+  const selectedCorp = visibleCorps.find((corp) => corp.id === selectedCorpId) || null;
+
+  const getCorpDirtyPayload = (corp) => ({
+    name: corp.name ?? '',
+    current_balance: corp.current_balance ?? 0,
+    current_foreign: corp.current_foreign ?? 0,
+    is_foreign: corp.is_foreign ?? 0,
+    inverse: corp.inverse ?? 0,
+    last_verified_date: corp.last_verified_date ?? null,
+    last_verified_balance: corp.last_verified_balance ?? null,
+    last_verified_total_foreign: corp.last_verified_total_foreign ?? null,
+    start_day: corp.start_day ?? 1,
+    display_order: corp.display_order ?? 0,
+    corp_category_id: corp.corp_category_id ?? null,
+    soft_delete: corp.soft_delete ?? 0,
+  });
+
+  const handleRenameCorp = ({ corpId, name }) => {
+    const nextName = String(name || '').trim();
+    if (!corpId || !nextName) return;
+
+    const targetCorp = corps.find((corp) => corp.id === corpId);
+    if (!targetCorp || targetCorp.name === nextName) return;
+
+    setDraftData((prev) => ({
+      ...prev,
+      corp_data: (prev.corp_data || []).map((corp) =>
+        corp.id === corpId ? { ...corp, name: nextName } : corp
+      ),
+    }));
+
+    if (targetCorp.id < 0) {
+      onQueueInsert?.('corp_data', targetCorp.id, {
+        ...getCorpDirtyPayload(targetCorp),
+        name: nextName,
+      });
+      return;
+    }
+
+    onQueueUpdate?.(
+      'corp_data',
+      targetCorp.id,
+      getCorpDirtyPayload(targetCorp),
+      {
+        ...getCorpDirtyPayload(targetCorp),
+        name: nextName,
+      }
+    );
+  };
+
+  const handleDeleteCorp = ({ corpId }) => {
+    if (!corpId) return;
+
+    const targetCorp = corps.find((corp) => corp.id === corpId);
+    if (!targetCorp) return;
+
+    if (targetCorp.id < 0) {
+      setDraftData((prev) => ({
+        ...prev,
+        corp_data: (prev.corp_data || []).filter((corp) => corp.id !== corpId),
+      }));
+      onRemoveDirtyRow?.('INSERT', 'corp_data', targetCorp.id);
+      return;
+    }
+
+    setDraftData((prev) => ({
+      ...prev,
+      corp_data: (prev.corp_data || []).map((corp) =>
+        corp.id === corpId ? { ...corp, soft_delete: 1 } : corp
+      ),
+    }));
+
+    onQueueUpdate?.(
+      'corp_data',
+      targetCorp.id,
+      getCorpDirtyPayload(targetCorp),
+      {
+        ...getCorpDirtyPayload(targetCorp),
+        soft_delete: 1,
+      }
+    );
+  };
 
   const handleInsertTransaction = (txData) => {
     if (!selectedCorp) return;
@@ -281,10 +371,12 @@ function Sheets({
       <CorpList
         showAddCorpForm={showAddCorpForm}
         setShowAddCorpForm={setShowAddCorpForm}
-        corps={corps}
+        corps={visibleCorps}
         onAddCorp={onAddCorp}
         selectedCorp={selectedCorp}
         onSelectCorp={setSelectedCorpId}
+        onRenameCorp={handleRenameCorp}
+        onDeleteCorp={handleDeleteCorp}
         onAddTransaction={handleInsertTransaction}
         globalTree={globalTree}
         languageMode={languageMode}
