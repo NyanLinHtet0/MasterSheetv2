@@ -160,6 +160,7 @@ export function toDisplayTransaction(tx, { isInverse, isForeign }) {
     ...hydratedTx,
     tx_date: hydratedTx.tx_date,
     amount: flipByInverse(hydratedTx.amount || 0, isInverse),
+    adjustment: flipByInverse(hydratedTx.adjustment || 0, isInverse),
     total_mmk: flipByInverse(hydratedTx.total_mmk || 0, isInverse),
   };
 }

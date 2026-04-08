@@ -12,16 +12,12 @@ import {
   buildAssembledTree,
   buildLayerOptions,
 } from './helpers/treeViewHelpers';
+import { buildTreeScope } from './helpers/treeHelpers';
 import { LANGUAGE_MODES } from './helpers/nameLocalization';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
-
-const TAG_HINTS = {
-  revenue: ['revenue', 'income', 'sales'],
-  expense: ['expense', 'expenses', 'cost', 'cogs'],
-};
 
 const formatDisplayValue = (value) => {
   if (value === '' || value === '-' || value === '.' || value === '-.') return value;
@@ -30,16 +26,6 @@ const formatDisplayValue = (value) => {
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   return decimalPart != null ? `${formattedInteger}.${decimalPart}` : formattedInteger;
-};
-
-const findLayer1KeyByType = (options, type) => {
-  const hints = TAG_HINTS[type] || [];
-  return (
-    options.find((option) => {
-      const normalized = String(option.label || '').toLowerCase();
-      return hints.some((hint) => normalized.includes(hint));
-    })?.key || ''
-  );
 };
 
 export default function TransactionForm({
@@ -82,15 +68,79 @@ export default function TransactionForm({
     return buildLayerOptions(assembledTree.childrenByKey, null);
   }, [assembledTree]);
 
-  const revenueLayer1Key = useMemo(
-    () => findLayer1KeyByType(layer1Options, 'revenue'),
-    [layer1Options]
+  const revenueScope = useMemo(
+    () =>
+      buildTreeScope({
+        globalTree,
+        localTree,
+        globalName: 'Revenue',
+      }),
+    [globalTree, localTree]
   );
 
-  const expenseLayer1Key = useMemo(
-    () => findLayer1KeyByType(layer1Options, 'expense'),
-    [layer1Options]
+  const expenseScope = useMemo(
+    () =>
+      buildTreeScope({
+        globalTree,
+        localTree,
+        globalName: 'Expense',
+      }),
+    [globalTree, localTree]
   );
+
+  const { revenueLayer1Key, expenseLayer1Key } = useMemo(() => {
+    const findLayer1KeyForScope = (scope) => {
+      if (!scope) return '';
+
+      const hasScope =
+        (scope.globalIdSet && scope.globalIdSet.size > 0) ||
+        (scope.localIdSet && scope.localIdSet.size > 0);
+
+      if (!hasScope) return '';
+
+      const matchesNodeScope = (node) => {
+        if (!node) return false;
+
+        const matchesGlobal =
+          scope.globalIdSet?.size > 0 && node.globalId != null
+            ? scope.globalIdSet.has(node.globalId)
+            : false;
+
+        const matchesLocal =
+          scope.localIdSet?.size > 0 && node.localId != null
+            ? scope.localIdSet.has(node.localId)
+            : false;
+
+        return matchesGlobal || matchesLocal;
+      };
+
+      for (const option of layer1Options) {
+        const stack = [option.key];
+        const visited = new Set();
+
+        while (stack.length > 0) {
+          const key = stack.pop();
+          if (visited.has(key)) continue;
+          visited.add(key);
+
+          const node = assembledTree.nodeMap.get(key);
+          if (matchesNodeScope(node)) {
+            return option.key;
+          }
+
+          const children = assembledTree.childrenByKey.get(key) || [];
+          children.forEach((child) => stack.push(child.key));
+        }
+      }
+
+      return '';
+    };
+
+    return {
+      revenueLayer1Key: findLayer1KeyForScope(revenueScope),
+      expenseLayer1Key: findLayer1KeyForScope(expenseScope),
+    };
+  }, [layer1Options, assembledTree, revenueScope, expenseScope]);
 
   const layer2Options = useMemo(() => {
     if (!layer1Key) return [];
@@ -136,6 +186,18 @@ export default function TransactionForm({
     setTotalMMK(baseTotal == null ? '' : String(baseTotal));
   };
 
+  const autoSelectLayer1ByTotal = (rawTotalValue) => {
+    const numericTotal = parseEditableNumber(rawTotalValue, null);
+    if (numericTotal == null || numericTotal === 0) return;
+
+    const nextAutoLayer1 = numericTotal < 0 ? expenseLayer1Key : revenueLayer1Key;
+    if (!nextAutoLayer1 || nextAutoLayer1 === layer1Key) return;
+
+    setLayer1Key(nextAutoLayer1);
+    setLayer2Key('');
+    setLayer3Key('');
+  };
+
   const handleAmountChange = (e) => {
     const rawValue = cleanNumericInput(e.target.value);
     if (!isValidPartialNumber(rawValue)) return;
@@ -143,17 +205,14 @@ export default function TransactionForm({
     setAmount(rawValue);
     syncForeignTotal(rawValue, rate);
 
-    if (isForeign) return;
-
-    const numericAmount = parseEditableNumber(rawValue, null);
-    if (numericAmount == null || numericAmount === 0) return;
-
-    const nextAutoLayer1 = numericAmount < 0 ? expenseLayer1Key : revenueLayer1Key;
-    if (!nextAutoLayer1 || nextAutoLayer1 === layer1Key) return;
-
-    setLayer1Key(nextAutoLayer1);
-    setLayer2Key('');
-    setLayer3Key('');
+    const autoTotal = isForeign
+      ? getDisplayedBaseTotal({
+          amount: rawValue,
+          rate,
+          isForeign,
+        })
+      : parseEditableNumber(rawValue, null);
+    autoSelectLayer1ByTotal(autoTotal);
   };
 
   const handleRateChange = (e) => {
@@ -162,6 +221,12 @@ export default function TransactionForm({
 
     setRate(rawValue);
     syncForeignTotal(amount, rawValue);
+    const autoTotal = getDisplayedBaseTotal({
+      amount,
+      rate: rawValue,
+      isForeign,
+    });
+    autoSelectLayer1ByTotal(autoTotal);
   };
 
   const handleTotalChange = (e) => {
@@ -169,6 +234,7 @@ export default function TransactionForm({
     if (!isValidPartialNumber(rawValue)) return;
 
     setTotalMMK(rawValue);
+    autoSelectLayer1ByTotal(rawValue);
   };
 
   const resetForm = () => {
