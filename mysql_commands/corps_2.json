@@ -1,0 +1,2948 @@
+[
+  {
+    "name": "ရေခဲ",
+    "total_mmk": 45998710,
+    "order": 1,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "date": "2026-02-25",
+        "total_mmk": 43264260,
+        "amount": 43264260
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ရောင်းရ",
+        "total_mmk": 993100,
+        "amount": 993100
+      },
+      {
+        "date": "2026-02-26",
+        "description": "စရိတ်",
+        "total_mmk": -18000,
+        "amount": -18000
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ရုံးခန်းမီတာ",
+        "total_mmk": -500,
+        "amount": -500
+      },
+      {
+        "date": "2026-02-27",
+        "description": "ရောင်းရ",
+        "total_mmk": 913800,
+        "amount": 913800
+      },
+      {
+        "date": "2026-02-27",
+        "description": "စရိတ်",
+        "total_mmk": -38400,
+        "amount": -38400
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ရောင်းရ",
+        "total_mmk": 279900,
+        "amount": 279900
+      },
+      {
+        "date": "2026-02-28",
+        "description": "စရိတ်",
+        "total_mmk": -14400,
+        "amount": -14400
+      },
+      {
+        "date": "2026-02-28",
+        "description": "မောင်နိုင်ပေး",
+        "total_mmk": -300000,
+        "amount": -300000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ရောင်းရ",
+        "total_mmk": 530000,
+        "amount": 530000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "စရိတ်",
+        "total_mmk": -24000,
+        "amount": -24000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "ရောင်းရ",
+        "total_mmk": 2428700,
+        "amount": 2428700
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ရောင်းရ",
+        "total_mmk": 364100,
+        "amount": 364100
+      },
+      {
+        "date": "2026-03-03",
+        "description": "စရိတ်",
+        "total_mmk": -46800,
+        "amount": -46800
+      },
+      {
+        "date": "2026-03-03",
+        "description": "(2/2026) မိသားစုရေခဲ ဖိုးပေး",
+        "total_mmk": -14366400,
+        "amount": -14366400
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ရောင်းရ",
+        "total_mmk": 58000,
+        "amount": 58000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "စရိတ်",
+        "total_mmk": -48000,
+        "amount": -48000
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ရောင်းရ",
+        "total_mmk": 325500,
+        "amount": 325500
+      },
+      {
+        "date": "2026-03-05",
+        "description": "စရိတ်",
+        "total_mmk": -90000,
+        "amount": -90000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ရောင်းရ",
+        "total_mmk": 62000,
+        "amount": 62000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "စရိတ်",
+        "total_mmk": -172000,
+        "amount": -172000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ရောင်းရ",
+        "total_mmk": 604500,
+        "amount": 604500
+      },
+      {
+        "date": "2026-03-07",
+        "description": "စရိတ်",
+        "total_mmk": -66000,
+        "amount": -66000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "ရောင်းရ",
+        "total_mmk": 216800,
+        "amount": 216800
+      },
+      {
+        "date": "2026-03-08",
+        "description": "စရိတ်",
+        "total_mmk": -41600,
+        "amount": -41600
+      },
+      {
+        "date": "2026-03-09",
+        "description": "ရောင်းရ",
+        "total_mmk": 255000,
+        "amount": 255000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "စရိတ်",
+        "total_mmk": -35100,
+        "amount": -35100
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ရောင်းရ",
+        "total_mmk": 119000,
+        "amount": 119000
+      },
+      {
+        "date": "2026-03-12",
+        "description": "စရိတ်",
+        "total_mmk": -15600,
+        "amount": -15600
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ရောင်းရ",
+        "total_mmk": 3234100,
+        "amount": 3234100
+      },
+      {
+        "date": "2026-03-13",
+        "description": "စရိတ်",
+        "total_mmk": -115000,
+        "amount": -115000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ရောင်းရ",
+        "total_mmk": 1238500,
+        "amount": 1238500
+      },
+      {
+        "date": "2026-03-14",
+        "description": "စရိတ်",
+        "total_mmk": -78000,
+        "amount": -78000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ရောင်းရ",
+        "total_mmk": 1139800,
+        "amount": 1139800
+      },
+      {
+        "date": "2026-03-15",
+        "description": "စရိတ်",
+        "total_mmk": -123500,
+        "amount": -123500
+      },
+      {
+        "date": "2026-03-15",
+        "description": "သံဝယ် (တံတားပြင်)",
+        "total_mmk": -5000,
+        "amount": -5000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "ရောင်းရ",
+        "total_mmk": 410500,
+        "amount": 410500
+      },
+      {
+        "date": "2026-03-16",
+        "description": "စရိတ်",
+        "total_mmk": -19500,
+        "amount": -19500
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ရောင်းရ",
+        "total_mmk": 357000,
+        "amount": 357000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "စရိတ်",
+        "total_mmk": -52000,
+        "amount": -52000
+      },
+      {
+        "date": "2026-03-18",
+        "description": "ရောင်းရ",
+        "total_mmk": 1702000,
+        "amount": 1702000
+      },
+      {
+        "date": "2026-03-18",
+        "description": "စရိတ်",
+        "total_mmk": -130000,
+        "amount": -130000
+      },
+      {
+        "date": "2026-03-19",
+        "description": "ရောင်းရ",
+        "total_mmk": 101600,
+        "amount": 101600
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ရောင်းရ",
+        "total_mmk": 399000,
+        "originalIndex": 43,
+        "amount": 399000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "စရိတ်",
+        "amount": -63450,
+        "total_mmk": -63450
+      },
+      {
+        "date": "2026-03-21",
+        "description": "ရောင်းရ",
+        "amount": 874000,
+        "total_mmk": 874000
+      },
+      {
+        "date": "2026-3-21",
+        "description": "စရိတ်",
+        "amount": "-121500",
+        "total_mmk": -121500
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ရောင်းရ",
+        "amount": 1927000,
+        "total_mmk": 1927000
+      },
+      {
+        "date": "2026-3-22",
+        "description": "စရိတ်",
+        "amount": "-149000",
+        "total_mmk": -149000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "ရောင်းရ",
+        "amount": 209000,
+        "total_mmk": 209000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "ရုံးခန်းမီတာခ",
+        "amount": -500,
+        "total_mmk": -500
+      },
+      {
+        "date": "2026-03-24",
+        "description": "ရောင်းရ",
+        "amount": 133000,
+        "total_mmk": 133000
+      },
+      {
+        "date": "2026-03-24",
+        "description": "စရိတ်",
+        "amount": -27000,
+        "total_mmk": -27000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရောင်းရ",
+        "amount": 76000,
+        "total_mmk": 76000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "စရိတ်",
+        "amount": -16200,
+        "total_mmk": -16200
+      },
+      {
+        "date": "2026-03-25",
+        "description": "အလှူရံပုံငွေ",
+        "amount": -10000,
+        "total_mmk": -10000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "လစာရံပုံငွေ",
+        "amount": -30000,
+        "total_mmk": -30000
+      }
+    ]
+  },
+  {
+    "name": "ဒီဇယ်",
+    "total_mmk": 28508579,
+    "order": 1,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 10236779,
+        "date": "2026-03-21",
+        "total_mmk": 10236779
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ဒီဇယ်ရောင်းရငွေ ",
+        "amount": 2054300,
+        "total_mmk": 2054300
+      },
+      {
+        "date": "2026-02-27",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 2624200,
+        "total_mmk": 2624200
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 417300,
+        "total_mmk": 417300
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 963000,
+        "total_mmk": 963000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 14029800,
+        "total_mmk": 14029800
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 11426000,
+        "total_mmk": 11426000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 1680000,
+        "total_mmk": 1680000
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 1552100,
+        "total_mmk": 1552100
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 230200,
+        "total_mmk": 230200
+      },
+      {
+        "date": "2026-03-07",
+        "description": "D (25 ပီပါ= 5500 li * 24.00) ဝယ် (132000 bath * 126.50)",
+        "amount": -16698000,
+        "total_mmk": -16698000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "D (15 ပီပါ * 1030000) ဝယ် ",
+        "amount": -15450000,
+        "total_mmk": -15450000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "(2/2026)  ငါးစာရင်းသို့ပေး",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 334000,
+        "total_mmk": 334000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 225500,
+        "total_mmk": 225500
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 59100,
+        "total_mmk": 59100
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 433400,
+        "total_mmk": 433400
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 835600,
+        "total_mmk": 835600
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 2473600,
+        "total_mmk": 2473600
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 4657400,
+        "total_mmk": 4657400
+      },
+      {
+        "date": "2026-03-16",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 1943300,
+        "total_mmk": 1943300
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 906900,
+        "total_mmk": 906900
+      },
+      {
+        "date": "2026-03-18",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 44600,
+        "total_mmk": 44600
+      },
+      {
+        "date": "2026-03-19",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 549000,
+        "total_mmk": 549000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 235000,
+        "total_mmk": 235000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 141000,
+        "total_mmk": 141000
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 70500,
+        "total_mmk": 70500
+      },
+      {
+        "date": "2026-03-23",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 1250000,
+        "total_mmk": 1250000
+      },
+      {
+        "date": "2026-03-24",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 1807500,
+        "total_mmk": 1807500
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ဒီဇယ်ရောင်းရငွေ",
+        "amount": 26500,
+        "total_mmk": 26500
+      },
+      {
+        "date": "2026-03-25",
+        "description": "အလှူရံပုံငွေ ",
+        "amount": -100000,
+        "total_mmk": -100000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "လစာရံပုံငွေ ",
+        "amount": -150000,
+        "total_mmk": -150000
+      }
+    ]
+  },
+  {
+    "name": "HOH",
+    "total_mmk": 3119900,
+    "order": 3,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 3119900,
+        "date": "2026-02-25",
+        "total_mmk": 3119900
+      }
+    ]
+  },
+  {
+    "name": "NLH",
+    "total_mmk": 500000,
+    "order": 4,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 500000,
+        "date": "2026-02-25",
+        "total_mmk": 500000
+      }
+    ]
+  },
+  {
+    "name": "ငါး",
+    "total_mmk": 221416471,
+    "order": 5,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 232615171,
+        "date": "2026-02-25",
+        "total_mmk": 232615171
+      },
+      {
+        "date": "2026-02-26",
+        "description": "နေ့ယူငွေ",
+        "amount": -3000000,
+        "total_mmk": -3000000
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ညယူငွေ",
+        "amount": -15000000,
+        "total_mmk": -15000000
+      },
+      {
+        "date": "2026-02-27",
+        "description": "နေ့ယူငွေ",
+        "amount": -3000000,
+        "total_mmk": -3000000
+      },
+      {
+        "date": "2026-02-27",
+        "description": "ညယူငွေ",
+        "amount": -10000000,
+        "total_mmk": -10000000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(TMT) ဝန်ထမ်းလစာ ",
+        "amount": -8649000,
+        "total_mmk": -8649000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "USK ‌ပေး",
+        "amount": -4200000,
+        "total_mmk": -4200000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ဗမ လွှဲ ငွေ",
+        "amount": -2100000,
+        "total_mmk": -2100000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2/2026) ကြိုတင်ပြန်ရ",
+        "amount": 25429300,
+        "total_mmk": 25429300
+      },
+      {
+        "date": "2026-03-01",
+        "description": "နေ့ယူငွေ",
+        "amount": -25000000,
+        "total_mmk": -25000000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(1093) baht 13000 * 127.00  UZW",
+        "amount": 1651000,
+        "total_mmk": 1651000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "(3K) စိုက်ရှင်းထုတ်ငွေ",
+        "amount": -16385600,
+        "total_mmk": -16385600
+      },
+      {
+        "date": "2026-03-02",
+        "description": "(1094) Baht 237000 * 126.50 UZW ",
+        "amount": 29980500,
+        "total_mmk": 29980500
+      },
+      {
+        "date": "2026-03-02",
+        "description": "(1095) 146000 * 125.80 UZW ",
+        "amount": 18366800,
+        "total_mmk": 18366800
+      },
+      {
+        "date": "2026-03-02",
+        "description": "2/2026  အမြတ်ထုတ်ငွေ",
+        "amount": -17466000,
+        "total_mmk": -17466000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "2/2026 ဘောဝန်ထမ်းပေး",
+        "amount": -210000,
+        "total_mmk": -210000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ပြင်ပရောင်းရ",
+        "amount": 1341200,
+        "total_mmk": 1341200
+      },
+      {
+        "date": "2026-03-04",
+        "description": "(1096) baht 65000 * 125.5 UZW ",
+        "amount": 8157500,
+        "total_mmk": 8157500
+      },
+      {
+        "date": "2026-03-04",
+        "description": "2/2026 3K စိုက်ရှင်းထုတ်ငွေ ",
+        "amount": -14550200,
+        "total_mmk": -14550200
+      },
+      {
+        "date": "2026-03-04",
+        "description": "2/2026 ဒီဇယ်စာရင်းမှရ ",
+        "amount": 300000,
+        "total_mmk": 300000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "2/2026 လစာရံပုံငွေမှ ",
+        "amount": 110000,
+        "total_mmk": 110000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "ပြင်ပရောင်းရ ",
+        "amount": 879200,
+        "total_mmk": 879200
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ပြင်ပရောင်းရ",
+        "amount": 521200,
+        "total_mmk": 521200
+      },
+      {
+        "date": "2026-03-13",
+        "description": "နေ့ယူငွေ",
+        "amount": -3000000,
+        "total_mmk": -3000000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ညယူငွေ",
+        "amount": -17000000,
+        "total_mmk": -17000000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "(1097) baht 81000 * 125.8 ",
+        "amount": 10189800,
+        "total_mmk": 10189800,
+        "originalIndex": 25
+      },
+      {
+        "date": "2026-03-13",
+        "description": "(1098) baht 28000 * 126.5",
+        "amount": 3542000,
+        "total_mmk": 3542000,
+        "originalIndex": 26
+      },
+      {
+        "date": "2026-03-13",
+        "description": "(1099) baht 98000 * 125.8",
+        "amount": 12328400,
+        "total_mmk": 12328400,
+        "originalIndex": 27
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ညယူငွေ",
+        "amount": -5000000,
+        "total_mmk": -5000000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "နေ့ယူငွေ",
+        "amount": -5000000,
+        "total_mmk": -5000000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "နေ့ယူငွေ",
+        "amount": -2000000,
+        "total_mmk": -2000000
+      },
+      {
+        "date": "2026-03-18",
+        "description": "ပြင်ပရောင်းရ",
+        "amount": 210000,
+        "total_mmk": 210000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ပြင်ပရောင်းရ",
+        "amount": 270400,
+        "total_mmk": 270400
+      },
+      {
+        "date": "2026-03-20",
+        "description": "(1100) baht 196000 * 127.20",
+        "amount": 24931200,
+        "total_mmk": 24931200
+      },
+      {
+        "date": "2026-03-20",
+        "description": "(1101) baht 64000 * 127.4 ",
+        "amount": 8153600,
+        "total_mmk": 8153600
+      },
+      {
+        "date": "2026-03-22",
+        "description": "နေ့ငါးယူငွေ",
+        "amount": -1000000,
+        "total_mmk": -1000000
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ညငါးယူငွေ",
+        "amount": -3000000,
+        "total_mmk": -3000000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "နေ့ယူငွေ",
+        "amount": -1000000,
+        "total_mmk": -1000000
+      },
+      {
+        "date": "2026-3-24",
+        "description": "နေ့ယူငွေ",
+        "amount": "-1000000",
+        "total_mmk": -1000000
+      }
+    ]
+  },
+  {
+    "name": "ရာဘာခြံဝန်ထမ်းရန်ပုံငွေ",
+    "total_mmk": 11000000,
+    "order": 6,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 11000000,
+        "date": "2026-02-25",
+        "total_mmk": 11000000
+      }
+    ]
+  },
+  {
+    "name": "TTM",
+    "total_mmk": 9911559,
+    "order": 7,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -791301,
+        "date": "2026-02-25",
+        "total_mmk": -791301
+      },
+      {
+        "date": "2026-02-28",
+        "description": "အိမ်လစာ",
+        "amount": -630000,
+        "total_mmk": -630000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 အိမ်သုံးပိုငွေအပ်",
+        "amount": 10900,
+        "total_mmk": 10900
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026  ငါးမှရ",
+        "amount": 14700000,
+        "total_mmk": 14700000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 HP လစာအပ်ငွေ",
+        "amount": 200000,
+        "total_mmk": 200000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 အိမ်သုံးထုတ်ငွေ",
+        "amount": -3600000,
+        "total_mmk": -3600000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ငါး - ဘော အခွန်သွင်းငွေ",
+        "amount": -1045000,
+        "total_mmk": -1045000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "APP မှ ရ ",
+        "amount": 330000,
+        "total_mmk": 330000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "APP အမြတ်ခွန်ဆောင် ",
+        "amount": -330000,
+        "total_mmk": -330000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "2/2026  TTM K pay သုံးထုတ်",
+        "amount": -7222950,
+        "total_mmk": -7222950
+      },
+      {
+        "date": "2026-02-26",
+        "description": "TTM ထုတ် ",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "TTM ထုတ်",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "(5/2025 မှ 2/2026)အထိ PZA လစာ ပြန်ရ ",
+        "amount": 1343200,
+        "total_mmk": 1343200
+      },
+      {
+        "date": "2026-03-09",
+        "description": "(5/2025 မှ 2/2026) အထိ CKZ လစာပြန်ရ ",
+        "amount": 800000,
+        "total_mmk": 800000
+      },
+      {
+        "date": "2026-03-12",
+        "description": "(10/2024 မှ 2/2026) အထိ HP လစာ အစွန်းပေး",
+        "amount": -41500,
+        "total_mmk": -41500
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ကြွေပြား + ကျောက်မှုန့်ဝယ် (baht 44730 * 123)",
+        "amount": -5501790,
+        "total_mmk": -5501790
+      },
+      {
+        "date": "2026-03-17",
+        "description": "(22/2) ရုပ်တု Bkk ခရီး အလှူ",
+        "amount": -710000,
+        "total_mmk": -710000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "(22/2) UZW, HSW ရန်ကုန် ဘိတ် ခရီး လေယာဉ်လက်မှတ်ဖိုး ",
+        "amount": -3620000,
+        "total_mmk": -3620000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "(22/2) သင်္ကန်းစာရင်းမှရ",
+        "amount": 3620000,
+        "total_mmk": 3620000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "(2026-2027)ရေပုန်းအိမ်ငှားခ ရငွေ",
+        "amount": 14400000,
+        "total_mmk": 14400000
+      },
+      {
+        "date": "2026-3-25",
+        "description": "(2025-2026) မီတာခ ပြန်ပေးငွေ ",
+        "amount": "-1000000",
+        "total_mmk": -1000000
+      }
+    ]
+  },
+  {
+    "name": "မော်စုန်းခြံရာဘာ",
+    "total_mmk": -88787116,
+    "order": 8,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -36873421,
+        "date": "2026-02-25",
+        "total_mmk": -36873421
+      },
+      {
+        "date": "2026-03-01",
+        "description": "12/2025 စရိတ် ",
+        "amount": -8896445,
+        "total_mmk": -8896445
+      },
+      {
+        "date": "2026-03-01",
+        "description": "1/2026 စရိတ် ",
+        "amount": -15968775,
+        "total_mmk": -15968775
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(2025-2026) အစာငယ် (1) အိတ်",
+        "amount": -168000,
+        "total_mmk": -168000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(2025-2026) အစာကြီး (114) အိတ်",
+        "amount": -19152000,
+        "total_mmk": -19152000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 ကုန်ကျစရိတ်",
+        "amount": -7728475,
+        "total_mmk": -7728475
+      }
+    ]
+  },
+  {
+    "name": "ဝန်ချောင်းခြံရာဘာ",
+    "total_mmk": -62939641,
+    "order": 9,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -30791031,
+        "date": "2026-02-25",
+        "total_mmk": -30791031
+      },
+      {
+        "date": "2026-03-01",
+        "description": "12/2025 စရိတ် ",
+        "amount": -4388950,
+        "total_mmk": -4388950
+      },
+      {
+        "date": "2026-03-01",
+        "description": "1/2026 စရိတ် ",
+        "amount": -4192490,
+        "total_mmk": -4192490
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(2025-2026) အစာငယ် (1) အိတ်",
+        "amount": -168000,
+        "total_mmk": -168000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(2025-2026) အစာကြီး (100) အိတ်",
+        "amount": -16800000,
+        "total_mmk": -16800000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 ကုန်ကျစရိတ်",
+        "amount": -6599170,
+        "total_mmk": -6599170
+      }
+    ]
+  },
+  {
+    "name": "အစာအိတ်",
+    "total_mmk": 19383835,
+    "order": 10,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -16904165,
+        "date": "2026-02-25",
+        "total_mmk": -16904165
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2025-2026) မော်စုန်းခြံ အစာငယ်(1) အိတ်ဖိုး",
+        "amount": 168000,
+        "total_mmk": 168000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2025-2026) မော်စုန်းခြံ အစာကြီး (14) အိတ်ဖိုး ",
+        "amount": 19152000,
+        "total_mmk": 19152000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2025-2026) ဝန်ချောင်းခြံ အစာငယ် (1) အိတ်ဖိုး ",
+        "amount": 168000,
+        "total_mmk": 168000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2025-2026) ဝန်ချောင်းခြံ အစာကြီး (100) အိတ်ဖိုး",
+        "amount": 16800000,
+        "total_mmk": 16800000
+      }
+    ]
+  },
+  {
+    "name": "Main cash အစွန်း",
+    "total_mmk": 1982536,
+    "order": 11,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 582536,
+        "date": "2026-02-25",
+        "total_mmk": 582536
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2/2026) လုပ်ငန်းဖြည့်ငွေ ",
+        "amount": 1400000,
+        "total_mmk": 1400000
+      }
+    ]
+  },
+  {
+    "name": "Bank ချေးငွေအတိုး",
+    "total_mmk": 16022515,
+    "order": 12,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 18670453,
+        "date": "2026-02-25",
+        "total_mmk": 18670453
+      },
+      {
+        "date": "2026-02-11",
+        "description": "HP Wave pay မှားသွင်းပြန်ထုတ် ",
+        "amount": -550000,
+        "total_mmk": -550000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "9/2025 မှ 2/2026 အထိ AYA အတိုးရ ",
+        "amount": 512062,
+        "total_mmk": 512062
+      },
+      {
+        "date": "2026-03-18",
+        "description": "AYA ဘဏ်တိုးပေး",
+        "amount": -2610000,
+        "total_mmk": -2610000
+      }
+    ]
+  },
+  {
+    "name": "သင်္ကန်းရောင်းရငွေ",
+    "total_mmk": -6118356,
+    "order": 13,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -5141556,
+        "date": "2026-02-25",
+        "total_mmk": -5141556
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ရောင်းရငွေ",
+        "amount": 63500,
+        "total_mmk": 63500
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ရောင်းရငွေ",
+        "amount": 222000,
+        "total_mmk": 222000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ရောင်းရငွေ",
+        "amount": 226000,
+        "total_mmk": 226000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "ရောင်းရငွေ",
+        "amount": 290000,
+        "total_mmk": 290000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ရောင်းရငွေ",
+        "amount": 360000,
+        "total_mmk": 360000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ရောင်းရငွေ",
+        "amount": 23500,
+        "total_mmk": 23500
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ရောင်းရငွေ",
+        "amount": 252000,
+        "total_mmk": 252000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "APP အမြတ်ခွန်ဆောင် ",
+        "amount": -330000,
+        "total_mmk": -330000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ရောင်းရငွေ",
+        "amount": 587000,
+        "total_mmk": 587000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ဗောဓိမဏ္တိုင် သင်္ကန်းချုပ်ခငွေလွှဲ",
+        "amount": -3154000,
+        "total_mmk": -3154000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "ရောင်းရငွေ",
+        "amount": 23000,
+        "total_mmk": 23000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "ရောင်းရငွေ",
+        "amount": 471500,
+        "total_mmk": 471500
+      },
+      {
+        "date": "2026-03-10",
+        "description": "ရောင်းရငွေ",
+        "amount": 332500,
+        "total_mmk": 332500
+      },
+      {
+        "date": "2026-03-10",
+        "description": "Tape+ဘောပင် (1) ဘူးဝယ် ",
+        "amount": -23500,
+        "total_mmk": -23500
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ရောင်းရငွေ",
+        "amount": 4482500,
+        "total_mmk": 4482500
+      },
+      {
+        "date": "2026-03-11",
+        "description": "သင်္ကန်းဆိုင်ပစ္စည်းဝယ် ",
+        "amount": -315500,
+        "total_mmk": -315500
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ရောင်းရငွေ",
+        "amount": 406000,
+        "total_mmk": 406000
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ဖလား 22'' (5) လုံး * 225000 ",
+        "amount": -112500,
+        "total_mmk": -112500
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ဖလား 24'' (15)လုံး * 30500 ",
+        "amount": -457500,
+        "total_mmk": -457500
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ရောင်းရငွေ",
+        "amount": 209000,
+        "total_mmk": 209000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ခါးပန်းကြိုး (20) ခုဝယ် ",
+        "amount": -140000,
+        "total_mmk": -140000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "အပ် + Double တိပ် ဝယ် ",
+        "amount": -31800,
+        "total_mmk": -31800
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ရောင်းရငွေ",
+        "amount": 281000,
+        "total_mmk": 281000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ရောင်းရငွေ",
+        "amount": 178500,
+        "total_mmk": 178500
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ဒုကုဒ် (15) ခဏ်း (15)စုံ * 70000 ဝယ် ",
+        "amount": -1050000,
+        "total_mmk": -1050000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ယပ် (15)ချောင်း * 7000",
+        "amount": -105000,
+        "total_mmk": -105000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ခါးပန်းကြိုး (15) ခု *7000 ",
+        "amount": -105000,
+        "total_mmk": -105000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "ရောင်းရငွေ",
+        "amount": 24000,
+        "total_mmk": 24000
+      },
+      {
+        "date": "2026-03-18",
+        "description": "ရောင်းရငွေ",
+        "amount": 118500,
+        "total_mmk": 118500
+      },
+      {
+        "date": "2026-03-19",
+        "description": "ရောင်းရငွေ",
+        "amount": 100000,
+        "total_mmk": 100000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "ရောင်းရငွေ",
+        "amount": 111500,
+        "total_mmk": 111500
+      },
+      {
+        "date": "2026-03-21",
+        "description": "(22/2) TTM ထုတ်ငွေ (APP) သို့ ",
+        "amount": -3620000,
+        "total_mmk": -3620000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "Redmi Tablet ဝယ် ",
+        "amount": -880000,
+        "total_mmk": -880000
+      },
+      {
+        "date": "2026-03-24",
+        "description": "ရောင်းရငွေ",
+        "amount": 87000,
+        "total_mmk": 87000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရောင်းရငွေ",
+        "amount": 499000,
+        "total_mmk": 499000
+      }
+    ]
+  },
+  {
+    "name": "စိုက်/ချေး စာရင်း",
+    "total_mmk": 44807194,
+    "order": 14,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 6792178,
+        "date": "2026-02-25",
+        "total_mmk": 6792178
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(2/2026) ဒီဇယ် စာရင်းပိုငွေ အပ်",
+        "amount": 338067,
+        "total_mmk": 338067
+      },
+      {
+        "date": "2026-02-11",
+        "description": "HP Wave pay ချေးငွေ ပြန်ရ ",
+        "amount": 550000,
+        "total_mmk": 550000
+      },
+      {
+        "date": "2026-02-26",
+        "description": "အိမ်သုံးထုတ်ငွေ ",
+        "amount": -200000,
+        "total_mmk": -200000
+      },
+      {
+        "date": "2026-02-27",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -200000,
+        "total_mmk": -200000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "အိမ်သုံးထုတ်ငွေ (3/2026) အစ",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ခြံသုံးထုတ်ငွေ (2/2026) ",
+        "amount": -1200000,
+        "total_mmk": -1200000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(12/2025) မော်စုန်းခြံစရိတ် ",
+        "amount": 8896445,
+        "total_mmk": 8896445
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(12/2025) ဝန်ချောင်းခြံ စရိတ်",
+        "amount": 4388950,
+        "total_mmk": 4388950
+      },
+      {
+        "date": "2026-03-01",
+        "description": "1/2026  မော်စုန်းခြံစရိတ်",
+        "amount": 15968775,
+        "total_mmk": 15968775
+      },
+      {
+        "date": "2026-03-01",
+        "description": "1/2026 ဝန်ချောင်းခြံ စရိတ်",
+        "amount": 4192490,
+        "total_mmk": 4192490
+      },
+      {
+        "date": "2026-03-02",
+        "description": "3K စိုက်ရှင်းပိုငွေ အပ်",
+        "amount": 300,
+        "total_mmk": 300
+      },
+      {
+        "date": "2026-03-02",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "2/2026 အိမ်သုံးထုတ်ငွေ ပြန်ရ",
+        "amount": 3600000,
+        "total_mmk": 3600000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "မအေးပြည့်အပ်ငွေ ",
+        "amount": 150000,
+        "total_mmk": 150000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ခြံသုံးပိုငွေအပ်",
+        "amount": 4270,
+        "total_mmk": 4270
+      },
+      {
+        "date": "2026-03-03",
+        "description": "2/2026 ခြံသုံးပိုငွေအပ်",
+        "amount": 572355,
+        "total_mmk": 572355
+      },
+      {
+        "date": "2026-03-03",
+        "description": "2/2026 ခြံသုံးထုတ်ငွေ",
+        "amount": -8900000,
+        "total_mmk": -8900000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "(baht 150000 * 123.30) ရုပ်တုဖိုးထုတ်ငွေ ",
+        "amount": -18495000,
+        "total_mmk": -18495000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 မော်စုန်းစရိတ်ပြန်ရ ",
+        "amount": 7728475,
+        "total_mmk": 7728475
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 ဝန်ချောင်းစရိတ်ပြန်ရ",
+        "amount": 6599170,
+        "total_mmk": 6599170
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ခြံသုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "baht 6000 * 128.00 မျှားဖိုးပြန်ရ ",
+        "amount": 768000,
+        "total_mmk": 768000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ခြံသုံးထုတ်ငွေ ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "HP ဒီဇယ်+PD ဝယ်ရန်ချေးထားငွေ",
+        "amount": -4240000,
+        "total_mmk": -4240000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "2/2026 3K စိုက်ရှင်း အပ်ငွေ ",
+        "amount": 14550200,
+        "total_mmk": 14550200
+      },
+      {
+        "date": "2026-03-09",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-03-10",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-10",
+        "description": "ခြံသုံးထုတ်ငွေ (CKZ + PZA) လစာအတွက် ",
+        "amount": -2200000,
+        "total_mmk": -2200000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "HP ဆီဝယ်ရန်ချေးငွေပြန်ဆပ်",
+        "amount": 3960000,
+        "total_mmk": 3960000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "HP ဆီဝယ်ရန်ချေးငွေပြန်ဆပ်",
+        "amount": 280000,
+        "total_mmk": 280000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "အိမ်သုံးထုတ်ငွေ ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-19",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -300000,
+        "total_mmk": -300000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ခြံသုံးထုတ်ငွေ",
+        "amount": -1000000,
+        "total_mmk": -1000000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ဆီဆိုင်လုပ်ငန်းမှ အပ်ငွေ",
+        "amount": 22519,
+        "total_mmk": 22519
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ရုပ်တု Bkk ခရီးလေယာဉ်လက်မှတ်ဖိုး ပြန်ရ",
+        "amount": 710000,
+        "total_mmk": 710000
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ရုပ်တုခရီးလေယာဉ်လက်မှတ်ဖိုးပြန်ရ",
+        "amount": 2290000,
+        "total_mmk": 2290000
+      },
+      {
+        "date": "2026-2-22",
+        "description": "UZW, HSW ရန်ကုန် မြိတ်ခရီးစဉ် လေယာဉ်လက်မှတ်ဖိုး",
+        "amount": "3620000",
+        "total_mmk": 3620000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -600000,
+        "total_mmk": -600000
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ခြံသုံးထုတ်ငွေ ",
+        "amount": -1200000,
+        "total_mmk": -1200000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -600000,
+        "total_mmk": -600000
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ခြံ အလုပ်သမား (2) ဉီး လေယာဉ် လက်မှတ်ဖိုး",
+        "amount": 1260000,
+        "total_mmk": 1260000
+      },
+      {
+        "date": "2026-03-24",
+        "description": "အိမ်သုံးထုတ်ငွေ",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရေပုန်းအိမ် မီတာခ အပ်ငွေ",
+        "amount": 1200000,
+        "total_mmk": 1200000
+      }
+    ]
+  },
+  {
+    "name": "ဗမချေးငွေ",
+    "total_mmk": -21940000,
+    "order": 15,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -21940000,
+        "date": "2026-02-25",
+        "total_mmk": -21940000
+      }
+    ]
+  },
+  {
+    "name": "အလှူရန်ပုံငွေ",
+    "total_mmk": 784082,
+    "order": 16,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 556282,
+        "date": "2026-02-25",
+        "total_mmk": 556282
+      },
+      {
+        "date": "2026-02-28",
+        "description": "2/2026 ငါးမှရ",
+        "amount": 215000,
+        "total_mmk": 215000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ငါးစာရင်းမှ baht စာရင်းမှရ (100 baht * 128)",
+        "amount": 12800,
+        "total_mmk": 12800
+      }
+    ]
+  },
+  {
+    "name": "လစာရန်ပုံငွေ",
+    "total_mmk": 9702000,
+    "order": 17,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 9801000,
+        "date": "2026-02-25",
+        "total_mmk": 9801000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "2/2026 ငါးမှရ",
+        "amount": 951000,
+        "total_mmk": 951000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "2/2026 ငါးစာရင်းသို့ပေး",
+        "amount": -110000,
+        "total_mmk": -110000
+      },
+      {
+        "date": "2026-02-15",
+        "description": "တရုတ်နှစ်ကူး အန်ပေါင်ပေး ",
+        "amount": -1050000,
+        "total_mmk": -1050000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရေခဲမှရ",
+        "amount": 10000,
+        "total_mmk": 10000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ဒီဇယ်မှရ",
+        "amount": 100000,
+        "total_mmk": 100000
+      }
+    ]
+  },
+  {
+    "name": "အင်ဂျင်ဝိုင်",
+    "total_mmk": 11006950,
+    "order": 18,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 10826950,
+        "date": "2026-02-25",
+        "total_mmk": 10826950
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရေခဲမှရ",
+        "amount": 30000,
+        "total_mmk": 30000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ဒီဇယ်မှရ",
+        "amount": 150000,
+        "total_mmk": 150000
+      }
+    ]
+  },
+  {
+    "name": "ယောလုံချည်/ပုဝါပိုင်း",
+    "total_mmk": 1960300,
+    "order": 19,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 1960300,
+        "date": "2026-02-25",
+        "total_mmk": 1960300
+      }
+    ]
+  },
+  {
+    "name": "ကွမ်း + ဒူးရင်း + ငှက်ပျော",
+    "total_mmk": 9373824,
+    "order": 20,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 9216024,
+        "date": "2026-02-25",
+        "total_mmk": 9216024
+      },
+      {
+        "date": "2026-02-28",
+        "description": "အရွက်ဖြန်းဆေးဝယ် (ကွမ်းပင်)",
+        "amount": -9000,
+        "total_mmk": -9000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ကွမ်းသီးမျိုးအိတ်ဝယ်",
+        "amount": -14800,
+        "total_mmk": -14800
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ခါချဉ်ဖျန်းဆေးဘူးဝယ် (ဒူးရင်းပင်)",
+        "amount": -21400,
+        "total_mmk": -21400
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ကွမ်းသီးမှည့်ရောင်းရငွေ (4900လုံး * 50) ",
+        "amount": 245000,
+        "total_mmk": 245000
+      },
+      {
+        "date": "2026-03-10",
+        "description": "ဝါးကြိုးဝယ် (ဒူးရင်းပင်)",
+        "amount": -42000,
+        "total_mmk": -42000
+      }
+    ]
+  },
+  {
+    "name": "သမုတ်ဆီရောင်းရငွေ",
+    "total_mmk": 3028034,
+    "order": 21,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 43818168,
+        "date": "2026-02-25",
+        "total_mmk": 43818168
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ရောင်းရငွေ ",
+        "amount": 2539000,
+        "total_mmk": 2539000
+      },
+      {
+        "date": "2026-02-23",
+        "description": "ရောင်းရငွေ",
+        "amount": 2216400,
+        "total_mmk": 2216400
+      },
+      {
+        "date": "2026-02-24",
+        "description": "ရောင်းရငွေ",
+        "amount": 2583300,
+        "total_mmk": 2583300
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ဆလိုက်မီး + မီးကြိုးဝယ် ",
+        "amount": -222000,
+        "total_mmk": -222000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "(95) 1 ပီပါဝယ် ",
+        "amount": -590000,
+        "total_mmk": -590000
+      },
+      {
+        "date": "2026-02-21",
+        "description": "(92) 18 ပီပါ = 3960 li * 18.9 baht (74844 baht * 127)",
+        "amount": -9505188,
+        "total_mmk": -9505188
+      },
+      {
+        "date": "2026-02-27",
+        "description": "(92) 10 ပီပါ = 2200 li *18.9baht (41580 baht *127.70)",
+        "amount": -5309766,
+        "total_mmk": -5309766
+      },
+      {
+        "date": "2026-02-24",
+        "description": "(92) 23 ပီပါ = 5060li * 18.9 baht (95634 baht*127.7)",
+        "amount": -12212461,
+        "total_mmk": -12212461
+      },
+      {
+        "date": "2026-02-24",
+        "description": "PD 12 ပီပါ = 2640 li*20.2 baht (53328baht*127.7)",
+        "amount": -6809985,
+        "total_mmk": -6809985
+      },
+      {
+        "date": "2026-02-24",
+        "description": "D 12ပီပါ = 2640li*19.8baht (52272baht *127.7)",
+        "amount": -6675134,
+        "total_mmk": -6675134
+      },
+      {
+        "date": "2026-03-01",
+        "description": "3J ဆီဖိုးပြန်ရ ",
+        "amount": 70000,
+        "total_mmk": 70000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "မော်စုန်းခြံ မြက်ခုတ်ဆီဖိုးပြန်ရ ",
+        "amount": 244400,
+        "total_mmk": 244400
+      },
+      {
+        "date": "2026-03-01",
+        "description": "မော်စုန်းခြံ ဆိုင်ကယ်ဆီဖိုးပြန်ရ ",
+        "amount": 41600,
+        "total_mmk": 41600
+      },
+      {
+        "date": "2026-03-01",
+        "description": "အစေးကြိတ်စက် ဆီဖိုးပြန်ရ ",
+        "amount": 218000,
+        "total_mmk": 218000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "CKZ ဆိုင်ကယ်ဆီဖိုးပြန်ရ",
+        "amount": 31200,
+        "total_mmk": 31200
+      },
+      {
+        "date": "2026-03-01",
+        "description": "HP ဆိုင်ကယ် ဆီဖိုးပြန်ရ ",
+        "amount": 30800,
+        "total_mmk": 30800
+      },
+      {
+        "date": "2026-03-01",
+        "description": "စျေးဖိုးပြန်ရ ",
+        "amount": 444500,
+        "total_mmk": 444500
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ဝန်ချောင်းခြံဆီဖိုးပြန်ရ",
+        "amount": 201700,
+        "total_mmk": 201700
+      },
+      {
+        "date": "2026-03-01",
+        "description": "3D ဆီဖိုးပြန်ရ",
+        "amount": 301000,
+        "total_mmk": 301000
+      },
+      {
+        "date": "2026-02-25",
+        "description": "ရောင်းရငွေ",
+        "amount": 2491400,
+        "total_mmk": 2491400
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ရောင်းရငွေ",
+        "amount": 2724700,
+        "total_mmk": 2724700
+      },
+      {
+        "date": "2026-02-27",
+        "description": "ရောင်းရငွေ",
+        "amount": 1773500,
+        "total_mmk": 1773500
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ရောင်းရငွေ",
+        "amount": 1777900,
+        "total_mmk": 1777900
+      },
+      {
+        "date": "2026-03-01",
+        "description": "ရောင်းရငွေ",
+        "amount": 2561100,
+        "total_mmk": 2561100
+      },
+      {
+        "date": "2026-03-02",
+        "description": "ရောင်းရငွေ",
+        "amount": 3591200,
+        "total_mmk": 3591200
+      },
+      {
+        "date": "2026-03-03",
+        "description": "(95) 1 ပီပါဝယ်",
+        "amount": -590000,
+        "total_mmk": -590000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 ဝန်ထမ်းလစာပေး",
+        "amount": -460000,
+        "total_mmk": -460000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ရောင်းရငွေ",
+        "amount": 6459500,
+        "total_mmk": 6459500
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ဦးစိုးညွန့် အကြွေးရ",
+        "amount": 1190000,
+        "total_mmk": 1190000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ရောင်းရငွေ",
+        "amount": 17224460,
+        "total_mmk": 17224460
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ရောင်းရငွေ",
+        "amount": 9200000,
+        "total_mmk": 9200000
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ရောင်းရငွေ",
+        "amount": 1245850,
+        "total_mmk": 1245850
+      },
+      {
+        "date": "2026-03-06",
+        "description": "(92) 25 ပီပါ = 5500 li * 22.5 (123750 baht * 126.5)",
+        "amount": -15654375,
+        "total_mmk": -15654375
+      },
+      {
+        "date": "2026-03-06",
+        "description": "PD 10ပီပါ = 2200 li * 24.3 (53460 baht *126.50)",
+        "amount": -6762690,
+        "total_mmk": -6762690
+      },
+      {
+        "date": "2026-03-06",
+        "description": "D 18 ပီပါ = 3960 li * 24.00 ( 95040 baht * 126.50 )",
+        "amount": -12022560,
+        "total_mmk": -12022560
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ရောင်းရငွေ",
+        "amount": 2839500,
+        "total_mmk": 2839500
+      },
+      {
+        "date": "2026-3-7",
+        "description": "ရောင်းရငွေ",
+        "amount": "2845400",
+        "total_mmk": 2845400
+      },
+      {
+        "date": "2026-03-08",
+        "description": "(92) 2ပီပါ *1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "PD 2ပီပါ * 1070000",
+        "amount": -2140000,
+        "total_mmk": -2140000
+      },
+      {
+        "date": "2026-3-8",
+        "description": "ရောင်းရငွေ",
+        "amount": "3764500",
+        "total_mmk": 3764500
+      },
+      {
+        "date": "2026-03-09",
+        "description": "D 2ပီပါ *1050000",
+        "amount": -2100000,
+        "total_mmk": -2100000
+      },
+      {
+        "date": "2026-3-9",
+        "description": "PD 2 ပီပါ *1070000",
+        "amount": "-2140000",
+        "total_mmk": -2140000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "(95) 2ပီပါ * 1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-02-15",
+        "description": "တရုတ်နှစ်ကူးအန်ပေါင်ပေး",
+        "amount": -120000,
+        "total_mmk": -120000
+      },
+      {
+        "date": "2026-3-9",
+        "description": "ရောင်းရငွေ",
+        "amount": 3691865,
+        "total_mmk": 3691865
+      },
+      {
+        "date": "2026-03-07",
+        "description": "D 2ပီပါ ဝယ် *1000000",
+        "amount": -2000000,
+        "total_mmk": -2000000
+      },
+      {
+        "date": "2026-3-10",
+        "description": "(92)  2ပီပါ * 1020000",
+        "amount": "-2040000",
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "(92) 2ပီပါ * 1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "D  2ပီပါ ဝယ် *980000",
+        "amount": -1960000,
+        "total_mmk": -1960000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "(10/2024 မှ 2/2026) အထိ HP လစာ (16 လစာ)",
+        "amount": -5600000,
+        "total_mmk": -5600000
+      },
+      {
+        "date": "2026-03-10",
+        "description": "ရောင်းရငွေ",
+        "amount": 3182300,
+        "total_mmk": 3182300
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ရောင်းရငွေ",
+        "amount": 2781350,
+        "total_mmk": 2781350
+      },
+      {
+        "date": "2026-03-12",
+        "description": "(92) 2ပီပါ ဝယ် * 1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-13",
+        "description": "(92) 2 ပီပါ ဝယ် * 1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-12",
+        "description": "ရောင်းရငွေ",
+        "amount": 2349900,
+        "total_mmk": 2349900
+      },
+      {
+        "date": "2026-03-13",
+        "description": "ရောင်းရငွေ",
+        "amount": 2390600,
+        "total_mmk": 2390600
+      },
+      {
+        "date": "2026-03-14",
+        "description": "(92) 2ပီပါ * 1020000",
+        "amount": -2040000,
+        "total_mmk": -2040000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ရောင်းရငွေ",
+        "amount": 1872800,
+        "total_mmk": 1872800
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ရောင်းရငွေ",
+        "amount": 1360800,
+        "total_mmk": 1360800
+      },
+      {
+        "date": "2026-03-16",
+        "description": "(92) 6 ပီပါ *1100000",
+        "amount": -6600000,
+        "total_mmk": -6600000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "ရောင်းရငွေ",
+        "amount": 2006000,
+        "total_mmk": 2006000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "(95) 1 ပီပါဝယ် ",
+        "amount": -1150000,
+        "total_mmk": -1150000
+      },
+      {
+        "date": "2026-03-18",
+        "description": "(92) 12ပီပါဝယ် *1070000",
+        "amount": -12840000,
+        "total_mmk": -12840000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ရောင်းရငွေ",
+        "amount": 3090580,
+        "total_mmk": 3090580
+      },
+      {
+        "date": "2026-03-18",
+        "description": "ရောင်းရငွေ",
+        "amount": 3357300,
+        "total_mmk": 3357300
+      },
+      {
+        "date": "2026-03-19",
+        "description": "D 2 ပီပါ *1220000",
+        "amount": -2440000,
+        "total_mmk": -2440000
+      },
+      {
+        "date": "2026-03-19",
+        "description": "ရောင်းရငွေ",
+        "amount": 2915000,
+        "total_mmk": 2915000
+      },
+      {
+        "date": "2026-03-20",
+        "description": "ရောင်းရငွေ",
+        "amount": 3585250,
+        "total_mmk": 3585250
+      },
+      {
+        "date": "2026-03-21",
+        "description": "ဘိလပ်မြေ 70အိတ် * 44000 ဝယ် ",
+        "amount": -3080000,
+        "total_mmk": -3080000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "တစ်မတ် သံချောင်း (30) ချောင်း * 73000",
+        "amount": -219000,
+        "total_mmk": -219000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "သုံးမူး သံချောင်း (30) ချောင်း* 24500",
+        "amount": -735000,
+        "total_mmk": -735000
+      },
+      {
+        "date": "2026-03-21",
+        "description": "ရောင်းရငွေ ",
+        "amount": 6327620,
+        "total_mmk": 6327620
+      },
+      {
+        "date": "2026-03-22",
+        "description": "(92) 7ပီပါ * 1120000",
+        "amount": -7840000,
+        "total_mmk": -7840000
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ရောင်းရငွေ",
+        "amount": 3179900,
+        "total_mmk": 3179900
+      },
+      {
+        "date": "2026-03-24",
+        "description": "(92) 12ပီပါ * 1150000",
+        "amount": -13800000,
+        "total_mmk": -13800000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "ရောင်းရငွေ",
+        "amount": 3968700,
+        "total_mmk": 3968700
+      },
+      {
+        "date": "2026-03-24",
+        "description": "ရောင်းရငွေ",
+        "amount": 4447150,
+        "total_mmk": 4447150
+      },
+      {
+        "date": "2026-03-25",
+        "description": "D 3 ပီပါ *1350000",
+        "amount": -4050000,
+        "total_mmk": -4050000
+      }
+    ]
+  },
+  {
+    "name": "ဆီဆိုင်လုပ်ငန်း",
+    "total_mmk": 0,
+    "order": 22,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 22519,
+        "date": "2026-02-25",
+        "total_mmk": 22519
+      },
+      {
+        "date": "2026-3-20",
+        "description": "ထုတ်ငွေ (စိုက်ချေးစာရင်းသို့ပေး)",
+        "amount": "-22519",
+        "total_mmk": -22519
+      }
+    ]
+  },
+  {
+    "name": "လှေကပ်ခရငွေ",
+    "total_mmk": 2270700,
+    "order": 23,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 2203700,
+        "date": "2026-02-25",
+        "total_mmk": 2203700
+      },
+      {
+        "date": "2026-02-26",
+        "description": "ရငွေ",
+        "amount": 2000,
+        "total_mmk": 2000
+      },
+      {
+        "date": "2026-02-27",
+        "description": "ရငွေ",
+        "amount": 4000,
+        "total_mmk": 4000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "ရငွေ",
+        "amount": 20000,
+        "total_mmk": 20000
+      },
+      {
+        "date": "2026-03-02",
+        "description": "ရငွေ",
+        "amount": 3000,
+        "total_mmk": 3000
+      },
+      {
+        "date": "2026-03-05",
+        "description": "ရေကြောင်းရဲပေးငွေ",
+        "amount": -50000,
+        "total_mmk": -50000
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ရငွေ",
+        "amount": 4000,
+        "total_mmk": 4000
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ရငွေ",
+        "amount": 30000,
+        "total_mmk": 30000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "ရငွေ",
+        "amount": 8000,
+        "total_mmk": 8000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ရငွေ",
+        "amount": 2000,
+        "total_mmk": 2000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "ရငွေ",
+        "amount": 6000,
+        "total_mmk": 6000
+      },
+      {
+        "date": "2026-03-15",
+        "description": "ရငွေ",
+        "amount": 2000,
+        "total_mmk": 2000
+      },
+      {
+        "date": "2026-03-16",
+        "description": "ရငွေ",
+        "amount": 5000,
+        "total_mmk": 5000
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ရငွေ",
+        "amount": 12000,
+        "total_mmk": 12000
+      },
+      {
+        "date": "2026-03-22",
+        "description": "ရငွေ",
+        "amount": 7000,
+        "total_mmk": 7000
+      },
+      {
+        "date": "2026-03-23",
+        "description": "ရငွေ",
+        "amount": 2000,
+        "total_mmk": 2000
+      },
+      {
+        "date": "2026-03-24",
+        "description": "ရငွေ",
+        "amount": 5000,
+        "total_mmk": 5000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "ရငွေ",
+        "amount": 5000,
+        "total_mmk": 5000
+      }
+    ]
+  },
+  {
+    "name": "ရာဘာရောင်းရငွေ",
+    "total_mmk": 137932266,
+    "order": 24,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 78253828,
+        "date": "2026-02-25",
+        "total_mmk": 78253828
+      },
+      {
+        "date": "2026-03-06",
+        "description": "‌ဂေါ်လီချေး‌ရောင်းရငွေ (121.15 viss * 4250)",
+        "amount": 901650,
+        "total_mmk": 901650
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ရာဘာထုံး (257) ထုံးရောင်းရငွေ (5544.98 viss * 10600) ",
+        "amount": 58776788,
+        "total_mmk": 58776788
+      }
+    ]
+  },
+  {
+    "name": "(မဒဂ) အိမ်ဆောက်စာရင်း",
+    "total_mmk": -137445000,
+    "order": 25,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -137445000,
+        "date": "2026-02-25",
+        "total_mmk": -137445000
+      }
+    ]
+  },
+  {
+    "name": "UZW, TTM ရန်ပုံငွေ",
+    "total_mmk": 8561350,
+    "order": 26,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": 7641350,
+        "date": "2026-02-25",
+        "total_mmk": 7641350
+      },
+      {
+        "date": "2026-02-28",
+        "description": "2/2026 ဒီဇယ် စာရင်းမှရ",
+        "amount": 800000,
+        "total_mmk": 800000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "မထွေးလွှဲငွေရ (မနီဆေးဖိုး) ",
+        "amount": 120000,
+        "total_mmk": 120000
+      }
+    ]
+  },
+  {
+    "name": "Bank အပ်",
+    "inverse": true,
+    "total_mmk": -76335315,
+    "order": 27,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -15823253,
+        "date": "2026-03-26",
+        "total_mmk": -15823253
+      },
+      {
+        "date": "2026-03-09",
+        "description": "AYA အပ်ငွေ ",
+        "amount": -60000000,
+        "total_mmk": -60000000
+      },
+      {
+        "date": "2026-02-28",
+        "description": "28/2/2026 အထိ ဘဏ်တိုးရ",
+        "amount": -512062,
+        "total_mmk": -512062
+      },
+      {
+        "date": "2026-3-24",
+        "description": "AYA ထုတ်",
+        "amount": 10000000,
+        "total_mmk": 10000000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "AYA အပ် ",
+        "amount": -10000000,
+        "total_mmk": -10000000
+      }
+    ]
+  },
+  {
+    "name": "K pay",
+    "inverse": true,
+    "total_mmk": -8105750,
+    "order": 28,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -9333700,
+        "date": "2026-03-26",
+        "total_mmk": -9333700
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ဘော ဒီဇယ်ဖိုးရ ",
+        "amount": -4000000,
+        "total_mmk": -4000000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "ဆီဆိုင်မှ ရ",
+        "amount": -700000,
+        "total_mmk": -700000
+      },
+      {
+        "date": "2026-03-04",
+        "description": "ဆီဆိုင်မှရ",
+        "amount": -600000,
+        "total_mmk": -600000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "မထွေးလွှဲ ပေးငွေရ (မနီဆေးဖိုး) ဘဏ်အပ်",
+        "amount": -120000,
+        "total_mmk": -120000
+      },
+      {
+        "date": "2026-03-01",
+        "description": "2/2026 TTM Kpay သုံးထုတ်",
+        "amount": 7222950,
+        "total_mmk": 7222950
+      },
+      {
+        "date": "2026-03-07",
+        "description": "ဆီဆိုင်မှရ",
+        "amount": -100000,
+        "total_mmk": -100000
+      },
+      {
+        "date": "2026-03-08",
+        "description": "ဆီဆိုင်မှရ",
+        "amount": -700000,
+        "total_mmk": -700000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "မီးပုံးတိုင် စျေးဝယ် ",
+        "amount": 250500,
+        "total_mmk": 250500
+      },
+      {
+        "date": "2026-03-11",
+        "description": "မီးပုံးတိုင် စျေးဝယ် ",
+        "amount": 118500,
+        "total_mmk": 118500
+      },
+      {
+        "date": "2026-03-12",
+        "description": "APP မှရ",
+        "amount": -188000,
+        "total_mmk": -188000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "ဆီဆိုင်မှရ",
+        "amount": -500000,
+        "total_mmk": -500000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "APP မှရ",
+        "amount": -126000,
+        "total_mmk": -126000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "Redmi tablet ဝယ် ",
+        "amount": 880000,
+        "total_mmk": 880000
+      },
+      {
+        "date": "2026-03-25",
+        "description": "APP မှရ",
+        "amount": -210000,
+        "total_mmk": -210000
+      }
+    ]
+  },
+  {
+    "name": "Baht ဝယ်စာရင်း (1)",
+    "inverse": true,
+    "total_mmk": -151328907.2,
+    "total_foreign": -1228477,
+    "order": 29,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -1388343,
+        "date": "2026-03-26",
+        "rate": 123.93222136028345,
+        "total_mmk": -172060432
+      },
+      {
+        "date": "2026-2-24",
+        "description": "D 25ပီပါ=5500li *19.8(108900 baht*127.70)",
+        "amount": 108900,
+        "rate": "127.70",
+        "total_mmk": 13906530
+      },
+      {
+        "date": "2026-2-27",
+        "description": "baht 200000 ရောင်း",
+        "amount": 200000,
+        "rate": "127.20",
+        "total_mmk": 25440000
+      },
+      {
+        "date": "2026-2-21",
+        "description": "(92) 18 ပီပါ = 3960 li * 18.9 baht (74844 baht * 127)",
+        "amount": 74844,
+        "rate": 127,
+        "total_mmk": 9505188
+      },
+      {
+        "date": "2026-2-27",
+        "description": "(92) 10 ပီပါ = 2200 li *18.9baht (41580 baht *127.70)",
+        "amount": 41580,
+        "rate": "127.7",
+        "total_mmk": 5309766
+      },
+      {
+        "date": "2026-2-24",
+        "description": "(92) 23 ပီပါ = 5060li * 18.9 baht (95634 baht*127.7)",
+        "amount": 95634,
+        "rate": "127.7",
+        "total_mmk": 12212461.8
+      },
+      {
+        "date": "2026-2-24",
+        "description": "PD 12 ပီပါ = 2640 li*20.2 baht (53328baht*127.7)",
+        "amount": 53328,
+        "rate": "127.7",
+        "total_mmk": 6809985.600000001
+      },
+      {
+        "date": "2026-2-24",
+        "description": "D 12ပီပါ = 2640li*19.8baht (52272baht *127.7)",
+        "amount": 52272,
+        "rate": 127.7,
+        "total_mmk": 6675134.4
+      },
+      {
+        "date": "2026-3-1",
+        "description": "(1093) baht 13000 * 127.00",
+        "amount": -13000,
+        "rate": 127,
+        "total_mmk": -1651000
+      },
+      {
+        "date": "2026-3-1",
+        "description": "(1094) Baht 237000 * 126.50",
+        "amount": -237000,
+        "rate": "126.5",
+        "total_mmk": -29980500
+      },
+      {
+        "date": "2026-3-1",
+        "description": "(1095) Baht 146000 * 125.80",
+        "amount": -146000,
+        "rate": "125.8",
+        "total_mmk": -18366800
+      },
+      {
+        "date": "2026-3-3",
+        "description": "(1096) Baht 65000 * 125.50",
+        "amount": -65000,
+        "rate": "125.5",
+        "total_mmk": -8157500
+      },
+      {
+        "date": "2026-3-6",
+        "description": "(92) 25 ပီပါ = 5500 li * 22.5 (123750 baht * 126.5)",
+        "amount": 123750,
+        "rate": 126.5,
+        "total_mmk": 15654375
+      },
+      {
+        "date": "2026-3-6",
+        "description": "PD 10ပီပါ = 2200 li * 24.3 (53460 baht *126.50) ",
+        "amount": 53460,
+        "rate": 126.5,
+        "total_mmk": 6762690
+      },
+      {
+        "date": "2026-3-6",
+        "description": "D 18 ပီပါ = 3960 li * 24.00 ( 95040 baht * 126.50 ) ",
+        "amount": 95040,
+        "rate": 126.5,
+        "total_mmk": 12022560
+      },
+      {
+        "date": "2026-03-06",
+        "description": "ဘော D 25 ပီပါ = 5500 li * 24 (132000 baht * 126.5 ) ",
+        "amount": 132000,
+        "rate": 126.5,
+        "total_mmk": 16698000
+      },
+      {
+        "date": "2026-03-03",
+        "description": "UZW + ဆရာငယ် Bkk သုံး ( 5000 baht * 126.5)",
+        "amount": 5000,
+        "rate": 126.5,
+        "total_mmk": 632500
+      },
+      {
+        "date": "2026-3-14",
+        "description": "(1097) Baht 81000 * 125.80 ",
+        "amount": -81000,
+        "rate": "125.8",
+        "total_mmk": -10189800
+      },
+      {
+        "date": "2026-03-14",
+        "description": "(1098) baht 28000*126.5",
+        "amount": -28000,
+        "rate": 126.5,
+        "total_mmk": -3542000
+      },
+      {
+        "date": "2026-03-14",
+        "description": "(1099) baht 98000 *125.8",
+        "amount": -98000,
+        "rate": 125.8,
+        "total_mmk": -12328400
+      },
+      {
+        "date": "2026-03-17",
+        "description": "အစ်စစ်ပုံး (4) ပုံးဖိုးပေး ",
+        "amount": 7328,
+        "rate": 123,
+        "total_mmk": 901344
+      },
+      {
+        "date": "2026-03-17",
+        "description": "ကြွေပြား+ကျောက်မှုန့်ဝယ် ",
+        "amount": 44730,
+        "rate": 123,
+        "total_mmk": 5501790
+      },
+      {
+        "date": "2026-3-17",
+        "description": "(1100) baht 196000*127.20",
+        "amount": -196000,
+        "rate": "127.2",
+        "total_mmk": -24931200
+      },
+      {
+        "date": "2026-3-17",
+        "description": "(1101) baht 64000 * 127.4)",
+        "amount": -64000,
+        "rate": "127.4",
+        "total_mmk": -8153600
+      }
+    ]
+  },
+  {
+    "name": "TTM Cash (အပ်ငွေ)",
+    "inverse": true,
+    "total_mmk": -6088610,
+    "order": 30,
+    "transactions": [
+      {
+        "date": "2026-02-25",
+        "description": "Initial Balance",
+        "amount": -2196410,
+        "total_mmk": -2196410
+      },
+      {
+        "date": "2026-2-26",
+        "description": "TTM ထုတ်",
+        "amount": 500000,
+        "total_mmk": 500000
+      },
+      {
+        "date": "2026-2-28",
+        "description": "TTM ထုတ် ",
+        "amount": 500000,
+        "total_mmk": 500000
+      },
+      {
+        "date": "2026-03-09",
+        "description": "(5/2025 မှ 2/2026) အထိ PZA  လစာပြန်ရ",
+        "amount": -1343200,
+        "total_mmk": -1343200
+      },
+      {
+        "date": "2026-03-09",
+        "description": "(5/2025 မှ 2/2026) အထိ CKZ လစာပြန်ရ ",
+        "amount": -800000,
+        "total_mmk": -800000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "မီးပုံးတိုင် စျေးဝယ် kpay ပြန်ရ ",
+        "amount": -250500,
+        "total_mmk": -250500
+      },
+      {
+        "date": "2026-03-11",
+        "description": "မီးပုံးတိုင် စျေးဝယ် kpay ပြန်ရ",
+        "amount": -118500,
+        "total_mmk": -118500
+      },
+      {
+        "date": "2026-02-15",
+        "description": "တရုတ်နှစ်ကူးဘော အန်ပေါင်ပေး",
+        "amount": 1050000,
+        "total_mmk": 1050000
+      },
+      {
+        "date": "2026-02-15",
+        "description": "တရုတ်နှစ်ကူး ဆီဆိုင် အန်ပေါင်ပေး",
+        "amount": 120000,
+        "total_mmk": 120000
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ရုပ်တု Bkk လေယာဉ်လက်မှတ်ဖိုးပြန်ရ ",
+        "amount": -2290000,
+        "total_mmk": -2290000
+      },
+      {
+        "date": "2026-02-22",
+        "description": "ခြံ အလုပ်သမား 2 ယောက် လေယာဉ်လက်မှတ်ဖိုး ပြန်ရ",
+        "amount": -1260000,
+        "total_mmk": -1260000
+      }
+    ]
+  },
+  {
+    "name": "Wave Pay (HP)",
+    "inverse": true,
+    "total_mmk": -2000000,
+    "order": 31,
+    "transactions": [
+      {
+        "date": "2026-03-03",
+        "description": "ဆီဆိုင် HP လွှဲငွေ ",
+        "amount": -2000000,
+        "total_mmk": -2000000
+      }
+    ]
+  },
+  {
+    "name": "Baht ဝယ်စာရင်း (2) ရုပ်တုဖိုးအပ်ငွေ",
+    "inverse": true,
+    "total_mmk": -12330000,
+    "total_foreign": -100000,
+    "order": 32,
+    "transactions": [
+      {
+        "description": "Initial Balance",
+        "amount": -250000,
+        "date": "2026-03-28",
+        "rate": 123.3,
+        "total_mmk": -30825000
+      },
+      {
+        "date": "2026-3-1",
+        "description": "ရုပ်တုဖိုးပေး Baht 150000 * 123.3",
+        "amount": 150000,
+        "rate": "123.3",
+        "total_mmk": 18495000
+      }
+    ]
+  },
+  {
+    "name": "HP လစာ စာရင်း",
+    "inverse": false,
+    "total_mmk": 5641500,
+    "order": 33,
+    "transactions": [
+      {
+        "date": "2026-03-11",
+        "description": "(10/2024 မှ 2/2026) အထိ HP 16 လစာ ရငွေ ",
+        "amount": 5600000,
+        "total_mmk": 5600000
+      },
+      {
+        "date": "2026-03-11",
+        "description": "(10/2024 မှ 2/2026) အထိ HP လစာ အစွန်းရငွေ ",
+        "amount": 41500,
+        "total_mmk": 41500
+      }
+    ]
+  }
+]

@@ -58,6 +58,7 @@ CREATE TABLE corp_data (
 CREATE TABLE global_tree (
     id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name              VARCHAR(255) NOT NULL,
+    burmese_name      VARCHAR(255) NULL,
     parent_id         INT UNSIGNED NULL,
     soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -84,6 +85,7 @@ CREATE TABLE local_tree (
     global_parent_id  INT UNSIGNED NOT NULL,
     parent_id         INT UNSIGNED NULL,
     name              VARCHAR(255) NOT NULL,
+    burmese_name      VARCHAR(255) NULL,
     leaf              TINYINT NOT NULL DEFAULT 0,
     soft_delete       TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
