@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Sheets.module.css';
 import CorpList from '../sheets/corp_list';
 import CorpDetails from '../sheets/corp_details';
@@ -25,9 +25,19 @@ function Sheets({
   onRemoveDirtyRow,
   setDraftData,
 }) {
+  const DEFAULT_LIST_WIDTH = 320;
+  const COLLAPSED_LIST_WIDTH = 28;
+  const SNAP_CLOSE_THRESHOLD = 120;
+  const SNAP_OPEN_THRESHOLD = 160;
+  const MIN_EXPANDED_LIST_WIDTH = 220;
+  const MAX_LIST_WIDTH = 600;
+
   const [showAddCorpForm, setShowAddCorpForm] = useState(false);
   const [selectedCorpId, setSelectedCorpId] = useState(null);
   const [languageMode, setLanguageMode] = useState(LANGUAGE_MODES.ENG);
+  const [listWidth, setListWidth] = useState(DEFAULT_LIST_WIDTH);
+  const [isDraggingDivider, setIsDraggingDivider] = useState(false);
+  const containerRef = useRef(null);
 
   const visibleCorps = corps.filter(
     (corp) =>
@@ -52,6 +62,56 @@ function Sheets({
   }, [visibleCorps, selectedCorpId]);
 
   const selectedCorp = visibleCorps.find((corp) => corp.id === selectedCorpId) || null;
+
+  const clampListWidth = useCallback((rawWidth) => {
+    if (rawWidth <= SNAP_CLOSE_THRESHOLD) {
+      return COLLAPSED_LIST_WIDTH;
+    }
+
+    return Math.min(Math.max(rawWidth, MIN_EXPANDED_LIST_WIDTH), MAX_LIST_WIDTH);
+  }, []);
+
+  const expandFromCollapsedWidth = useCallback((rawWidth) => {
+    if (rawWidth <= SNAP_OPEN_THRESHOLD) {
+      return COLLAPSED_LIST_WIDTH;
+    }
+
+    return Math.min(Math.max(rawWidth, MIN_EXPANDED_LIST_WIDTH), MAX_LIST_WIDTH);
+  }, []);
+
+  const handlePointerMove = useCallback(
+    (event) => {
+      if (!containerRef.current) return;
+
+      const bounds = containerRef.current.getBoundingClientRect();
+      const nextWidth = event.clientX - bounds.left;
+
+      setListWidth((previousWidth) =>
+        previousWidth === COLLAPSED_LIST_WIDTH
+          ? expandFromCollapsedWidth(nextWidth)
+          : clampListWidth(nextWidth)
+      );
+    },
+    [clampListWidth, expandFromCollapsedWidth]
+  );
+
+  const handlePointerUp = useCallback(() => {
+    setIsDraggingDivider(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isDraggingDivider) return undefined;
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [handlePointerMove, handlePointerUp, isDraggingDivider]);
+
+  const isListCollapsed = listWidth <= COLLAPSED_LIST_WIDTH;
 
   const getCorpDirtyPayload = (corp) => ({
     name: corp.name ?? '',
@@ -379,20 +439,37 @@ function Sheets({
   };
 
   return (
-    <div className={styles.container}>
-      <CorpList
-        showAddCorpForm={showAddCorpForm}
-        setShowAddCorpForm={setShowAddCorpForm}
-        corps={visibleCorps}
-        onAddCorp={onAddCorp}
-        selectedCorp={selectedCorp}
-        onSelectCorp={setSelectedCorpId}
-        onRenameCorp={handleRenameCorp}
-        onDeleteCorp={handleDeleteCorp}
-        onAddTransaction={handleInsertTransaction}
-        globalTree={globalTree}
-        languageMode={languageMode}
-      />
+    <div className={styles.container} ref={containerRef}>
+      <div
+        className={styles.corpListPane}
+        style={{ width: `${listWidth}px` }}
+        aria-hidden={isListCollapsed}
+      >
+        {!isListCollapsed && (
+          <CorpList
+            showAddCorpForm={showAddCorpForm}
+            setShowAddCorpForm={setShowAddCorpForm}
+            corps={visibleCorps}
+            onAddCorp={onAddCorp}
+            selectedCorp={selectedCorp}
+            onSelectCorp={setSelectedCorpId}
+            onRenameCorp={handleRenameCorp}
+            onDeleteCorp={handleDeleteCorp}
+            onAddTransaction={handleInsertTransaction}
+            globalTree={globalTree}
+            languageMode={languageMode}
+          />
+        )}
+      </div>
+
+      <button
+        type="button"
+        className={`${styles.splitter} ${isDraggingDivider ? styles.splitterActive : ''}`}
+        onPointerDown={() => setIsDraggingDivider(true)}
+        aria-label={isListCollapsed ? 'Expand corporation list' : 'Resize corporation list'}
+      >
+        <span className={styles.splitterHandle} />
+      </button>
 
       <CorpDetails
         selectedCorp={selectedCorp}
