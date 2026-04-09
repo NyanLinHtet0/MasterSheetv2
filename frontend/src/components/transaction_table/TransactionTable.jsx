@@ -81,6 +81,8 @@ export default function TransactionTable({
   const closeDeleteConfirm = () => {
     setPendingDeleteRowId(null);
   };
+  
+
 
   const confirmDelete = () => {
     if (pendingDeleteRowId == null) return;
@@ -92,6 +94,7 @@ export default function TransactionTable({
     <>
       <div className={styles.txHeader} style={{ marginBottom: '10px' }}>
         <h3 className={styles.tableTitle}>{title}</h3>
+        
 
         {!isEmpty && (
           <button onClick={handleToggleEditMode}>
@@ -129,7 +132,7 @@ export default function TransactionTable({
                   <col style={{ width: '180px' }} />
                 </>
               ) : (
-                <col style={{ width: '240px' }} />
+                <col style={{ width: '180' }} />
               )}
 
               {showSaveColumn && <col style={{ width: '82px' }} />}

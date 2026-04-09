@@ -423,6 +423,10 @@ function CorpDetails({
     );
   }
 
+  const sum_data = (displayTransactions) => {
+    return displayTransactions.reduce((subTotal, tx) => subTotal.add(tx.total_mmk ?? 0), currency(0));
+  };
+
   return (
     <div className={styles.corpDetails}>
       <div className={styles.headerbar}>
@@ -474,7 +478,7 @@ function CorpDetails({
       <div className={styles.tablecontainer}>
         <div className={styles.tablecontent}>
           <TransactionTable
-            title={`Transactions - ${titleParts.reverse().join('  ')}`}
+            title={`${titleParts.reverse().join(' ') + ' Transactions: '+currency(sum_data(displayTransactions).value,{precision:0,symbol: '',}).format()} MMK`}
             data={displayTransactions}
             type="all"
             currencyName={foreignLabel}
