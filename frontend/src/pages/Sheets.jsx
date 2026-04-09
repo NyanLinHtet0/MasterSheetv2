@@ -333,14 +333,26 @@ function Sheets({
     }));
 
     if (oldNode.id < 0) {
-      onQueueInsert?.('local_tree', oldNode.id, {
-        corp_id: oldNode.corp_id,
-        parent_id: oldNode.parent_id,
-        global_parent_id: oldNode.global_parent_id,
-        name: nextEnglishName,
-        burmese_name: burmeseName || null,
-        soft_delete: oldNode.soft_delete ?? 0,
-      });
+      onQueueUpdate?.(
+        'local_tree',
+        oldNode.id,
+        {
+          corp_id: oldNode.corp_id,
+          parent_id: oldNode.parent_id,
+          global_parent_id: oldNode.global_parent_id,
+          name: oldNode.name,
+          burmese_name: oldNode.burmese_name ?? null,
+          soft_delete: oldNode.soft_delete ?? 0,
+        },
+        {
+          corp_id: oldNode.corp_id,
+          parent_id: oldNode.parent_id,
+          global_parent_id: oldNode.global_parent_id,
+          name: nextEnglishName,
+          burmese_name: burmeseName || null,
+          soft_delete: oldNode.soft_delete ?? 0,
+        }
+      );
       return;
     }
 

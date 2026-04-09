@@ -15,10 +15,150 @@ function formatCurrencyValue(value, { fallback = '' } = {}) {
   }).format();
 }
 
+function formatEditNumber(value) {
+  if (value == null || value === '') return '';
+
+  const stringValue = String(value).replace(/,/g, '').trim();
+  if (
+    stringValue === '' ||
+    stringValue === '-' ||
+    stringValue === '.' ||
+    stringValue === '-.'
+  ) {
+    return stringValue;
+  }
+
+  const isNegative = stringValue.startsWith('-');
+  const unsignedValue = isNegative ? stringValue.slice(1) : stringValue;
+  const [integerPartRaw = '', decimalPart = ''] = unsignedValue.split('.');
+
+  if (!/^\d*$/.test(integerPartRaw) || !/^\d*$/.test(decimalPart)) {
+    return value;
+  }
+
+  const integerPart = integerPartRaw === '' ? '0' : integerPartRaw;
+  const formattedInteger = currency(Number(integerPart), {
+    symbol: '',
+    precision: 0,
+  }).format();
+
+  const signedInteger = isNegative ? `-${formattedInteger}` : formattedInteger;
+
+  if (!unsignedValue.includes('.')) return signedInteger;
+  return `${signedInteger}.${decimalPart}`;
+}
+
+function normalizeEditNumber(value) {
+  return value.replace(/,/g, '');
+}
+
+function getDisplayTagLabel(tx) {
+  const parts = [
+    tx.global_tag_root_name,
+    tx.global_tag_name,
+    tx.local_tag_name,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.reverse().join(' ') : '-';
+}
+
+function getEditingLabels({
+  tx,
+  editFormData,
+  typeOptions,
+  globalOptions,
+  localOptions,
+}) {
+  const typeLabel = typeOptions.find(
+    (option) => String(option.value) === String(editFormData.type_id)
+  )?.label;
+
+  const globalLabel = globalOptions.find(
+    (option) =>
+      option.localId == null &&
+      String(option.globalId) === String(editFormData.global_tree_id)
+  )?.label;
+
+  const localLabel = localOptions.find(
+    (option) => String(option.value) === String(editFormData.local_tree_id)
+  )?.label;
+
+  return {
+    typeLabel: typeLabel || tx.global_tag_root_name || '-',
+    globalLabel: globalLabel || tx.global_tag_name || '-',
+    localLabel: localLabel || tx.local_tag_name || '-',
+  };
+}
+
+function renderCompactTagEditor({
+  editFormData,
+  onInputChange,
+  typeOptions,
+  globalOptions,
+  selectedGlobalOptionValue,
+  localOptions,
+}) {
+  return (
+    <div className={styles.compactTagEditor}>
+      <select
+        className={`${styles.editInput} ${styles.tagInlineSelect}`}
+        value={editFormData.type_id}
+        onChange={(e) => onInputChange(e, 'type_id')}
+      >
+        <option value="">Type</option>
+        {typeOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className={`${styles.editInput} ${styles.tagInlineSelect}`}
+        value={selectedGlobalOptionValue}
+        onChange={(e) => onInputChange(e, 'global_tree_id')}
+      >
+        <option value="">Global Tag</option>
+        {globalOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className={`${styles.editInput} ${styles.tagInlineSelect}`}
+        value={editFormData.local_tree_id}
+        onChange={(e) => onInputChange(e, 'local_tree_id')}
+      >
+        <option value="">Local Tag</option>
+        {localOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function TransactionRow({
-  tx, type, isForeign, isTableEditMode, isEditing,
-  editFormData, onInputChange, onSave, onCancel, onEditClick, onDelete,
-  typeOptions = [], globalOptions = [], selectedGlobalOptionValue = '', localOptions = [],
+  tx,
+  type,
+  isForeign,
+  isTableEditMode,
+  isEditing,
+  isTagDetailsExpanded = false,
+  editFormData,
+  onInputChange,
+  onSave,
+  typeOptions = [],
+  globalOptions = [],
+  selectedGlobalOptionValue = '',
+  localOptions = [],
+  onContextMenu,
+  editingRowRef,
+  showSaveColumn = false,
 }) {
   const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
     ? 'var(--success-color)'
@@ -26,10 +166,41 @@ export default function TransactionRow({
       ? '#ef4444'
       : 'inherit';
 
-  if (isEditing) {
-    return (
-      <tr>
-        <td>
+  const compactTagLabel = (() => {
+    if (!isEditing) {
+      return getDisplayTagLabel(tx);
+    }
+
+    const labels = getEditingLabels({
+      tx,
+      editFormData,
+      typeOptions,
+      globalOptions,
+      localOptions,
+    });
+
+    return [labels.typeLabel, labels.globalLabel, labels.localLabel]
+      .filter(Boolean)
+      .join(' / ');
+  })();
+
+  const expandedLabels = getEditingLabels({
+    tx,
+    editFormData,
+    typeOptions,
+    globalOptions,
+    localOptions,
+  });
+
+  return (
+    <tr
+      ref={isEditing ? editingRowRef : null}
+      className={`${styles.txRow} ${isEditing ? styles.editingRow : ''} ${isTableEditMode && !isEditing ? styles.contextMenuRow : ''}`}
+      onContextMenu={isEditing ? undefined : onContextMenu}
+      title={isTableEditMode && !isEditing ? 'Right click for actions' : ''}
+    >
+      <td>
+        {isEditing ? (
           <input
             translate="no"
             className={`${styles.editInput} ${styles.editInputDate}`}
@@ -37,166 +208,205 @@ export default function TransactionRow({
             value={editFormData.date}
             onChange={(e) => onInputChange(e, 'date')}
           />
-        </td>
+        ) : (
+          tx.tx_date
+        )}
+      </td>
 
-        <td>
+      <td>
+        {isEditing ? (
           <input
             className={`${styles.editInput} ${styles.editInputText}`}
             type="text"
             value={editFormData.description}
             onChange={(e) => onInputChange(e, 'description')}
           />
-        </td>
-
-        {isForeign ? (
-          <>
-            <td style={{ textAlign: 'right' }}>
-              <input
-                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputSm}`}
-                type="number"
-                value={editFormData.amount}
-                onChange={(e) => onInputChange(e, 'amount')}
-              />
-            </td>
-
-            <td style={{ textAlign: 'right' }}>
-              <input
-                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputXs}`}
-                type="number"
-                value={editFormData.rate}
-                onChange={(e) => onInputChange(e, 'rate')}
-              />
-            </td>
-            {isTableEditMode && isForeign && (
-              <td style={{ textAlign: 'right' }}>
-                {formatCurrencyValue(tx.adjustment)}
-              </td>
-            )}
-
-            <td style={{ textAlign: 'right' }}>
-              <input
-                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd} ${styles.editInputBold}`}
-                type="number"
-                value={editFormData.total_mmk}
-                onChange={(e) => onInputChange(e, 'total_mmk')}
-              />
-            </td>
-          </>
         ) : (
-          <td style={{ textAlign: 'right' }}>
-            <input
-              className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd}`}
-              type="number"
-              value={editFormData.amount}
-              onChange={(e) => onInputChange(e, 'amount')}
-            />
-          </td>
+          tx.description
         )}
-
-        <td>
-          <select
-            className={styles.editInput}
-            value={editFormData.type_id}
-            onChange={(e) => onInputChange(e, 'type_id')}
-          >
-            <option value="">-</option>
-            {typeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </td>
-
-        <td>
-          <select
-            className={styles.editInput}
-            value={selectedGlobalOptionValue}
-            onChange={(e) => onInputChange(e, 'global_tree_id')}
-          >
-            <option value="">-</option>
-            {globalOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </td>
-
-        <td>
-          <select
-            className={styles.editInput}
-            value={editFormData.local_tree_id}
-            onChange={(e) => onInputChange(e, 'local_tree_id')}
-          >
-            <option value="">-</option>
-            {localOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </td>
-
-        <td className={styles.actionCell}>
-          <div className={styles.actionCellButtons}>
-            <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onSave}>Save</button>
-            <button className={`${styles.actionBtn} ${styles.cancelBtn}`} onClick={onCancel}>Cancel</button>
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  return (
-    <tr>
-      <td>{tx.tx_date}</td>
-      <td>{tx.description}</td>
+      </td>
 
       {isForeign ? (
         <>
           <td style={{ textAlign: 'right' }}>
-            <span style={{ color: amountColor, fontWeight: 'bold' }}>
-              {formatCurrencyValue(tx.amount)}
-            </span>
-          </td>
-          <td style={{ textAlign: 'right' }}>
-            {formatCurrencyValue(tx.rate)}
-          </td>
-            {isTableEditMode && isForeign && (
-              <td style={{ textAlign: 'right' }}>
-                {formatCurrencyValue(tx.adjustment)}
-              </td>
+            {isEditing ? (
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputSm}`}
+                type="text"
+                inputMode="decimal"
+                value={formatEditNumber(editFormData.amount)}
+                onChange={(e) =>
+                  onInputChange(
+                    { ...e, target: { ...e.target, value: normalizeEditNumber(e.target.value) } },
+                    'amount'
+                  )
+                }
+              />
+            ) : (
+              <span style={{ color: amountColor, fontWeight: 'bold' }}>
+                {formatCurrencyValue(tx.amount)}
+              </span>
             )}
+          </td>
+
           <td style={{ textAlign: 'right' }}>
-            <span style={{ color: amountColor, fontWeight: 'bold' }}>
-              {formatCurrencyValue(tx.total_mmk)}
-            </span>
+            {isEditing ? (
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputXs}`}
+                type="text"
+                inputMode="decimal"
+                value={formatEditNumber(editFormData.rate)}
+                onChange={(e) =>
+                  onInputChange(
+                    { ...e, target: { ...e.target, value: normalizeEditNumber(e.target.value) } },
+                    'rate'
+                  )
+                }
+              />
+            ) : (
+              formatCurrencyValue(tx.rate)
+            )}
+          </td>
+
+          {isTableEditMode && isForeign && (
+            <td style={{ textAlign: 'right' }}>
+              {formatCurrencyValue(tx.adjustment)}
+            </td>
+          )}
+
+          <td style={{ textAlign: 'right' }}>
+            {isEditing ? (
+              <input
+                className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd} ${styles.editInputBold}`}
+                type="text"
+                inputMode="decimal"
+                value={formatEditNumber(editFormData.total_mmk)}
+                onChange={(e) =>
+                  onInputChange(
+                    { ...e, target: { ...e.target, value: normalizeEditNumber(e.target.value) } },
+                    'total_mmk'
+                  )
+                }
+              />
+            ) : (
+              <span style={{ color: amountColor, fontWeight: 'bold' }}>
+                {formatCurrencyValue(tx.total_mmk)}
+              </span>
+            )}
           </td>
         </>
       ) : (
         <td style={{ textAlign: 'right' }}>
-          <span style={{ color: amountColor, fontWeight: 'bold' }}>
-            {formatCurrencyValue(tx.amount)}
-          </span>
+          {isEditing ? (
+            <input
+              className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputMd}`}
+              type="text"
+              inputMode="decimal"
+              value={formatEditNumber(editFormData.amount)}
+              onChange={(e) =>
+                onInputChange(
+                  { ...e, target: { ...e.target, value: normalizeEditNumber(e.target.value) } },
+                  'amount'
+                )
+              }
+            />
+          ) : (
+            <span style={{ color: amountColor, fontWeight: 'bold' }}>
+              {formatCurrencyValue(tx.amount)}
+            </span>
+          )}
         </td>
       )}
 
-      <td>{tx.global_tag_root_name || '-'}</td>
-      <td>{tx.global_tag_name || '-'}</td>
-      <td>{tx.local_tag_name || '-'}</td>
-      {isTableEditMode &&
-        <td className={styles.actionCell}>
-          {isTableEditMode ? (
-            <div className={styles.actionCellButtons}>
-              <button className={`${styles.actionBtn} ${styles.saveBtn}`} onClick={onEditClick}>Edit</button>
-              <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={onDelete}>Delete</button>
-            </div>
-          ) : (
-            <span>&nbsp;</span>
-          )}
-        </td>}
+      {isTagDetailsExpanded ? (
+        <>
+          <td>
+            {isEditing ? (
+              <select
+                className={`${styles.editInput} ${styles.tagInlineSelect}`}
+                value={editFormData.type_id}
+                onChange={(e) => onInputChange(e, 'type_id')}
+              >
+                <option value="">-</option>
+                {typeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className={styles.tagCellValue}>
+                {tx.global_tag_root_name || '-'}
+              </span>
+            )}
+          </td>
 
+          <td>
+            {isEditing ? (
+              <select
+                className={`${styles.editInput} ${styles.tagInlineSelect}`}
+                value={selectedGlobalOptionValue}
+                onChange={(e) => onInputChange(e, 'global_tree_id')}
+              >
+                <option value="">-</option>
+                {globalOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className={styles.tagCellValue}>
+                {tx.global_tag_name || '-'}
+              </span>
+            )}
+          </td>
+
+          <td>
+            {isEditing ? (
+              <select
+                className={`${styles.editInput} ${styles.tagInlineSelect}`}
+                value={editFormData.local_tree_id}
+                onChange={(e) => onInputChange(e, 'local_tree_id')}
+              >
+                <option value="">-</option>
+                {localOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className={styles.tagCellValue}>
+                {tx.local_tag_name || '-'}
+              </span>
+            )}
+          </td>
+        </>
+      ) : (
+        <td>
+          {isEditing ? renderCompactTagEditor({
+            editFormData,
+            onInputChange,
+            typeOptions,
+            globalOptions,
+            selectedGlobalOptionValue,
+            localOptions,
+          }) : (
+            <span className={styles.tagText}>{compactTagLabel}</span>
+          )}
+        </td>
+      )}
+
+      {showSaveColumn && (
+        <td className={styles.saveCell}>
+          {isEditing && (
+            <button type="button" className={styles.inlineSaveButton} onClick={onSave}>
+              Save
+            </button>
+          )}
+        </td>
+      )}
     </tr>
   );
 }

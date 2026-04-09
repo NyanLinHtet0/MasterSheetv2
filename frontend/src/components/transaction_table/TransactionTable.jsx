@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import styles from './transactiontable.module.css';
 import TransactionTableHeader from './TransactionTableHeader';
 import TransactionRow from './TransactionRow';
@@ -18,16 +19,23 @@ export default function TransactionTable({
   resolveTypeId = () => null,
 }) {
   const isEmpty = data.length === 0;
+  const [pendingDeleteRowId, setPendingDeleteRowId] = useState(null);
+  const [isTagDetailsExpanded, setIsTagDetailsExpanded] = useState(false);
 
   const {
     isTableEditMode,
     editingRowId,
     editFormData,
+    contextMenu,
+    contextMenuRef,
+    editingRowRef,
+    closeContextMenu,
     handleEditClick,
     handleSaveEdit,
-    handleCancelEdit,
     handleInputChange,
     handleToggleEditMode,
+    handleOpenContextMenu,
+    handleKeyDown,
   } = useTransactionTable({
     isForeign,
     isInverse,
@@ -58,6 +66,27 @@ export default function TransactionTable({
   })();
 
   const localOptions = getLocalOptionsByGlobal(selectedGlobalOptionValue);
+  const contextMenuTx = data.find((tx) => tx.id === contextMenu.rowId) || null;
+  const showSaveColumn = editingRowId != null;
+
+  const toggleTagDetails = () => {
+    setIsTagDetailsExpanded((prev) => !prev);
+  };
+
+  const openDeleteConfirm = (rowId) => {
+    closeContextMenu();
+    setPendingDeleteRowId(rowId);
+  };
+
+  const closeDeleteConfirm = () => {
+    setPendingDeleteRowId(null);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDeleteRowId == null) return;
+    onDelete(pendingDeleteRowId);
+    setPendingDeleteRowId(null);
+  };
 
   return (
     <>
@@ -71,7 +100,7 @@ export default function TransactionTable({
         )}
       </div>
 
-      <div className={styles.tableScroll}>
+      <div className={styles.tableScroll} onKeyDown={handleKeyDown}>
         {isEmpty ? (
           <p style={{ padding: '15px', color: 'var(--text-muted)' }}>
             No transactions yet.
@@ -81,8 +110,6 @@ export default function TransactionTable({
             <colgroup>
               <col style={{ width: '140px' }} />
               <col style={{ width: '220px' }} />
-
-              
 
               {isForeign ? (
                 <>
@@ -95,17 +122,26 @@ export default function TransactionTable({
                 <col style={{ width: '120px' }} />
               )}
 
-              <col style={{ width: '180px' }} />
-              <col style={{ width: '180px' }} />
-              <col style={{ width: '180px' }} />
+              {isTagDetailsExpanded ? (
+                <>
+                  <col style={{ width: '130px' }} />
+                  <col style={{ width: '180px' }} />
+                  <col style={{ width: '180px' }} />
+                </>
+              ) : (
+                <col style={{ width: '240px' }} />
+              )}
 
-              {isTableEditMode && <col style={{ width: '180px' }} />}
+              {showSaveColumn && <col style={{ width: '82px' }} />}
             </colgroup>
 
             <TransactionTableHeader
               isForeign={isForeign}
               currencyName={currencyName}
               isTableEditMode={isTableEditMode}
+              isTagDetailsExpanded={isTagDetailsExpanded}
+              onToggleTagDetails={toggleTagDetails}
+              showSaveColumn={showSaveColumn}
             />
 
             <tbody>
@@ -117,6 +153,7 @@ export default function TransactionTable({
                   isForeign={isForeign}
                   isTableEditMode={isTableEditMode}
                   isEditing={editingRowId === tx.id}
+                  isTagDetailsExpanded={isTagDetailsExpanded}
                   editFormData={editFormData}
                   onInputChange={handleInputChange}
                   typeOptions={typeOptions}
@@ -124,15 +161,72 @@ export default function TransactionTable({
                   selectedGlobalOptionValue={selectedGlobalOptionValue}
                   localOptions={localOptions}
                   onSave={() => handleSaveEdit(tx.id)}
-                  onCancel={handleCancelEdit}
                   onEditClick={() => handleEditClick(tx)}
-                  onDelete={() => onDelete(tx.id)}
+                  onDelete={() => openDeleteConfirm(tx.id)}
+                  onContextMenu={(e) => handleOpenContextMenu(e, tx.id)}
+                  editingRowRef={editingRowRef}
+                  showSaveColumn={showSaveColumn}
                 />
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {isTableEditMode && contextMenu.isOpen && contextMenuTx && (
+        <div
+          ref={contextMenuRef}
+          className={styles.contextMenu}
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            className={styles.contextMenuButton}
+            onClick={() => handleEditClick(contextMenuTx)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className={`${styles.contextMenuButton} ${styles.contextMenuDelete}`}
+            onClick={() => openDeleteConfirm(contextMenuTx.id)}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
+      {pendingDeleteRowId != null && (
+        <div className={styles.modalOverlay} onClick={closeDeleteConfirm}>
+          <div
+            className={styles.confirmModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className={styles.confirmTitle}>Delete transaction?</h4>
+            <p className={styles.confirmText}>
+              This will remove the transaction from the table. Please confirm.
+            </p>
+
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancelBtn}
+                onClick={closeDeleteConfirm}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDeleteBtn}
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

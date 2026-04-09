@@ -68,6 +68,7 @@ function sanitizeFields(tableName, obj = {}) {
       cleaned[key] = value;
     }
   }
+
   return cleaned;
 }
 

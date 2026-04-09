@@ -172,10 +172,10 @@ export function buildEditFormData(tx, { isInverse, isForeign, resolveTypeId }) {
   return {
     date: formatTxDateForInput(hydratedTx.tx_date),
     description: hydratedTx.description || '',
-    amount: String(flipByInverse(hydratedTx.amount || 0, isInverse)),
+    amount: String(toMoney(hydratedTx.amount)),
     rate: isForeign ? String(toMoney(hydratedTx.rate)) : '',
     total_mmk: isForeign
-      ? String(flipByInverse(hydratedTx.total_mmk || 0, isInverse))
+      ? String(toMoney(hydratedTx.total_mmk))
       : '',
     type_id: typeId != null ? String(typeId) : '',
     global_tree_id:

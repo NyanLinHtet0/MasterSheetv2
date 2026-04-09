@@ -3,7 +3,7 @@ export const LANGUAGE_MODES = {
   BUR: 'bur',
 };
 
-export const NAME_PARTITION_CHAR = '|';
+const NAME_PARTITION_CHARS = ['|', '｜'];
 
 export function splitBilingualName(rawName = '') {
   const normalized = String(rawName || '').trim();
@@ -15,7 +15,14 @@ export function splitBilingualName(rawName = '') {
     };
   }
 
-  const partitionIndex = normalized.indexOf(NAME_PARTITION_CHAR);
+  let partitionIndex = -1;
+
+  for (const separator of NAME_PARTITION_CHARS) {
+    const index = normalized.indexOf(separator);
+    if (index >= 0 && (partitionIndex < 0 || index < partitionIndex)) {
+      partitionIndex = index;
+    }
+  }
 
   if (partitionIndex < 0) {
     return {

@@ -2917,6 +2917,34 @@ VALUES
 (@current_corp_id, '2026-03-17', 'ရငွေ', 12000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
 
 COMMIT;
+-- =============================================
+-- Initialization Script for Corp: HP လစာ စာရင်း
+-- =============================================
+START TRANSACTION;
+
+INSERT INTO corp_data (name, is_foreign, current_balance, current_foreign, start_day, inverse, display_order, soft_delete)
+VALUES
+('HP လစာ စာရင်း', 0, 0, 0, 1, 0, 33, 0);
+
+SET @current_corp_id = LAST_INSERT_ID();
+
+-- ---------------------------------------------
+-- Transaction 1
+-- no local_tree_id provided, using explicit/fallback global_tree_id
+-- ---------------------------------------------
+INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
+VALUES
+(@current_corp_id, '2026-03-11', '(10/2024 မှ 2/2026) အထိ HP 16 လစာ ရငွေ ', 5600000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+
+-- ---------------------------------------------
+-- Transaction 2
+-- no local_tree_id provided, using explicit/fallback global_tree_id
+-- ---------------------------------------------
+INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
+VALUES
+(@current_corp_id, '2026-03-11', '(10/2024 မှ 2/2026) အထိ HP လစာ အစွန်းရငွေ ', 41500, 0, 0, 1, NULL, NULL, NULL, 0, 1);
+
+COMMIT;
 
 -- =============================================
 -- Initialization Script for Corp: ရာဘာရောင်းရငွေ
@@ -3381,6 +3409,35 @@ VALUES
 COMMIT;
 
 -- =============================================
+-- Initialization Script for Corp: Baht ဝယ်စာရင်း (2) ရုပ်တုဖိုးအပ်ငွေ
+-- =============================================
+START TRANSACTION;
+
+INSERT INTO corp_data (name, is_foreign, current_balance, current_foreign, start_day, inverse, display_order, soft_delete)
+VALUES
+('Baht ဝယ်စာရင်း (2) ရုပ်တုဖိုးအပ်ငွေ', 1, 0, 0, 1, 1, 32, 0);
+
+SET @current_corp_id = LAST_INSERT_ID();
+
+-- ---------------------------------------------
+-- Transaction 1
+-- no local_tree_id provided, using explicit/fallback global_tree_id
+-- ---------------------------------------------
+INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
+VALUES
+(@current_corp_id, '2026-03-25', 'Initial Balance', -250000, 123.3, 0, 3, NULL, NULL, NULL, 0, 1);
+
+-- ---------------------------------------------
+-- Transaction 2
+-- no local_tree_id provided, using explicit/fallback global_tree_id
+-- ---------------------------------------------
+INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
+VALUES
+(@current_corp_id, '2026-03-01', 'ရုပ်တုဖိုးပေး Baht 150000 * 123.3', 150000, 123.3, 0, 1, NULL, NULL, NULL, 0, 1);
+
+COMMIT;
+
+-- =============================================
 -- Initialization Script for Corp: TTM Cash (အပ်ငွေ)
 -- =============================================
 START TRANSACTION;
@@ -3502,61 +3559,5 @@ VALUES
 
 COMMIT;
 
--- =============================================
--- Initialization Script for Corp: Baht ဝယ်စာရင်း (2) ရုပ်တုဖိုးအပ်ငွေ
--- =============================================
-START TRANSACTION;
 
-INSERT INTO corp_data (name, is_foreign, current_balance, current_foreign, start_day, inverse, display_order, soft_delete)
-VALUES
-('Baht ဝယ်စာရင်း (2) ရုပ်တုဖိုးအပ်ငွေ', 1, 0, 0, 1, 1, 32, 0);
-
-SET @current_corp_id = LAST_INSERT_ID();
-
--- ---------------------------------------------
--- Transaction 1
--- no local_tree_id provided, using explicit/fallback global_tree_id
--- ---------------------------------------------
-INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
-VALUES
-(@current_corp_id, '2026-03-25', 'Initial Balance', -250000, 123.3, 0, 3, NULL, NULL, NULL, 0, 1);
-
--- ---------------------------------------------
--- Transaction 2
--- no local_tree_id provided, using explicit/fallback global_tree_id
--- ---------------------------------------------
-INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
-VALUES
-(@current_corp_id, '2026-03-01', 'ရုပ်တုဖိုးပေး Baht 150000 * 123.3', 150000, 123.3, 0, 1, NULL, NULL, NULL, 0, 1);
-
-COMMIT;
-
--- =============================================
--- Initialization Script for Corp: HP လစာ စာရင်း
--- =============================================
-START TRANSACTION;
-
-INSERT INTO corp_data (name, is_foreign, current_balance, current_foreign, start_day, inverse, display_order, soft_delete)
-VALUES
-('HP လစာ စာရင်း', 0, 0, 0, 1, 0, 33, 0);
-
-SET @current_corp_id = LAST_INSERT_ID();
-
--- ---------------------------------------------
--- Transaction 1
--- no local_tree_id provided, using explicit/fallback global_tree_id
--- ---------------------------------------------
-INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
-VALUES
-(@current_corp_id, '2026-03-11', '(10/2024 မှ 2/2026) အထိ HP 16 လစာ ရငွေ ', 5600000, 0, 0, 1, NULL, NULL, NULL, 0, 1);
-
--- ---------------------------------------------
--- Transaction 2
--- no local_tree_id provided, using explicit/fallback global_tree_id
--- ---------------------------------------------
-INSERT INTO transactions (corp_id, tx_date, description, amount, rate, adjustment, global_tree_id, local_tree_id, employee_id, asset_id, soft_delete, tx_status)
-VALUES
-(@current_corp_id, '2026-03-11', '(10/2024 မှ 2/2026) အထိ HP လစာ အစွန်းရငွေ ', 41500, 0, 0, 1, NULL, NULL, NULL, 0, 1);
-
-COMMIT;
 

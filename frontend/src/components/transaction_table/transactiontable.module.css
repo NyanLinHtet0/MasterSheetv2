@@ -97,86 +97,56 @@
   box-shadow: 0 1px 0 var(--border-color);
 }
 
-.actionCell {
-  vertical-align: middle;
-  text-align: center;
-  width: 180px;
-  min-width: 180px;
-  max-width: 180px;
-}
-
-.actionCellButtons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
-  justify-content: center;
+.headerCellWithAction {
+  display: inline-flex;
   align-items: center;
-  width: 100%;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.actionBtn {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  white-space: nowrap;
-  padding: 6px 0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f8f9fa;
-  color: #333;
+.headerToggleButton {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: white;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  line-height: 1;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.actionBtn:hover {
-  background-color: #e2e8f0;
-  border-color: #cbd5e1;
+.headerToggleButton:hover {
+  background: #f8fafc;
 }
 
-.deleteBtn {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-color: #fca5a5;
-  font-size: 0.6rem;
-  font-weight: 700;
+.saveHeaderCell {
+  width: 82px;
+  min-width: 82px;
 }
 
-.deleteBtn:hover {
-  background-color: #fecaca;
-  border-color: #f87171;
+.txRow {
+  position: relative;
 }
 
-.saveBtn {
-  background-color: #dcfce7;
-  color: #15803d;
-  border-color: #86efac;
-  font-size: 0.6em;
-  font-weight: 700;
+.contextMenuRow {
+  cursor: context-menu;
 }
 
-.saveBtn:hover {
-  background-color: #bbf7d0;
-  border-color: #4ade80;
-}
-
-.cancelBtn {
+.contextMenuRow:hover td {
   background-color: #f8fafc;
-  color: var(--text-muted);
-  border-color: #cbd5e1;
-  font-size: 0.6rem;
-  font-weight: 700;
-
 }
 
-.cancelBtn:hover {
-  background-color: #e2e8f0;
-  border-color: #94a3b8;
+.editingRow td {
+  background-color: #eff6ff;
 }
 
 .editInput {
   height: 40px;
-  padding: 0 3px;
+  padding: 0 8px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background-color: #fff;
@@ -185,6 +155,8 @@
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%;
+  min-width: 0;
 }
 
 .editInput:focus {
@@ -219,6 +191,158 @@
 
 .editInputBold {
   font-weight: 700;
+}
+
+.tagInlineSelect {
+  min-width: 0;
+}
+
+.compactTagEditor {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.tagText,
+.tagCellValue {
+  display: inline-block;
+  max-width: 100%;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.saveCell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.inlineSaveButton {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--primary-color);
+  color: white;
+}
+
+.inlineSaveButton:hover {
+  background: var(--primary-hover);
+}
+
+.contextMenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 140px;
+  padding: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+}
+
+.contextMenuButton {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.contextMenuButton:hover {
+  background-color: #f1f5f9;
+}
+
+.contextMenuDelete {
+  color: #b91c1c;
+}
+
+.contextMenuDelete:hover {
+  background-color: #fee2e2;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.confirmModal {
+  width: min(420px, 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+  padding: 22px;
+}
+
+.confirmTitle {
+  margin: 0 0 10px;
+  color: var(--text-main);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.confirmText {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.confirmCancelBtn,
+.confirmDeleteBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirmCancelBtn {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.confirmCancelBtn:hover {
+  background: #cbd5e1;
+}
+
+.confirmDeleteBtn {
+  background: #dc2626;
+  color: white;
+}
+
+.confirmDeleteBtn:hover {
+  background: #b91c1c;
+}
+
+.editInputNumber {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.editInputNumber::-webkit-outer-spin-button,
+.editInputNumber::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 @media (max-width: 1300px) {

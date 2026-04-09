@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   buildEditFormData,
   cleanNumericInput,
@@ -9,6 +9,15 @@ import {
 export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTypeId }) {
   const [isTableEditMode, setIsTableEditMode] = useState(false);
   const [editingRowId, setEditingRowId] = useState(null);
+  const [contextMenu, setContextMenu] = useState({
+    isOpen: false,
+    rowId: null,
+    x: 0,
+    y: 0,
+  });
+
+  const editingRowRef = useRef(null);
+  const contextMenuRef = useRef(null);
 
   const [editFormData, setEditFormData] = useState({
     date: '',
@@ -21,12 +30,22 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
     local_tree_id: '',
   });
 
-  const handleEditClick = (tx) => {
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      isOpen: false,
+      rowId: null,
+      x: 0,
+      y: 0,
+    });
+  }, []);
+
+  const handleEditClick = useCallback((tx) => {
+    closeContextMenu();
     setEditingRowId(tx.id);
     setEditFormData(buildEditFormData(tx, { isForeign, isInverse, resolveTypeId }));
-  };
+  }, [closeContextMenu, isForeign, isInverse, resolveTypeId]);
 
-  const handleSaveEdit = (rowId) => {
+  const handleSaveEdit = useCallback((rowId) => {
     if (!editFormData.type_id || !editFormData.global_tree_id) {
       alert('Please select Type and Global Tag before saving.');
       return;
@@ -34,11 +53,11 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
 
     onSaveRow(rowId, editFormData);
     setEditingRowId(null);
-  };
+  }, [editFormData, onSaveRow]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingRowId(null);
-  };
+  }, []);
 
   const handleInputChange = (e, field) => {
     const rawValue = cleanNumericInput(e.target.value);
@@ -86,19 +105,104 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
     });
   };
 
-  const handleToggleEditMode = () => {
+  const handleToggleEditMode = useCallback(() => {
     setIsTableEditMode((prev) => !prev);
     setEditingRowId(null);
-  };
+    closeContextMenu();
+  }, [closeContextMenu]);
+
+  const handleOpenContextMenu = useCallback((e, rowId) => {
+    if (!isTableEditMode || editingRowId != null) return;
+
+    e.preventDefault();
+
+    setContextMenu({
+      isOpen: true,
+      rowId,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  }, [editingRowId, isTableEditMode]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (editingRowId == null) return;
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const tagName = e.target?.tagName?.toLowerCase();
+      const isTextArea = tagName === 'textarea';
+      const isButton = tagName === 'button';
+
+      if (isTextArea || isButton) return;
+
+      e.preventDefault();
+      handleSaveEdit(editingRowId);
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
+  }, [editingRowId, handleCancelEdit, handleSaveEdit]);
+
+  useEffect(() => {
+    if (!contextMenu.isOpen) return;
+
+    const handlePointerDown = (e) => {
+      if (contextMenuRef.current?.contains(e.target)) {
+        return;
+      }
+
+      closeContextMenu();
+    };
+
+    const handleWindowBlur = () => {
+      closeContextMenu();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [closeContextMenu, contextMenu.isOpen]);
+
+  useEffect(() => {
+    if (editingRowId == null) return;
+
+    const handlePointerDown = (e) => {
+      if (!editingRowRef.current) return;
+      if (editingRowRef.current.contains(e.target)) return;
+
+      handleCancelEdit();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [editingRowId, handleCancelEdit]);
 
   return {
     isTableEditMode,
     editingRowId,
     editFormData,
+    contextMenu,
+    contextMenuRef,
+    editingRowRef,
+    closeContextMenu,
     handleEditClick,
     handleSaveEdit,
     handleCancelEdit,
     handleInputChange,
     handleToggleEditMode,
+    handleOpenContextMenu,
+    handleKeyDown,
   };
 }

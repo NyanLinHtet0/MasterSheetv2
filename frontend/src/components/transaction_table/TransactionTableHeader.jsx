@@ -1,6 +1,13 @@
 import styles from './transactiontable.module.css';
 
-export default function TransactionTableHeader({ isForeign, currencyName, isTableEditMode }) {
+export default function TransactionTableHeader({
+  isForeign,
+  currencyName,
+  isTableEditMode,
+  isTagDetailsExpanded,
+  onToggleTagDetails,
+  showSaveColumn = false,
+}) {
   return (
     <thead>
       <tr>
@@ -20,15 +27,43 @@ export default function TransactionTableHeader({ isForeign, currencyName, isTabl
           <th style={{ textAlign: 'right' }}>Amount</th>
         )}
 
-        <th>Type</th>
-        <th>Global Tag</th>
-        <th>Local Tag</th>
-
-        {isTableEditMode && (
-          <th className={styles.actionCell}>
-            Actions
+        {isTagDetailsExpanded ? (
+          <>
+            <th>
+              <div className={styles.headerCellWithAction}>
+                <span>Type</span>
+                <button
+                  type="button"
+                  className={styles.headerToggleButton}
+                  onClick={onToggleTagDetails}
+                  aria-label="Hide tag columns"
+                  title="Hide tag columns"
+                >
+                  −
+                </button>
+              </div>
+            </th>
+            <th>Global Tag</th>
+            <th>Local Tag</th>
+          </>
+        ) : (
+          <th>
+            <div className={styles.headerCellWithAction}>
+              <span>Tag</span>
+              <button
+                type="button"
+                className={styles.headerToggleButton}
+                onClick={onToggleTagDetails}
+                aria-label="Show tag columns"
+                title="Show tag columns"
+              >
+                +
+              </button>
+            </div>
           </th>
         )}
+
+        {showSaveColumn && <th className={styles.saveHeaderCell} aria-label="Save row" />}
       </tr>
     </thead>
   );

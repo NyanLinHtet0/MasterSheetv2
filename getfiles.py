@@ -14,7 +14,7 @@ IGNORE_DIRS = {
 }
 
 MODE_CONFIG = {
-    "f":  ("frontend",   {".css"}),
+    "f":  ("frontend", {".js", ".jsx"}),
     "b":  ("backend", {".js", ".jsx", ".css"}),
 
     "f2": ("frontend",   {".js", ".jsx"}),
