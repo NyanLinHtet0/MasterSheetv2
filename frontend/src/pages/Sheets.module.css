@@ -6,4 +6,38 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.corpListPane {
+  height: 100%;
+  overflow: hidden;
+  transition: width 0.15s ease;
+}
+
+.splitter {
+  width: 14px;
+  min-width: 14px;
+  border: none;
+  border-left: 1px solid var(--border-color, #e2e8f0);
+  border-right: 1px solid var(--border-color, #e2e8f0);
+  background: linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  touch-action: none;
+}
+
+.splitter:hover,
+.splitterActive {
+  background: linear-gradient(180deg, #edf2f7 0%, #e2e8f0 100%);
+}
+
+.splitterHandle {
+  width: 3px;
+  height: 56px;
+  border-radius: 9999px;
+  background-color: #a0aec0;
 }

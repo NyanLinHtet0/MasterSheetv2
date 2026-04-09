@@ -1,9 +1,13 @@
 .corpList {
-    width: 320px; /* Fixed width, adjust as needed */
+    width: 100%;
+    min-width: 0;
+    height: 100%;
     background-color: #ffffff;
     border-right: 1px solid #e0e0e0;
     margin: 0; /* Ensures it stays attached to the left edge */
     padding: 5px;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .corpListHeader{
