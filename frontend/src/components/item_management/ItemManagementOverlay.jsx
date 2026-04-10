@@ -36,6 +36,64 @@ function getAncestorPath(node, rowMap) {
   return chain;
 }
 
+function TreeNode({
+  node,
+  depth = 0,
+  childrenByParent,
+  expandedIds,
+  onToggleExpand,
+  onSelect,
+  selectedId,
+  languageMode,
+  formatQty,
+  onContextMenu,
+}) {
+  const children = childrenByParent.get(node.id) || [];
+  const hasChildren = children.length > 0;
+  const isExpanded = expandedIds.has(node.id);
+  const isSelected = selectedId === node.id;
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`${styles.treeRow} ${isSelected ? styles.treeRowActive : ''}`}
+        style={{ paddingLeft: `${10 + depth * 18}px` }}
+        onClick={() => onSelect(node)}
+        onContextMenu={(event) => onContextMenu(event, node)}
+      >
+        <span
+          className={`${styles.treeChevron} ${hasChildren ? styles.treeChevronVisible : ''}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (hasChildren) onToggleExpand(node.id);
+          }}
+        >
+          {hasChildren ? (isExpanded ? '▾' : '▸') : '•'}
+        </span>
+        <span className={styles.treeLabel}>{getLocalizedName(node, languageMode)}</span>
+        <span className={styles.treeMeta}>{formatQty(node.quantity)}</span>
+      </button>
+
+      {hasChildren && isExpanded && children.map((child) => (
+        <TreeNode
+          key={child.id}
+          node={child}
+          depth={depth + 1}
+          childrenByParent={childrenByParent}
+          expandedIds={expandedIds}
+          onToggleExpand={onToggleExpand}
+          onSelect={onSelect}
+          selectedId={selectedId}
+          languageMode={languageMode}
+          formatQty={formatQty}
+          onContextMenu={onContextMenu}
+        />
+      ))}
+    </>
+  );
+}
+
 function renderCategoryColumn({
   title,
   options = [],
@@ -204,6 +262,7 @@ export default function ItemManagementOverlay({
   const [previewLayer2Id, setPreviewLayer2Id] = useState('');
   const [previewLayer3Id, setPreviewLayer3Id] = useState('');
   const [openLayerKey, setOpenLayerKey] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -255,6 +314,17 @@ export default function ItemManagementOverlay({
   const showLayer3Board = layer2ViewNode != null;
   const showLayer2Category = selectedLayer1Key != null;
   const showLayer3Category = selectedLayer2Key != null;
+  const expandedIds = useMemo(() => {
+    const set = new Set();
+    activePath.forEach((node) => set.add(node.id));
+    return set;
+  }, [activePath]);
+  const [manualExpandedIds, setManualExpandedIds] = useState(new Set());
+  const effectiveExpandedIds = useMemo(() => {
+    const set = new Set(expandedIds);
+    manualExpandedIds.forEach((id) => set.add(id));
+    return set;
+  }, [expandedIds, manualExpandedIds]);
 
   const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
@@ -295,6 +365,18 @@ export default function ItemManagementOverlay({
     setOpenLayerKey((current) => (current === key ? null : key));
   };
 
+  const toggleTreeNode = (nodeId) => {
+    setManualExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  };
+
   const handleSelectLayer1Node = (node) => {
     setParentId(String(node.id));
     setPreviewLayer2Id('');
@@ -314,6 +396,24 @@ export default function ItemManagementOverlay({
     setPreviewLayer3Id(String(node.id));
     setOpenLayerKey(null);
   };
+
+  const handleTreeContextMenu = (event, node) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      node,
+    });
+  };
+
+  const handleSelectTreeNode = (node) => {
+    setParentId(String(node.id));
+    setPreviewLayer2Id('');
+    setPreviewLayer3Id('');
+    setContextMenu(null);
+  };
+
+  const rootNodes = childrenByParent.get(null) || [];
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -361,6 +461,33 @@ export default function ItemManagementOverlay({
           </form>
 
           <div className={styles.layerBoard}>
+            <div className={styles.layerColumn}>
+              <div className={styles.layerTitle}>Folder Tree</div>
+              {rootNodes.length === 0 ? (
+                <div className={styles.emptyList}>No items in tree yet.</div>
+              ) : (
+                <div className={styles.treePanel}>
+                  {rootNodes.map((node) => (
+                    <TreeNode
+                      key={node.id}
+                      node={node}
+                      childrenByParent={childrenByParent}
+                      expandedIds={effectiveExpandedIds}
+                      onToggleExpand={toggleTreeNode}
+                      onSelect={handleSelectTreeNode}
+                      selectedId={parentId === '' ? null : Number(parentId)}
+                      languageMode={languageMode}
+                      formatQty={formatQty}
+                      onContextMenu={handleTreeContextMenu}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className={styles.treeHint}>
+                Right-click a folder to set it as parent for quick add.
+              </div>
+            </div>
+
             {renderLayerDropdown({
               title: 'Layer 1',
               nodes: layer1Nodes,
@@ -463,6 +590,42 @@ export default function ItemManagementOverlay({
           </div>
         </section>
       </div>
+
+      {contextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setParentId(String(contextMenu.node.id));
+              setContextMenu(null);
+            }}
+          >
+            Add inside "{getLocalizedName(contextMenu.node, languageMode)}"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toggleTreeNode(contextMenu.node.id);
+              setContextMenu(null);
+            }}
+          >
+            {effectiveExpandedIds.has(contextMenu.node.id) ? 'Collapse folder' : 'Expand folder'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setParentId('');
+              setContextMenu(null);
+            }}
+          >
+            Add in root
+          </button>
+        </div>
+      )}
     </div>
   );
 }
