@@ -95,13 +95,13 @@ export default function TransactionTable({
     <>
       <div className={styles.txHeader} style={{ marginBottom: '10px' }}>
         <h3 className={styles.tableTitle}>{title}</h3>
-        
-
-        {!isEmpty && (
-          <button onClick={handleToggleEditMode}>
-            {isTableEditMode ? 'Done' : 'Edit Table'}
-          </button>
-        )}
+        <div className={styles.txHeaderActions}>
+          {!isEmpty && (
+            <button onClick={handleToggleEditMode}>
+              {isTableEditMode ? 'Done' : 'Edit Table'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={styles.tableScroll} onKeyDown={handleKeyDown}>
