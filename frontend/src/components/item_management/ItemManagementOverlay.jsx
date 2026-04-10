@@ -117,6 +117,8 @@ export default function ItemManagementOverlay({
   const [newLayer2Name, setNewLayer2Name] = useState('');
   const [newLayer3Name, setNewLayer3Name] = useState('');
   const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
+  const [previewLayer2Id, setPreviewLayer2Id] = useState('');
+  const [previewLayer3Id, setPreviewLayer3Id] = useState('');
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -154,11 +156,18 @@ export default function ItemManagementOverlay({
   const activeLayer1 = activePath[0] || null;
   const layer2Nodes = activeLayer1 ? childrenByParent.get(activeLayer1.id) || [] : [];
   const activeLayer2 = activePath[1] || null;
-  const layer3Nodes = activeLayer2 ? childrenByParent.get(activeLayer2.id) || [] : [];
+  const layer2ViewNode = useMemo(() => {
+    if (layer2Nodes.length === 0) return null;
+    const selected = layer2Nodes.find((node) => String(node.id) === previewLayer2Id);
+    return selected || activeLayer2 || layer2Nodes[0];
+  }, [activeLayer2, layer2Nodes, previewLayer2Id]);
+  const layer3Nodes = layer2ViewNode ? childrenByParent.get(layer2ViewNode.id) || [] : [];
+  const layer3ViewNode = useMemo(() => {
+    if (layer3Nodes.length === 0) return null;
+    return layer3Nodes.find((node) => String(node.id) === previewLayer3Id) || layer3Nodes[0];
+  }, [layer3Nodes, previewLayer3Id]);
 
-  const rootLayerLabel = activeParentNode
-    ? `Layer ${activePath.length} • ${buildItemPath(activeParentNode, rowMap)}`
-    : 'Layer 0 • Root';
+  const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -229,11 +238,23 @@ export default function ItemManagementOverlay({
             <button type="submit">Add Item</button>
           </form>
 
-          <div className={styles.activeTarget}>Current target: {rootLayerLabel}</div>
-
           <div className={styles.layerBoard}>
             <div className={styles.layerColumn}>
               <div className={styles.layerTitle}>Layer 1</div>
+              {layer1Nodes.length > 1 && (
+                <select
+                  className={styles.layerSelect}
+                  value={activeLayer1 ? String(activeLayer1.id) : ''}
+                  onChange={(event) => setParentId(event.target.value)}
+                >
+                  <option value="">Root layer</option>
+                  {layer1Nodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               {layer1Nodes.length === 0 && <div className={styles.emptyList}>No layer 1 items yet.</div>}
               {layer1Nodes.map((node) => (
                 <button
@@ -244,7 +265,7 @@ export default function ItemManagementOverlay({
                 >
                   <div className={styles.layerCardName}>{node.name}</div>
                   <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
+                  <div className={styles.layerCardMeta}>{formatQty(node.quantity)}</div>
                 </button>
               ))}
             </div>
@@ -255,38 +276,57 @@ export default function ItemManagementOverlay({
               {activeLayer1 != null && layer2Nodes.length === 0 && (
                 <div className={styles.emptyList}>No layer 2 items under this layer 1 item.</div>
               )}
-              {layer2Nodes.map((node) => (
-                <button
-                  type="button"
-                  key={node.id}
-                  className={`${styles.layerCard} ${activeLayer2?.id === node.id ? styles.layerCardActive : ''}`}
-                  onClick={() => setParentId(String(node.id))}
+              {layer2Nodes.length > 1 && (
+                <select
+                  className={styles.layerSelect}
+                  value={layer2ViewNode ? String(layer2ViewNode.id) : ''}
+                  onChange={(event) => {
+                    setPreviewLayer2Id(event.target.value);
+                    setPreviewLayer3Id('');
+                  }}
                 >
-                  <div className={styles.layerCardName}>{node.name}</div>
-                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
-                </button>
-              ))}
+                  {layer2Nodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {layer2ViewNode && (
+                <div className={`${styles.layerCard} ${styles.layerCardPassive}`}>
+                  <div className={styles.layerCardName}>{layer2ViewNode.name}</div>
+                  <div className={styles.layerCardSub}>{layer2ViewNode.burmese_name || '-'}</div>
+                  <div className={styles.layerCardMeta}>{formatQty(layer2ViewNode.quantity)}</div>
+                </div>
+              )}
             </div>
 
             <div className={styles.layerColumn}>
               <div className={styles.layerTitle}>Layer 3</div>
-              {activeLayer2 == null && <div className={styles.emptyList}>Select a layer 2 item first.</div>}
-              {activeLayer2 != null && layer3Nodes.length === 0 && (
+              {layer2ViewNode == null && <div className={styles.emptyList}>Select a layer 2 item first.</div>}
+              {layer2ViewNode != null && layer3Nodes.length === 0 && (
                 <div className={styles.emptyList}>No layer 3 items under this layer 2 item.</div>
               )}
-              {layer3Nodes.map((node) => (
-                <button
-                  type="button"
-                  key={node.id}
-                  className={styles.layerCard}
-                  onClick={() => setParentId(String(node.id))}
+              {layer3Nodes.length > 1 && (
+                <select
+                  className={styles.layerSelect}
+                  value={layer3ViewNode ? String(layer3ViewNode.id) : ''}
+                  onChange={(event) => setPreviewLayer3Id(event.target.value)}
                 >
-                  <div className={styles.layerCardName}>{node.name}</div>
-                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
-                </button>
-              ))}
+                  {layer3Nodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {layer3ViewNode && (
+                <div className={`${styles.layerCard} ${styles.layerCardPassive}`}>
+                  <div className={styles.layerCardName}>{layer3ViewNode.name}</div>
+                  <div className={styles.layerCardSub}>{layer3ViewNode.burmese_name || '-'}</div>
+                  <div className={styles.layerCardMeta}>{formatQty(layer3ViewNode.quantity)}</div>
+                </div>
+              )}
             </div>
           </div>
         </section>
