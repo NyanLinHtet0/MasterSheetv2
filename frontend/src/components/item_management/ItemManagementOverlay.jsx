@@ -3,32 +3,20 @@ import styles from './ItemManagementOverlay.module.css';
 import { buildChildrenMap, buildRowMap, normalizeRows } from '../helpers/treeHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../helpers/nameLocalization';
 import TreePanel from './overlay/components/TreePanel';
-import CategoryColumn from './overlay/components/CategoryColumn';
+import CategoryTreePanel from './overlay/components/CategoryTreePanel';
 import { getAncestorPath } from './overlay/utils/pathUtils';
 import useTreeExpansion from './overlay/hooks/useTreeExpansion';
-
-const VIEW_MODES = {
-  LIVE: 'live',
-  TRASH: 'trash',
-};
 
 export default function ItemManagementOverlay({
   corp,
   onClose,
   onAddItem,
-  layer1Options = [],
-  selectedLayer1Key = null,
-  onSelectLayer1,
-  layer2Options = [],
-  selectedLayer2Key = null,
-  onSelectLayer2,
-  onAddLayer2,
-  layer3Options = [],
-  selectedLayer3Key = null,
-  onSelectLayer3,
-  isEditTableMode = false,
-  onToggleEditTableMode,
-  onAddLayer3,
+  categoryRootNodes = [],
+  categoryChildrenByKey = new Map(),
+  categoryNodeMap = new Map(),
+  selectedCategoryKey = null,
+  onSelectCategoryNode,
+  onAddCategoryNode,
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
 }) {
@@ -37,10 +25,11 @@ export default function ItemManagementOverlay({
   const [newItemBurmeseName, setNewItemBurmeseName] = useState('');
   const [newItemParentId, setNewItemParentId] = useState(null);
   const [isAddingItemInline, setIsAddingItemInline] = useState(false);
-  const [newLayer2Name, setNewLayer2Name] = useState('');
-  const [newLayer3Name, setNewLayer3Name] = useState('');
-  const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isAddingCategoryInline, setIsAddingCategoryInline] = useState(false);
+  const [newCategoryParentKey, setNewCategoryParentKey] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [categoryContextMenu, setCategoryContextMenu] = useState(null);
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -56,8 +45,6 @@ export default function ItemManagementOverlay({
     [activeParentNode, rowMap],
   );
 
-  const showLayer2Category = selectedLayer1Key != null;
-  const showLayer3Category = selectedLayer2Key != null;
   const expandedIds = useMemo(() => {
     const set = new Set();
     activePath.forEach((node) => set.add(node.id));
@@ -65,6 +52,25 @@ export default function ItemManagementOverlay({
   }, [activePath]);
 
   const { effectiveExpandedIds, toggleTreeNode } = useTreeExpansion(expandedIds);
+  const selectedCategoryNode = useMemo(
+    () => (selectedCategoryKey ? categoryNodeMap.get(selectedCategoryKey) || null : null),
+    [selectedCategoryKey, categoryNodeMap]
+  );
+  const categoryExpandedIds = useMemo(() => {
+    const set = new Set();
+    let current = selectedCategoryNode;
+    let guard = 0;
+
+    while (current && guard < 1000) {
+      set.add(current.key);
+      current = current.parentKey != null ? categoryNodeMap.get(current.parentKey) : null;
+      guard += 1;
+    }
+
+    return set;
+  }, [selectedCategoryNode, categoryNodeMap]);
+  const { effectiveExpandedIds: effectiveCategoryExpandedIds, toggleTreeNode: toggleCategoryTreeNode } =
+    useTreeExpansion(categoryExpandedIds);
 
   const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
@@ -87,20 +93,14 @@ export default function ItemManagementOverlay({
     setIsAddingItemInline(false);
   };
 
-  const handleAddLayer2 = () => {
-    const nextName = newLayer2Name.trim();
-    if (!nextName || !onAddLayer2) return;
-
-    onAddLayer2(nextName);
-    setNewLayer2Name('');
-  };
-
-  const handleAddLayer3 = () => {
-    const nextName = newLayer3Name.trim();
-    if (!nextName || !onAddLayer3) return;
-
-    onAddLayer3(nextName);
-    setNewLayer3Name('');
+  const handleAddCategory = (event) => {
+    event.preventDefault();
+    const nextName = String(newCategoryName || '').trim();
+    if (!nextName || !newCategoryParentKey || !onAddCategoryNode) return;
+    onAddCategoryNode({ name: nextName, parentKey: newCategoryParentKey });
+    setNewCategoryName('');
+    setNewCategoryParentKey(null);
+    setIsAddingCategoryInline(false);
   };
 
   const handleSelectTreeNode = (node) => {
@@ -126,6 +126,7 @@ export default function ItemManagementOverlay({
   };
 
   const contextMenuRef = useRef(null);
+  const categoryContextMenuRef = useRef(null);
 
   useEffect(() => {
     if (!contextMenu) return undefined;
@@ -145,6 +146,25 @@ export default function ItemManagementOverlay({
       document.removeEventListener('pointerdown', handlePointerDownCapture, true);
     };
   }, [contextMenu]);
+
+  useEffect(() => {
+    if (!categoryContextMenu) return undefined;
+
+    const handlePointerDownCapture = (event) => {
+      if (event.button !== 0) return;
+      if (categoryContextMenuRef.current?.contains(event.target)) return;
+
+      setCategoryContextMenu(null);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDownCapture, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDownCapture, true);
+    };
+  }, [categoryContextMenu]);
 
   const rootNodes = childrenByParent.get(null) || [];
   const addItemParentNode = newItemParentId == null ? null : rowMap.get(newItemParentId) || null;
@@ -216,68 +236,43 @@ export default function ItemManagementOverlay({
         <section className={styles.sectionBlock}>
           <div className={styles.sectionHeader}>
             <h4>Category Management</h4>
-            <div className={styles.headerActions}>
-              <button
-                type="button"
-                className={`${styles.editTableButton} ${isEditTableMode ? styles.editTableButtonActive : ''}`}
-                onClick={() => onToggleEditTableMode?.()}
-              >
-                {isEditTableMode ? 'Done Editing' : 'Edit Table'}
-              </button>
-              <button
-                type="button"
-                className={`${styles.modeToggleButton} ${overlayViewMode === VIEW_MODES.LIVE ? styles.modeToggleButtonActive : ''}`}
-                onClick={() => setOverlayViewMode(VIEW_MODES.LIVE)}
-              >
-                Live
-              </button>
-              <button
-                type="button"
-                className={`${styles.modeToggleButton} ${overlayViewMode === VIEW_MODES.TRASH ? styles.modeToggleButtonActive : ''}`}
-                onClick={() => setOverlayViewMode(VIEW_MODES.TRASH)}
-              >
-                Trash
-              </button>
-            </div>
           </div>
 
-          <div className={styles.categoryColumns}>
-            <CategoryColumn
-              title="Layer 1"
-              options={layer1Options}
-              selectedValue={selectedLayer1Key}
-              onSelect={onSelectLayer1}
-              emptyLabel="No layer 1 items."
-            />
-
-            {showLayer2Category && (
-              <CategoryColumn
-                title="Layer 2"
-                options={layer2Options}
-                selectedValue={selectedLayer2Key}
-                onSelect={onSelectLayer2}
-                editable={isEditTableMode}
-                draftName={newLayer2Name}
-                setDraftName={setNewLayer2Name}
-                onAdd={handleAddLayer2}
-                emptyLabel="No layer 2 items."
+          <div className={styles.layerBoard}>
+            <div className={styles.layerColumn}>
+              <div className={styles.layerTitle}>Folder Tree</div>
+              <CategoryTreePanel
+                rootNodes={categoryRootNodes}
+                childrenByParent={categoryChildrenByKey}
+                effectiveExpandedIds={effectiveCategoryExpandedIds}
+                toggleTreeNode={toggleCategoryTreeNode}
+                onSelectNode={(node) => {
+                  onSelectCategoryNode?.(node.key);
+                  setCategoryContextMenu(null);
+                }}
+                selectedKey={selectedCategoryKey}
+                onContextMenu={(event, node) => {
+                  event.preventDefault();
+                  setCategoryContextMenu({
+                    x: event.clientX,
+                    y: event.clientY,
+                    node,
+                  });
+                }}
+                onInlineAddSubmit={handleAddCategory}
+                isAddingInline={isAddingCategoryInline}
+                addParentNode={
+                  newCategoryParentKey ? categoryNodeMap.get(newCategoryParentKey) || null : null
+                }
+                newItemName={newCategoryName}
+                setNewItemName={setNewCategoryName}
+                onCancelInlineAdd={() => {
+                  setIsAddingCategoryInline(false);
+                  setNewCategoryParentKey(null);
+                  setNewCategoryName('');
+                }}
               />
-            )}
-
-            {showLayer3Category && (
-              <CategoryColumn
-                title="Layer 3"
-                options={layer3Options}
-                selectedValue={selectedLayer3Key}
-                onSelect={onSelectLayer3}
-                editable={isEditTableMode}
-                draftName={newLayer3Name}
-                setDraftName={setNewLayer3Name}
-                onAdd={handleAddLayer3}
-                emptyLabel="No layer 3 items."
-                compact
-              />
-            )}
+            </div>
           </div>
         </section>
       </div>
@@ -314,6 +309,26 @@ export default function ItemManagementOverlay({
             }}
           >
             Add in root
+          </button>
+        </div>
+      )}
+      {categoryContextMenu && (
+        <div
+          ref={categoryContextMenuRef}
+          className={styles.contextMenu}
+          style={{ top: `${categoryContextMenu.y}px`, left: `${categoryContextMenu.x}px` }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setNewCategoryParentKey(categoryContextMenu.node.key);
+              setIsAddingCategoryInline(true);
+              setCategoryContextMenu(null);
+              setNewCategoryName('');
+            }}
+          >
+            Add inside "{categoryContextMenu.node.label}"
           </button>
         </div>
       )}
