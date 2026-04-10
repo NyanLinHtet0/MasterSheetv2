@@ -62,6 +62,7 @@ export default function TransactionTableHeader({
             </div>
           </th>
         )}
+        <th>Item</th>
 
         {showSaveColumn && <th className={styles.saveHeaderCell} aria-label="Save row" />}
       </tr>

@@ -97,6 +97,7 @@ function renderCompactTagEditor({
   globalOptions,
   selectedGlobalOptionValue,
   localOptions,
+  inventoryOptions,
 }) {
   return (
     <div className={styles.compactTagEditor}>
@@ -138,6 +139,19 @@ function renderCompactTagEditor({
           </option>
         ))}
       </select>
+
+      <select
+        className={`${styles.editInput} ${styles.tagInlineSelect}`}
+        value={editFormData.inven_id}
+        onChange={(e) => onInputChange(e, 'inven_id')}
+      >
+        <option value="">Item</option>
+        {inventoryOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -156,6 +170,7 @@ export default function TransactionRow({
   globalOptions = [],
   selectedGlobalOptionValue = '',
   localOptions = [],
+  inventoryOptions = [],
   onContextMenu,
   editingRowRef,
   showSaveColumn = false,
@@ -392,11 +407,31 @@ export default function TransactionRow({
             globalOptions,
             selectedGlobalOptionValue,
             localOptions,
+            inventoryOptions,
           }) : (
             <span className={styles.tagText}>{compactTagLabel}</span>
           )}
         </td>
       )}
+
+      <td>
+        {isEditing ? (
+          <select
+            className={`${styles.editInput} ${styles.tagInlineSelect}`}
+            value={editFormData.inven_id}
+            onChange={(e) => onInputChange(e, 'inven_id')}
+          >
+            <option value="">-</option>
+            {inventoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className={styles.tagCellValue}>{tx.inventory_item_name || '-'}</span>
+        )}
+      </td>
 
       {showSaveColumn && (
         <td className={styles.saveCell}>

@@ -137,6 +137,7 @@ function applyServerIdMappings(appData, mappings) {
   const corpIdMap = new Map();
   const transactionIdMap = new Map();
   const localTreeIdMap = new Map();
+  const inventoryTreeIdMap = new Map();
   const employeeIdMap = new Map();
   const assetIdMap = new Map();
 
@@ -151,6 +152,10 @@ function applyServerIdMappings(appData, mappings) {
 
     if (tableName === 'local_tree') {
       localTreeIdMap.set(tempId, realId);
+    }
+
+    if (tableName === 'inventory_tree') {
+      inventoryTreeIdMap.set(tempId, realId);
     }
 
     if (tableName === 'employee') {
@@ -175,6 +180,7 @@ function applyServerIdMappings(appData, mappings) {
           id: transactionIdMap.get(tx.id) ?? tx.id,
           corp_id: corpIdMap.get(tx.corp_id) ?? nextCorpId,
           local_tree_id: localTreeIdMap.get(tx.local_tree_id) ?? tx.local_tree_id,
+          inven_id: inventoryTreeIdMap.get(tx.inven_id) ?? tx.inven_id,
           employee_id: employeeIdMap.get(tx.employee_id) ?? tx.employee_id,
           asset_id: assetIdMap.get(tx.asset_id) ?? tx.asset_id,
         })),
@@ -183,6 +189,12 @@ function applyServerIdMappings(appData, mappings) {
           id: localTreeIdMap.get(node.id) ?? node.id,
           corp_id: corpIdMap.get(node.corp_id) ?? nextCorpId,
           parent_id: localTreeIdMap.get(node.parent_id) ?? node.parent_id,
+        })),
+        inventory_tree: (corp.inventory_tree || []).map((node) => ({
+          ...node,
+          id: inventoryTreeIdMap.get(node.id) ?? node.id,
+          corp_id: corpIdMap.get(node.corp_id) ?? nextCorpId,
+          parent_id: inventoryTreeIdMap.get(node.parent_id) ?? node.parent_id,
         })),
         employees: (corp.employees || []).map((employee) => ({
           ...employee,
@@ -220,6 +232,16 @@ function applyServerIdMappings(appData, mappings) {
         local_tree: Math.max(
           nextData.max_ids.local_tree || 0,
           ...Array.from(localTreeIdMap.values())
+        ),
+      };
+    }
+
+    if (inventoryTreeIdMap.size > 0) {
+      nextData.max_ids = {
+        ...nextData.max_ids,
+        inventory_tree: Math.max(
+          nextData.max_ids.inventory_tree || 0,
+          ...Array.from(inventoryTreeIdMap.values())
         ),
       };
     }
@@ -297,6 +319,7 @@ export function useSyncManager(initialData, refreshDataFn = async () => {}) {
       id: tempId,
       ...insertPayload,
       local_tree: [],
+      inventory_tree: [],
       employees: [],
       transactions: [],
     };

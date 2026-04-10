@@ -3,6 +3,7 @@ import currency from 'currency.js';
 import styles from './corp_details.module.css';
 import TransactionTable from '../components/transaction_table/TransactionTable';
 import ChangeViewControl from '../components/change_view/ChangeViewControl';
+import ItemManagementOverlay from '../components/item_management/ItemManagementOverlay';
 import {
   attachTransactionTagNames,
   buildChildrenMap,
@@ -31,6 +32,7 @@ function CorpDetails({
   onDeleteTransaction,
   onInsertLocalTreeNode,
   onRenameLocalTreeNode,
+  onInsertInventoryTreeNode,
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
 }) {
@@ -39,10 +41,12 @@ function CorpDetails({
   const [selectedLayer1Key, setSelectedLayer1Key] = useState(null);
   const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
   const [selectedLayer3Key, setSelectedLayer3Key] = useState(null);
+  const [showItemManagement, setShowItemManagement] = useState(false);
 
   const safeCorp = selectedCorp || {};
   const localTree = safeCorp.local_tree || [];
   const transactions = safeCorp.transactions || [];
+  const inventoryTree = safeCorp.inventory_tree || [];
   const isInverse = normalizeBool(safeCorp.inverse);
   const isForeign = normalizeBool(safeCorp.is_foreign);
 
@@ -184,7 +188,7 @@ function CorpDetails({
   ]);
 
   const displayTransactions = useMemo(() => {
-    return attachTransactionTagNames(
+    const withTags = attachTransactionTagNames(
       filteredTransactions.map((tx) =>
         toDisplayTransaction(tx, { isInverse, isForeign })
       ),
@@ -192,7 +196,39 @@ function CorpDetails({
       localTree,
       { languageMode }
     );
-  }, [filteredTransactions, isInverse, isForeign, globalTree, localTree, languageMode]);
+
+    const inventoryNameById = new Map(
+      inventoryTree.map((row) => [row.id, getLocalizedName(row, languageMode) || row.name || `ID ${row.id}`])
+    );
+
+    return withTags.map((tx) => ({
+      ...tx,
+      inventory_item_name: tx.inven_id != null ? (inventoryNameById.get(tx.inven_id) || '-') : '-',
+    }));
+  }, [filteredTransactions, isInverse, isForeign, globalTree, localTree, languageMode, inventoryTree]);
+
+  const inventoryLeafOptions = useMemo(() => {
+    const rows = normalizeRows(inventoryTree);
+    const rowMap = buildRowMap(rows);
+
+    const makePath = (node) => {
+      const parts = [];
+      let current = node;
+      let guard = 0;
+
+      while (current && guard < 1000) {
+        parts.unshift(getLocalizedName(current, languageMode) || current.name || `ID ${current.id}`);
+        current = current.parent_id != null ? rowMap.get(current.parent_id) : null;
+        guard += 1;
+      }
+
+      return parts.join(' > ');
+    };
+
+    return rows
+      .filter((row) => Number(row.leaf) === 1)
+      .map((row) => ({ value: String(row.id), label: makePath(row) }));
+  }, [inventoryTree, languageMode]);
 
   const typeOptions = useMemo(() => {
     return (globalChildrenByParent.get(null) || []).map((row) => ({
@@ -434,6 +470,14 @@ function CorpDetails({
           {safeCorp.name}
           {isInverse ? ' (Inverse)' : ''}
         </h2>
+        <button
+          type="button"
+          className={styles.settingsButton}
+          onClick={() => setShowItemManagement(true)}
+          title="Item management"
+        >
+          ⚙
+        </button>
       </div>
 
       <div className={styles.balanceRow}>
@@ -490,9 +534,18 @@ function CorpDetails({
             getGlobalOptionsByType={getGlobalOptionsByType}
             getLocalOptionsByGlobal={getLocalOptionsByGlobal}
             resolveTypeId={resolveTypeId}
+            inventoryOptions={inventoryLeafOptions}
           />
         </div>
       </div>
+
+      {showItemManagement && (
+        <ItemManagementOverlay
+          corp={safeCorp}
+          onClose={() => setShowItemManagement(false)}
+          onAddItem={onInsertInventoryTreeNode}
+        />
+      )}
     </div>
   );
 }

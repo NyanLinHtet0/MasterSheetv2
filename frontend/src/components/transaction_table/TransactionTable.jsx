@@ -17,6 +17,7 @@ export default function TransactionTable({
   getGlobalOptionsByType = () => [],
   getLocalOptionsByGlobal = () => [],
   resolveTypeId = () => null,
+  inventoryOptions = [],
 }) {
   const isEmpty = data.length === 0;
   const [pendingDeleteRowId, setPendingDeleteRowId] = useState(null);
@@ -134,6 +135,7 @@ export default function TransactionTable({
               ) : (
                 <col style={{ width: '200' }} />
               )}
+              <col style={{ width: '180px' }} />
 
               {showSaveColumn && <col style={{ width: '82px' }} />}
             </colgroup>
@@ -164,6 +166,7 @@ export default function TransactionTable({
                   selectedGlobalOptionValue={selectedGlobalOptionValue}
                   localOptions={localOptions}
                   onSave={() => handleSaveEdit(tx.id)}
+                  inventoryOptions={inventoryOptions}
                   onEditClick={() => handleEditClick(tx)}
                   onDelete={() => openDeleteConfirm(tx.id)}
                   onContextMenu={(e) => handleOpenContextMenu(e, tx.id)}

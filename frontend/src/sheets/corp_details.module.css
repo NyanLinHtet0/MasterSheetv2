@@ -28,6 +28,16 @@
   color: var(--text-main);
 }
 
+.settingsButton {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
 .balanceRow {
   display: flex;
   align-items: center;
