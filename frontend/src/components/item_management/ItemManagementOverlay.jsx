@@ -3,11 +3,6 @@ import styles from './ItemManagementOverlay.module.css';
 import { buildChildrenMap, buildRowMap, normalizeRows } from '../helpers/treeHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../helpers/nameLocalization';
 
-const VIEW_MODES = {
-  LIVE: 'live',
-  TRASH: 'trash',
-};
-
 function getAncestorPath(node, rowMap) {
   const chain = [];
   let current = node;
@@ -80,145 +75,6 @@ function TreeNode({
   );
 }
 
-function renderCategoryColumn({
-  title,
-  options = [],
-  selectedValue,
-  onSelect,
-  editable = false,
-  draftName,
-  setDraftName,
-  onAdd,
-  emptyLabel,
-  compact = false,
-}) {
-  return (
-    <div className={styles.categoryColumn}>
-      <div className={styles.sectionTitle}>{title}</div>
-
-      {editable && (
-        <div className={styles.editInlineRow}>
-          <input
-            type="text"
-            value={draftName}
-            className={styles.editInput}
-            placeholder={`Add ${title} (ENG | BUR)...`}
-            onChange={(event) => setDraftName(event.target.value)}
-          />
-
-          <button type="button" className={styles.addButton} onClick={onAdd}>
-            Add
-          </button>
-        </div>
-      )}
-
-      <div className={styles.optionsList}>
-        {options.length === 0 ? (
-          <div className={styles.emptyList}>{emptyLabel}</div>
-        ) : compact ? (
-          <div className={styles.compactOptionsGrid}>
-            {options.map((option) => {
-              const isSelected = selectedValue === option.key;
-              return (
-                <button
-                  type="button"
-                  key={option.key}
-                  className={`${styles.compactOptionChip} ${isSelected ? styles.compactOptionChipActive : ''}`}
-                  onClick={() => onSelect?.(option.key)}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          options.map((option) => {
-            const isSelected = selectedValue === option.key;
-
-            return (
-              <label key={option.key} className={styles.optionRow}>
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => onSelect?.(option.key)}
-                />
-                <span className={styles.optionLabel}>{option.label}</span>
-              </label>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-function renderLayerDropdown({
-  title,
-  nodes = [],
-  selectedNode = null,
-  isOpen = false,
-  onToggle,
-  onSelect,
-  emptyLabel,
-  disabledLabel = '',
-  formatQty,
-  languageMode,
-}) {
-  if (disabledLabel) {
-    return (
-      <div className={styles.layerColumn}>
-        <div className={styles.layerTitle}>{title}</div>
-        <div className={styles.emptyList}>{disabledLabel}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.layerColumn}>
-      <div className={styles.layerTitle}>{title}</div>
-
-      {nodes.length === 0 ? (
-        <div className={styles.emptyList}>{emptyLabel}</div>
-      ) : (
-        <div className={styles.layerDropdown}>
-          <button
-            type="button"
-            className={`${styles.layerCard} ${isOpen ? styles.layerCardActive : ''}`}
-            onClick={onToggle}
-          >
-            <div className={styles.layerCardName}>
-              {selectedNode ? getLocalizedName(selectedNode, languageMode) : `Select ${title}`}
-            </div>
-            <div className={styles.layerCardMeta}>
-              {selectedNode ? formatQty(selectedNode.quantity) : formatQty(0)} {isOpen ? '▲' : '▼'}
-            </div>
-          </button>
-
-          {isOpen && (
-            <div className={styles.layerDropdownMenu}>
-              {nodes.map((node) => {
-                const isSelected = selectedNode?.id === node.id;
-
-                return (
-                  <button
-                    type="button"
-                    key={node.id}
-                    className={`${styles.layerCard} ${isSelected ? styles.layerCardActive : styles.layerCardPassive}`}
-                    onClick={() => onSelect(node)}
-                  >
-                    <div className={styles.layerCardName}>{getLocalizedName(node, languageMode)}</div>
-                    <div className={styles.layerCardMeta}>{formatQty(node.quantity)}</div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ItemManagementOverlay({
   corp,
   onClose,
@@ -233,8 +89,6 @@ export default function ItemManagementOverlay({
   layer3Options = [],
   selectedLayer3Key = null,
   onSelectLayer3,
-  isEditTableMode = false,
-  onToggleEditTableMode,
   onAddLayer3,
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
@@ -244,13 +98,12 @@ export default function ItemManagementOverlay({
   const [newItemBurmeseName, setNewItemBurmeseName] = useState('');
   const [newItemParentId, setNewItemParentId] = useState(null);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
-  const [newLayer2Name, setNewLayer2Name] = useState('');
-  const [newLayer3Name, setNewLayer3Name] = useState('');
-  const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
-  const [previewLayer2Id, setPreviewLayer2Id] = useState('');
-  const [previewLayer3Id, setPreviewLayer3Id] = useState('');
-  const [openLayerKey, setOpenLayerKey] = useState(null);
+  const [tableScopeMode, setTableScopeMode] = useState('live');
   const [contextMenu, setContextMenu] = useState(null);
+  const [categoryContextMenu, setCategoryContextMenu] = useState(null);
+  const [categoryDraftName, setCategoryDraftName] = useState('');
+  const [categoryDraftLayer, setCategoryDraftLayer] = useState(null);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [manualCollapsedIds, setManualCollapsedIds] = useState(new Set());
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
@@ -268,23 +121,6 @@ export default function ItemManagementOverlay({
   );
 
   const layer1Nodes = childrenByParent.get(null) || [];
-  const activeLayer1 = activePath[0] || null;
-  const layer2Nodes = activeLayer1 ? childrenByParent.get(activeLayer1.id) || [] : [];
-  const activeLayer2 = activePath[1] || null;
-  const layer2ViewNode = useMemo(() => {
-    if (layer2Nodes.length === 0) return null;
-    const selected = layer2Nodes.find((node) => String(node.id) === previewLayer2Id);
-    return selected || activeLayer2 || null;
-  }, [activeLayer2, layer2Nodes, previewLayer2Id]);
-  const layer3Nodes = layer2ViewNode ? childrenByParent.get(layer2ViewNode.id) || [] : [];
-  const layer3ViewNode = useMemo(() => {
-    if (layer3Nodes.length === 0) return null;
-    return layer3Nodes.find((node) => String(node.id) === previewLayer3Id) || activePath[2] || null;
-  }, [activePath, layer3Nodes, previewLayer3Id]);
-  const showLayer2Board = activeLayer1 != null;
-  const showLayer3Board = layer2ViewNode != null;
-  const showLayer2Category = selectedLayer1Key != null;
-  const showLayer3Category = selectedLayer2Key != null;
   const expandedIds = useMemo(() => {
     const set = new Set();
     activePath.forEach((node) => set.add(node.id));
@@ -319,26 +155,6 @@ export default function ItemManagementOverlay({
     setIsAddItemModalOpen(false);
   };
 
-  const handleAddLayer2 = () => {
-    const nextName = newLayer2Name.trim();
-    if (!nextName || !onAddLayer2) return;
-
-    onAddLayer2(nextName);
-    setNewLayer2Name('');
-  };
-
-  const handleAddLayer3 = () => {
-    const nextName = newLayer3Name.trim();
-    if (!nextName || !onAddLayer3) return;
-
-    onAddLayer3(nextName);
-    setNewLayer3Name('');
-  };
-
-  const toggleLayerDropdown = (key) => {
-    setOpenLayerKey((current) => (current === key ? null : key));
-  };
-
   const toggleTreeNode = (nodeId) => {
     const isExpanded = effectiveExpandedIds.has(nodeId);
     if (isExpanded) {
@@ -367,26 +183,6 @@ export default function ItemManagementOverlay({
     });
   };
 
-  const handleSelectLayer1Node = (node) => {
-    setParentId(String(node.id));
-    setPreviewLayer2Id('');
-    setPreviewLayer3Id('');
-    setOpenLayerKey(null);
-  };
-
-  const handleSelectLayer2Node = (node) => {
-    setParentId(String(node.id));
-    setPreviewLayer2Id(String(node.id));
-    setPreviewLayer3Id('');
-    setOpenLayerKey(null);
-  };
-
-  const handleSelectLayer3Node = (node) => {
-    setParentId(String(node.id));
-    setPreviewLayer3Id(String(node.id));
-    setOpenLayerKey(null);
-  };
-
   const handleTreeContextMenu = (event, node) => {
     event.preventDefault();
     setContextMenu({
@@ -406,12 +202,78 @@ export default function ItemManagementOverlay({
     }
 
     setParentId(String(node.id));
-    setPreviewLayer2Id('');
-    setPreviewLayer3Id('');
     setContextMenu(null);
   };
 
   const contextMenuRef = useRef(null);
+  const categoryContextMenuRef = useRef(null);
+
+  const categoryTreeNodes = useMemo(() => {
+    return layer1Options.map((layer1) => {
+      const layer2Children = selectedLayer1Key === layer1.key
+        ? layer2Options.map((layer2) => ({
+          id: `l2-${layer2.key}`,
+          key: layer2.key,
+          label: layer2.label,
+          layer: 2,
+          children: selectedLayer2Key === layer2.key
+            ? layer3Options.map((layer3) => ({
+              id: `l3-${layer3.key}`,
+              key: layer3.key,
+              label: layer3.label,
+              layer: 3,
+              children: [],
+            }))
+            : [],
+        }))
+        : [];
+
+      return {
+        id: `l1-${layer1.key}`,
+        key: layer1.key,
+        label: layer1.label,
+        layer: 1,
+        children: layer2Children,
+      };
+    });
+  }, [layer1Options, layer2Options, layer3Options, selectedLayer1Key, selectedLayer2Key]);
+
+  const handleSelectCategoryNode = (node) => {
+    if (node.layer === 1) {
+      onSelectLayer1?.(node.key);
+      onSelectLayer2?.(null);
+      onSelectLayer3?.(null);
+      return;
+    }
+    if (node.layer === 2) {
+      onSelectLayer2?.(node.key);
+      onSelectLayer3?.(null);
+      return;
+    }
+    onSelectLayer3?.(node.key);
+  };
+
+  const openCategoryAddModal = (layer) => {
+    setCategoryDraftLayer(layer);
+    setCategoryDraftName('');
+    setIsAddCategoryModalOpen(true);
+  };
+
+  const handleSubmitCategory = (event) => {
+    event.preventDefault();
+    const nextName = String(categoryDraftName || '').trim();
+    if (!nextName) return;
+
+    if (categoryDraftLayer === 2) {
+      onAddLayer2?.(nextName);
+    } else if (categoryDraftLayer === 3) {
+      onAddLayer3?.(nextName);
+    }
+
+    setCategoryDraftName('');
+    setCategoryDraftLayer(null);
+    setIsAddCategoryModalOpen(false);
+  };
 
   useEffect(() => {
     if (!contextMenu) return undefined;
@@ -432,6 +294,25 @@ export default function ItemManagementOverlay({
     };
   }, [contextMenu]);
 
+  useEffect(() => {
+    if (!categoryContextMenu) return undefined;
+
+    const handlePointerDownCapture = (event) => {
+      if (event.button !== 0) return;
+      if (categoryContextMenuRef.current?.contains(event.target)) return;
+
+      setCategoryContextMenu(null);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDownCapture, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDownCapture, true);
+    };
+  }, [categoryContextMenu]);
+
   const rootNodes = childrenByParent.get(null) || [];
   const addItemParentNode = newItemParentId == null ? null : rowMap.get(newItemParentId) || null;
 
@@ -443,6 +324,20 @@ export default function ItemManagementOverlay({
           <div className={styles.headerActions}>
             <button
               type="button"
+              className={`${styles.modeToggleButton} ${tableScopeMode === 'live' ? styles.modeToggleButtonActive : ''}`}
+              onClick={() => setTableScopeMode('live')}
+            >
+              Live
+            </button>
+            <button
+              type="button"
+              className={`${styles.modeToggleButton} ${tableScopeMode === 'trash' ? styles.modeToggleButtonActive : ''}`}
+              onClick={() => setTableScopeMode('trash')}
+            >
+              Trash
+            </button>
+            <button
+              type="button"
               className={styles.languageToggleButton}
               onClick={() => onToggleLanguageMode?.()}
             >
@@ -452,104 +347,144 @@ export default function ItemManagementOverlay({
           </div>
         </div>
 
-        <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <h4>Item Management</h4>
-          </div>
+        <div className={styles.managementGrid}>
+          <section className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <h4>Item Management</h4>
+            </div>
 
-          <div className={styles.layerBoard}>
+            <div className={styles.layerBoard}>
+              <div className={styles.layerColumn}>
+                <div className={styles.layerTitle}>Item Folder</div>
+                {rootNodes.length === 0 ? (
+                  <div className={styles.emptyList}>No items in tree yet.</div>
+                ) : (
+                  <div className={styles.treePanel}>
+                    {rootNodes.map((node) => (
+                      <TreeNode
+                        key={node.id}
+                        node={node}
+                        childrenByParent={childrenByParent}
+                        expandedIds={effectiveExpandedIds}
+                        onToggleExpand={toggleTreeNode}
+                        onSelect={handleSelectTreeNode}
+                        selectedId={parentId === '' ? null : Number(parentId)}
+                        languageMode={languageMode}
+                        formatQty={formatQty}
+                        onContextMenu={handleTreeContextMenu}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className={styles.treeHint}>
+                  Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <h4>Category Management</h4>
+            </div>
+
             <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Folder Tree</div>
-              {rootNodes.length === 0 ? (
-                <div className={styles.emptyList}>No items in tree yet.</div>
+              <div className={styles.layerTitle}>Category Folder</div>
+              {categoryTreeNodes.length === 0 ? (
+                <div className={styles.emptyList}>No categories available.</div>
               ) : (
                 <div className={styles.treePanel}>
-                  {rootNodes.map((node) => (
-                    <TreeNode
+                  {categoryTreeNodes.map((node) => (
+                    <button
+                      type="button"
                       key={node.id}
-                      node={node}
-                      childrenByParent={childrenByParent}
-                      expandedIds={effectiveExpandedIds}
-                      onToggleExpand={toggleTreeNode}
-                      onSelect={handleSelectTreeNode}
-                      selectedId={parentId === '' ? null : Number(parentId)}
-                      languageMode={languageMode}
-                      formatQty={formatQty}
-                      onContextMenu={handleTreeContextMenu}
-                    />
+                      className={`${styles.treeRow} ${selectedLayer1Key === node.key ? styles.treeRowActive : ''}`}
+                      onClick={() => handleSelectCategoryNode(node)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        setCategoryContextMenu({ x: event.clientX, y: event.clientY, node });
+                      }}
+                    >
+                      <span className={`${styles.treeChevron} ${styles.treeChevronVisible}`}>•</span>
+                      <span className={styles.treeLabel}>{node.label}</span>
+                    </button>
+                  ))}
+                  {selectedLayer1Key != null && layer2Options.map((node) => (
+                    <button
+                      type="button"
+                      key={`l2-${node.key}`}
+                      className={`${styles.treeRow} ${selectedLayer2Key === node.key ? styles.treeRowActive : ''}`}
+                      style={{ paddingLeft: '28px' }}
+                      onClick={() => handleSelectCategoryNode({ ...node, layer: 2 })}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        setCategoryContextMenu({ x: event.clientX, y: event.clientY, node: { ...node, layer: 2 } });
+                      }}
+                    >
+                      <span className={`${styles.treeChevron} ${styles.treeChevronVisible}`}>•</span>
+                      <span className={styles.treeLabel}>{node.label}</span>
+                    </button>
+                  ))}
+                  {selectedLayer2Key != null && layer3Options.map((node) => (
+                    <button
+                      type="button"
+                      key={`l3-${node.key}`}
+                      className={`${styles.treeRow} ${selectedLayer3Key === node.key ? styles.treeRowActive : ''}`}
+                      style={{ paddingLeft: '46px' }}
+                      onClick={() => handleSelectCategoryNode({ ...node, layer: 3 })}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        setCategoryContextMenu({ x: event.clientX, y: event.clientY, node: { ...node, layer: 3 } });
+                      }}
+                    >
+                      <span className={`${styles.treeChevron} ${styles.treeChevronVisible}`}>•</span>
+                      <span className={styles.treeLabel}>{node.label}</span>
+                    </button>
                   ))}
                 </div>
               )}
               <div className={styles.treeHint}>
-                Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
+                Right-click a category to add inside it.
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <h4>Category Management</h4>
-            <div className={styles.headerActions}>
+        {categoryContextMenu && (
+          <div
+            ref={categoryContextMenuRef}
+            className={styles.contextMenu}
+            style={{ top: `${categoryContextMenu.y}px`, left: `${categoryContextMenu.x}px` }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {categoryContextMenu.node.layer <= 2 && (
               <button
                 type="button"
-                className={`${styles.editTableButton} ${isEditTableMode ? styles.editTableButtonActive : ''}`}
-                onClick={() => onToggleEditTableMode?.()}
+                onClick={() => {
+                  if (categoryContextMenu.node.layer === 1) {
+                    onSelectLayer1?.(categoryContextMenu.node.key);
+                    openCategoryAddModal(2);
+                  } else {
+                    onSelectLayer2?.(categoryContextMenu.node.key);
+                    openCategoryAddModal(3);
+                  }
+                  setCategoryContextMenu(null);
+                }}
               >
-                {isEditTableMode ? 'Done Editing' : 'Edit Table'}
+                Add inside "{categoryContextMenu.node.label}"
               </button>
-              <button
-                type="button"
-                className={`${styles.modeToggleButton} ${overlayViewMode === VIEW_MODES.LIVE ? styles.modeToggleButtonActive : ''}`}
-                onClick={() => setOverlayViewMode(VIEW_MODES.LIVE)}
-              >
-                Live
-              </button>
-              <button
-                type="button"
-                className={`${styles.modeToggleButton} ${overlayViewMode === VIEW_MODES.TRASH ? styles.modeToggleButtonActive : ''}`}
-                onClick={() => setOverlayViewMode(VIEW_MODES.TRASH)}
-              >
-                Trash
-              </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                openCategoryAddModal(2);
+                setCategoryContextMenu(null);
+              }}
+            >
+              Add in root
+            </button>
           </div>
-
-          <div className={styles.categoryColumns}>
-            {renderCategoryColumn({
-              title: 'Layer 1',
-              options: layer1Options,
-              selectedValue: selectedLayer1Key,
-              onSelect: onSelectLayer1,
-              emptyLabel: 'No layer 1 items.',
-            })}
-
-            {showLayer2Category && renderCategoryColumn({
-              title: 'Layer 2',
-              options: layer2Options,
-              selectedValue: selectedLayer2Key,
-              onSelect: onSelectLayer2,
-              editable: isEditTableMode,
-              draftName: newLayer2Name,
-              setDraftName: setNewLayer2Name,
-              onAdd: handleAddLayer2,
-              emptyLabel: 'No layer 2 items.',
-            })}
-
-            {showLayer3Category && renderCategoryColumn({
-              title: 'Layer 3',
-              options: layer3Options,
-              selectedValue: selectedLayer3Key,
-              onSelect: onSelectLayer3,
-              editable: isEditTableMode,
-              draftName: newLayer3Name,
-              setDraftName: setNewLayer3Name,
-              onAdd: handleAddLayer3,
-              emptyLabel: 'No layer 3 items.',
-              compact: true,
-            })}
-          </div>
-        </section>
+        )}
       </div>
 
       {contextMenu && (
@@ -614,6 +549,29 @@ export default function ItemManagementOverlay({
                   Cancel
                 </button>
                 <button type="submit">Add Item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isAddCategoryModalOpen && (
+        <div className={styles.addItemModalBackdrop} onClick={() => setIsAddCategoryModalOpen(false)}>
+          <div className={styles.addItemModal} onClick={(event) => event.stopPropagation()}>
+            <h4>{categoryDraftLayer === 3 ? 'Add Layer 3' : 'Add Layer 2'}</h4>
+            <form className={styles.addItemForm} onSubmit={handleSubmitCategory}>
+              <input
+                type="text"
+                placeholder={categoryDraftLayer === 3 ? 'Layer 3 name' : 'Layer 2 name'}
+                value={categoryDraftName}
+                onChange={(event) => setCategoryDraftName(event.target.value)}
+                autoFocus
+              />
+              <div className={styles.addItemActions}>
+                <button type="button" onClick={() => setIsAddCategoryModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Add</button>
               </div>
             </form>
           </div>
