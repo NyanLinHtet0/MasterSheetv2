@@ -29,6 +29,8 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
     global_tree_id: '',
     local_tree_id: '',
     inven_id: '',
+    inven_flow: '',
+    inven_qty: '',
   });
 
   const closeContextMenu = useCallback(() => {
@@ -63,7 +65,7 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
   const handleInputChange = (e, field) => {
     const rawValue = cleanNumericInput(e.target.value);
 
-    if (['amount', 'rate', 'total_mmk'].includes(field) && !isValidPartialNumber(rawValue)) {
+    if (['amount', 'rate', 'total_mmk', 'inven_qty'].includes(field) && !isValidPartialNumber(rawValue)) {
       return;
     }
 
@@ -90,6 +92,11 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
         } else {
           next.local_tree_id = '';
         }
+      }
+
+      if (field === 'inven_id' && rawValue === '') {
+        next.inven_flow = '';
+        next.inven_qty = '';
       }
 
       if (isForeign && (field === 'amount' || field === 'rate')) {

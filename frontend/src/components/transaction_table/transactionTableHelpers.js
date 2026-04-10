@@ -168,7 +168,7 @@ export function toDisplayTransaction(tx, { isInverse, isForeign }) {
   };
 }
 
-export function buildEditFormData(tx, { isInverse, isForeign, resolveTypeId }) {
+export function buildEditFormData(tx, { isForeign, resolveTypeId }) {
   const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
   const typeId = resolveTypeId?.(hydratedTx.global_tree_id) ?? null;
 
@@ -186,6 +186,8 @@ export function buildEditFormData(tx, { isInverse, isForeign, resolveTypeId }) {
     local_tree_id:
       hydratedTx.local_tree_id != null ? String(hydratedTx.local_tree_id) : '',
     inven_id: hydratedTx.inven_id != null ? String(hydratedTx.inven_id) : '',
+    inven_flow: hydratedTx.inven_flow != null ? String(hydratedTx.inven_flow) : '',
+    inven_qty: hydratedTx.inven_qty != null ? String(hydratedTx.inven_qty) : '',
   };
 }
 
@@ -227,6 +229,12 @@ export function buildUpdatedTransaction(oldTx, editFormData, { isForeign, isInve
       editFormData.local_tree_id === '' ? null : Number(editFormData.local_tree_id),
     inven_id:
       editFormData.inven_id === '' ? null : Number(editFormData.inven_id),
+    inven_flow:
+      editFormData.inven_flow === '' ? null : Number(editFormData.inven_flow),
+    inven_qty:
+      editFormData.inven_qty === '' || !isUsableNumberInput(editFormData.inven_qty)
+        ? null
+        : toMoney(editFormData.inven_qty),
   };
 
   return {
