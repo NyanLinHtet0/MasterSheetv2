@@ -25,6 +25,8 @@ import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLoca
 function CorpDetails({
   selectedCorp,
   globalTree = [],
+  linkTable = [],
+  paymentTable = [],
   onUpdateTransaction,
   onDeleteTransaction,
   onInsertLocalTreeNode,
@@ -192,12 +194,43 @@ function CorpDetails({
     const inventoryNameById = new Map(
       inventoryTree.map((row) => [row.id, getLocalizedName(row, languageMode) || row.name || `ID ${row.id}`])
     );
+    const linkTypeNameById = new Map(
+      linkTable.map((row) => [row.id, getLocalizedName(row, languageMode) || row.type_name || `ID ${row.id}`])
+    );
+    const paymentModeNameById = new Map(
+      paymentTable.map((row) => [row.id, getLocalizedName(row, languageMode) || row.type_name || `ID ${row.id}`])
+    );
+    const corpTxIdSet = new Set(withTags.map((tx) => tx.id));
 
     return withTags.map((tx) => ({
       ...tx,
       inventory_item_name: tx.inven_id != null ? (inventoryNameById.get(tx.inven_id) || '-') : '-',
+      inventory_flow_label:
+        Number(tx.inven_flow) === 1
+          ? 'In'
+          : Number(tx.inven_flow) === -1
+            ? 'Out'
+            : '-',
+      link_type_name: tx.link_type != null ? (linkTypeNameById.get(tx.link_type) || '-') : '-',
+      payment_mode_name: tx.payment_mode != null ? (paymentModeNameById.get(tx.payment_mode) || '-') : '-',
+      link_tx_display:
+        tx.link_tx_id == null
+          ? '-'
+          : corpTxIdSet.has(tx.link_tx_id)
+            ? String(tx.link_tx_id)
+            : `Invalid (${tx.link_tx_id})`,
     }));
-  }, [filteredTransactions, isInverse, isForeign, globalTree, localTree, languageMode, inventoryTree]);
+  }, [
+    filteredTransactions,
+    isInverse,
+    isForeign,
+    globalTree,
+    localTree,
+    languageMode,
+    inventoryTree,
+    linkTable,
+    paymentTable,
+  ]);
 
   const inventoryLeafOptions = useMemo(() => {
     const rows = normalizeRows(inventoryTree);

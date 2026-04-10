@@ -136,6 +136,12 @@ export default function TransactionTable({
                 <col style={{ width: '200' }} />
               )}
               <col style={{ width: '180px' }} />
+              <col style={{ width: '80px' }} />
+              <col style={{ width: '70px' }} />
+              <col style={{ width: '70px' }} />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '95px' }} />
+              <col style={{ width: '110px' }} />
 
               {showSaveColumn && <col style={{ width: '82px' }} />}
             </colgroup>
