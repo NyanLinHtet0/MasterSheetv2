@@ -213,7 +213,11 @@ function CorpDetails({
 
     return rows
       .filter((row) => Number(row.leaf) === 1)
-      .map((row) => ({ value: String(row.id), label: makePath(row) }));
+      .map((row) => ({
+        value: String(row.id),
+        label: makePath(row),
+        leafName: getLocalizedName(row, languageMode) || row.name || '',
+      }));
   }, [inventoryTree, languageMode]);
 
   const typeOptions = useMemo(() => {
