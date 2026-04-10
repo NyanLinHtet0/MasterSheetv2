@@ -36,7 +36,7 @@ export default function ItemManagementOverlay({
   const [newItemName, setNewItemName] = useState('');
   const [newItemBurmeseName, setNewItemBurmeseName] = useState('');
   const [newItemParentId, setNewItemParentId] = useState(null);
-  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [isAddingItemInline, setIsAddingItemInline] = useState(false);
   const [newLayer2Name, setNewLayer2Name] = useState('');
   const [newLayer3Name, setNewLayer3Name] = useState('');
   const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
@@ -84,7 +84,7 @@ export default function ItemManagementOverlay({
     setNewItemName('');
     setNewItemBurmeseName('');
     setNewItemParentId(null);
-    setIsAddItemModalOpen(false);
+    setIsAddingItemInline(false);
   };
 
   const handleAddLayer2 = () => {
@@ -187,8 +187,21 @@ export default function ItemManagementOverlay({
                 onStartTree={() => {
                   setParentId('');
                   setNewItemParentId(null);
-                  setIsAddItemModalOpen(true);
+                  setIsAddingItemInline(true);
                   setContextMenu(null);
+                  setNewItemName('');
+                  setNewItemBurmeseName('');
+                }}
+                isAddingItemInline={isAddingItemInline}
+                addItemParentNode={addItemParentNode}
+                onInlineAddSubmit={handleSubmit}
+                newItemName={newItemName}
+                setNewItemName={setNewItemName}
+                newItemBurmeseName={newItemBurmeseName}
+                setNewItemBurmeseName={setNewItemBurmeseName}
+                onCancelInlineAdd={() => {
+                  setIsAddingItemInline(false);
+                  setNewItemParentId(null);
                   setNewItemName('');
                   setNewItemBurmeseName('');
                 }}
@@ -281,7 +294,7 @@ export default function ItemManagementOverlay({
             onClick={() => {
               setParentId(String(contextMenu.node.id));
               setNewItemParentId(contextMenu.node.id);
-              setIsAddItemModalOpen(true);
+              setIsAddingItemInline(true);
               setContextMenu(null);
               setNewItemName('');
               setNewItemBurmeseName('');
@@ -294,7 +307,7 @@ export default function ItemManagementOverlay({
             onClick={() => {
               setParentId('');
               setNewItemParentId(null);
-              setIsAddItemModalOpen(true);
+              setIsAddingItemInline(true);
               setContextMenu(null);
               setNewItemName('');
               setNewItemBurmeseName('');
@@ -305,37 +318,6 @@ export default function ItemManagementOverlay({
         </div>
       )}
 
-      {isAddItemModalOpen && (
-        <div className={styles.addItemModalBackdrop} onClick={() => setIsAddItemModalOpen(false)}>
-          <div className={styles.addItemModal} onClick={(event) => event.stopPropagation()}>
-            <h4>Add Item</h4>
-            <div className={styles.addItemTarget}>
-              Parent: {addItemParentNode ? getLocalizedName(addItemParentNode, languageMode) : 'Root layer'}
-            </div>
-            <form className={styles.addItemForm} onSubmit={handleSubmit}>
-              <input
-                type="text"
-                placeholder="Item name"
-                value={newItemName}
-                onChange={(event) => setNewItemName(event.target.value)}
-                autoFocus
-              />
-              <input
-                type="text"
-                placeholder="Burmese name (optional)"
-                value={newItemBurmeseName}
-                onChange={(event) => setNewItemBurmeseName(event.target.value)}
-              />
-              <div className={styles.addItemActions}>
-                <button type="button" onClick={() => setIsAddItemModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit">Add Item</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

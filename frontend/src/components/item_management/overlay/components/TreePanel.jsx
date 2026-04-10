@@ -70,18 +70,54 @@ export default function TreePanel({
   formatQty,
   handleTreeContextMenu,
   onStartTree,
+  isAddingItemInline = false,
+  addItemParentNode = null,
+  onInlineAddSubmit,
+  newItemName,
+  setNewItemName,
+  newItemBurmeseName,
+  setNewItemBurmeseName,
+  onCancelInlineAdd,
 }) {
+  const inlineForm = isAddingItemInline ? (
+    <form className={styles.inlineAddItemForm} onSubmit={onInlineAddSubmit}>
+      <div className={styles.inlineAddItemHeader}>
+        Add item under: {addItemParentNode ? getLocalizedName(addItemParentNode, languageMode) : 'Root layer'}
+      </div>
+      <input
+        type="text"
+        placeholder="English name"
+        value={newItemName}
+        onChange={(event) => setNewItemName(event.target.value)}
+        autoFocus
+      />
+      <input
+        type="text"
+        placeholder="Burmese name (optional)"
+        value={newItemBurmeseName}
+        onChange={(event) => setNewItemBurmeseName(event.target.value)}
+      />
+      <div className={styles.inlineAddItemActions}>
+        <button type="button" onClick={onCancelInlineAdd}>Cancel</button>
+        <button type="submit" disabled={!String(newItemName || '').trim()}>Add</button>
+      </div>
+    </form>
+  ) : null;
+
   if (rootNodes.length === 0) {
     return (
       <div className={styles.emptyList}>
         <div>No items in tree yet.</div>
-        <button
-          type="button"
-          className={styles.emptyTreeAddButton}
-          onClick={onStartTree}
-        >
-          Add first item
-        </button>
+        {!isAddingItemInline && (
+          <button
+            type="button"
+            className={styles.emptyTreeAddButton}
+            onClick={onStartTree}
+          >
+            Add first item
+          </button>
+        )}
+        {inlineForm}
       </div>
     );
   }
@@ -102,6 +138,7 @@ export default function TreePanel({
           onContextMenu={handleTreeContextMenu}
         />
       ))}
+      {inlineForm}
     </div>
   );
 }
