@@ -14,13 +14,21 @@ async function getBaseData() {
   const [employees] = await db.query('SELECT * FROM employee');
   const [corps] = await db.query('SELECT * FROM corp_data');
   const [localTree] = await db.query('SELECT * FROM local_tree');
+  const [inventoryTree] = await db.query('SELECT * FROM inventory_tree');
+  const [financialSummary] = await db.query('SELECT * FROM financial_summary');
+  const [linkTable] = await db.query('SELECT * FROM link_table');
+  const [paymentTable] = await db.query('SELECT * FROM payment_table');
 
   return {
     globalTree,
     assets,
     employees,
     corps,
-    localTree
+    localTree,
+    inventoryTree,
+    financialSummary,
+    linkTable,
+    paymentTable
   };
 }
 
@@ -175,7 +183,9 @@ function assembleCorps({
   corps,
   localTreeByCorp,
   employeesByCorp,
-  transactionsByCorp
+  transactionsByCorp,
+  inventoryTreeByCorp,
+  financialSummaryByCorp
 }) {
   return corps.map((corp) => {
     const corpTransactions = transactionsByCorp[corp.id] || [];
@@ -196,6 +206,8 @@ function assembleCorps({
         ? currency(corp.current_foreign || 0).add(foreignDelta).value
         : corp.current_foreign,
       local_tree: localTreeByCorp[corp.id] || [],
+      inventory_tree: inventoryTreeByCorp[corp.id] || [],
+      financial_summary: financialSummaryByCorp[corp.id] || [],
       employees: employeesByCorp[corp.id] || [],
       transactions: formattedTransactions
     };
@@ -227,13 +239,33 @@ async function getCurrentTableMaxIds() {
     'SELECT COALESCE(MAX(id), 0) AS local_tree FROM local_tree'
   );
 
+  const [[{ inventory_tree }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS inventory_tree FROM inventory_tree'
+  );
+
+  const [[{ financial_summary }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS financial_summary FROM financial_summary'
+  );
+
+  const [[{ link_table }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS link_table FROM link_table'
+  );
+
+  const [[{ payment_table }]] = await db.query(
+    'SELECT COALESCE(MAX(id), 0) AS payment_table FROM payment_table'
+  );
+
   return {
     corp_data,
     transactions,
     employees,
     assets,
     global_tree,
-    local_tree
+    local_tree,
+    inventory_tree,
+    financial_summary,
+    link_table,
+    payment_table
   };
 }
 
@@ -269,7 +301,11 @@ async function getRowsByIds(tableName, rowIds) {
     'employee',
     'assets',
     'global_tree',
-    'local_tree'
+    'local_tree',
+    'inventory_tree',
+    'financial_summary',
+    'link_table',
+    'payment_table'
   ]);
 
   if (!allowedTables.has(tableName)) {
