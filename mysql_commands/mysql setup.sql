@@ -338,6 +338,7 @@ CREATE TABLE inventory_tree (
     name              VARCHAR(255) NOT NULL,
     burmese_name      VARCHAR(255) NULL,
     quantity          DECIMAL(16,4) NULL DEFAULT 0,
+    leaf              TINYINT NOT NULL DEFAULT 0,
     created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
