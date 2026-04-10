@@ -456,6 +456,20 @@
   background-color: rgba(148, 163, 184, 0.08);
   color: rgba(248, 250, 252, 0.7);
   font-size: 0.92rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emptyTreeAddButton {
+  align-self: flex-start;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.8);
+  background: rgba(37, 99, 235, 0.9);
+  color: #ffffff;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .editInlineRow {

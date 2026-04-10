@@ -184,6 +184,14 @@ export default function ItemManagementOverlay({
                 languageMode={languageMode}
                 formatQty={formatQty}
                 handleTreeContextMenu={handleTreeContextMenu}
+                onStartTree={() => {
+                  setParentId('');
+                  setNewItemParentId(null);
+                  setIsAddItemModalOpen(true);
+                  setContextMenu(null);
+                  setNewItemName('');
+                  setNewItemBurmeseName('');
+                }}
               />
               <div className={styles.treeHint}>
                 Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.

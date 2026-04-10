@@ -69,9 +69,21 @@ export default function TreePanel({
   languageMode,
   formatQty,
   handleTreeContextMenu,
+  onStartTree,
 }) {
   if (rootNodes.length === 0) {
-    return <div className={styles.emptyList}>No items in tree yet.</div>;
+    return (
+      <div className={styles.emptyList}>
+        <div>No items in tree yet.</div>
+        <button
+          type="button"
+          className={styles.emptyTreeAddButton}
+          onClick={onStartTree}
+        >
+          Add first item
+        </button>
+      </div>
+    );
   }
 
   return (
