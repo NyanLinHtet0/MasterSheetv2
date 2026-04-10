@@ -417,6 +417,24 @@ export default function TransactionRow({
           <span className={styles.tagCellValue}>{tx.inventory_item_name || '-'}</span>
         )}
       </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.inven_id ?? '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.inven_qty ?? '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.link_type_name || '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.link_tx_display || '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.payment_mode_name || '-'}</span>
+      </td>
 
       {showSaveColumn && (
         <td className={styles.saveCell}>

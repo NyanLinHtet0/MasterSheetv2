@@ -19,6 +19,8 @@ function Sheets({
   corps = [],
   globalTree = [],
   assets = [],
+  linkTable = [],
+  paymentTable = [],
   onAddCorp,
   onQueueUpdate,
   onQueueInsert,
@@ -540,6 +542,8 @@ function Sheets({
         selectedCorp={selectedCorp}
         globalTree={globalTree}
         assets={assets}
+        linkTable={linkTable}
+        paymentTable={paymentTable}
         onUpdateTransaction={handleUpdateTransaction}
         onDeleteTransaction={handleDeleteTransaction}
         onInsertLocalTreeNode={handleInsertLocalTreeNode}

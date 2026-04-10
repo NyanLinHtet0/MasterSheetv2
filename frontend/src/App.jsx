@@ -42,6 +42,8 @@ function App() {
                 corps={draftData?.corp_data || []}
                 globalTree={draftData?.global_tree || []}
                 assets={draftData?.assets || []}
+                linkTable={draftData?.link_table || []}
+                paymentTable={draftData?.payment_table || []}
                 onAddCorp={handleInsertCorp}
                 onQueueUpdate={handleUpdate}
                 onQueueInsert={handleInsertRow}
