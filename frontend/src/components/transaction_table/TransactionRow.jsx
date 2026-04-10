@@ -410,10 +410,37 @@ export default function TransactionRow({
         )}
       </td>
       <td>
-        <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>
+        {isEditing ? (
+          <select
+            className={`${styles.editInput} ${styles.tagInlineSelect}`}
+            value={editFormData.inven_flow}
+            onChange={(e) => onInputChange(e, 'inven_flow')}
+          >
+            <option value="">-</option>
+            <option value="1">In</option>
+            <option value="-1">Out</option>
+          </select>
+        ) : (
+          <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>
+        )}
       </td>
       <td>
-        <span className={styles.tagCellValue}>{tx.inven_qty ?? '-'}</span>
+        {isEditing ? (
+          <input
+            className={`${styles.editInput} ${styles.editInputNumber} ${styles.editInputXs}`}
+            type="text"
+            inputMode="decimal"
+            value={formatEditNumber(editFormData.inven_qty)}
+            onChange={(e) =>
+              onInputChange(
+                { ...e, target: { ...e.target, value: normalizeEditNumber(e.target.value) } },
+                'inven_qty'
+              )
+            }
+          />
+        ) : (
+          <span className={styles.tagCellValue}>{tx.inven_qty ?? '-'}</span>
+        )}
       </td>
 
       {showSaveColumn && (
