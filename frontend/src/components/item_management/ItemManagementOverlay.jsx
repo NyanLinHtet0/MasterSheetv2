@@ -8,20 +8,6 @@ const VIEW_MODES = {
   TRASH: 'trash',
 };
 
-function buildItemPath(node, rowMap) {
-  const labels = [];
-  let current = node;
-  let guard = 0;
-
-  while (current && guard < 1000) {
-    labels.unshift(current.name || `ID ${current.id}`);
-    current = current.parent_id != null ? rowMap.get(current.parent_id) : null;
-    guard += 1;
-  }
-
-  return labels.join(' > ');
-}
-
 function getAncestorPath(node, rowMap) {
   const chain = [];
   let current = node;
@@ -253,9 +239,11 @@ export default function ItemManagementOverlay({
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
 }) {
-  const [name, setName] = useState('');
-  const [burmeseName, setBurmeseName] = useState('');
   const [parentId, setParentId] = useState('');
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemBurmeseName, setNewItemBurmeseName] = useState('');
+  const [newItemParentId, setNewItemParentId] = useState(null);
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [newLayer2Name, setNewLayer2Name] = useState('');
   const [newLayer3Name, setNewLayer3Name] = useState('');
   const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
@@ -263,28 +251,11 @@ export default function ItemManagementOverlay({
   const [previewLayer3Id, setPreviewLayer3Id] = useState('');
   const [openLayerKey, setOpenLayerKey] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [manualCollapsedIds, setManualCollapsedIds] = useState(new Set());
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
   const childrenByParent = useMemo(() => buildChildrenMap(inventoryRows, 'parent_id'), [inventoryRows]);
-
-  const rowsWithDepth = useMemo(() => {
-    const rows = [];
-
-    const walk = (node, depth = 0) => {
-      rows.push({
-        ...node,
-        depth,
-        path: buildItemPath(node, rowMap),
-      });
-
-      (childrenByParent.get(node.id) || []).forEach((child) => walk(child, depth + 1));
-    };
-
-    (childrenByParent.get(null) || []).forEach((root) => walk(root));
-
-    return rows;
-  }, [childrenByParent, rowMap]);
 
   const activeParentNode = useMemo(() => {
     if (parentId === '') return null;
@@ -323,26 +294,29 @@ export default function ItemManagementOverlay({
   const effectiveExpandedIds = useMemo(() => {
     const set = new Set(expandedIds);
     manualExpandedIds.forEach((id) => set.add(id));
+    manualCollapsedIds.forEach((id) => set.delete(id));
     return set;
-  }, [expandedIds, manualExpandedIds]);
+  }, [expandedIds, manualCollapsedIds, manualExpandedIds]);
 
   const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const nextName = String(name || '').trim();
+    const nextName = String(newItemName || '').trim();
     if (!nextName) return;
 
     onAddItem?.({
       corpId: corp.id,
-      parentId: parentId === '' ? null : Number(parentId),
+      parentId: newItemParentId,
       name: nextName,
-      burmeseName: String(burmeseName || '').trim() || null,
+      burmeseName: String(newItemBurmeseName || '').trim() || null,
     });
 
-    setName('');
-    setBurmeseName('');
+    setNewItemName('');
+    setNewItemBurmeseName('');
+    setNewItemParentId(null);
+    setIsAddItemModalOpen(false);
   };
 
   const handleAddLayer2 = () => {
@@ -366,13 +340,29 @@ export default function ItemManagementOverlay({
   };
 
   const toggleTreeNode = (nodeId) => {
+    const isExpanded = effectiveExpandedIds.has(nodeId);
+    if (isExpanded) {
+      setManualCollapsedIds((current) => {
+        const next = new Set(current);
+        next.add(nodeId);
+        return next;
+      });
+      setManualExpandedIds((current) => {
+        const next = new Set(current);
+        next.delete(nodeId);
+        return next;
+      });
+      return;
+    }
+
+    setManualCollapsedIds((current) => {
+      const next = new Set(current);
+      next.delete(nodeId);
+      return next;
+    });
     setManualExpandedIds((current) => {
       const next = new Set(current);
-      if (next.has(nodeId)) {
-        next.delete(nodeId);
-      } else {
-        next.add(nodeId);
-      }
+      next.add(nodeId);
       return next;
     });
   };
@@ -407,6 +397,14 @@ export default function ItemManagementOverlay({
   };
 
   const handleSelectTreeNode = (node) => {
+    if (parentId !== '' && Number(parentId) === node.id) {
+      if ((childrenByParent.get(node.id) || []).length > 0) {
+        toggleTreeNode(node.id);
+      }
+      setContextMenu(null);
+      return;
+    }
+
     setParentId(String(node.id));
     setPreviewLayer2Id('');
     setPreviewLayer3Id('');
@@ -414,6 +412,7 @@ export default function ItemManagementOverlay({
   };
 
   const rootNodes = childrenByParent.get(null) || [];
+  const addItemParentNode = newItemParentId == null ? null : rowMap.get(newItemParentId) || null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -436,29 +435,6 @@ export default function ItemManagementOverlay({
           <div className={styles.sectionHeader}>
             <h4>Item Management</h4>
           </div>
-
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Item name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Burmese name (optional)"
-              value={burmeseName}
-              onChange={(event) => setBurmeseName(event.target.value)}
-            />
-            <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
-              <option value="">Root layer</option>
-              {rowsWithDepth.map((row) => (
-                <option key={row.id} value={row.id}>{`Layer ${row.depth + 1} • ${row.path}`}</option>
-              ))}
-            </select>
-
-            <button type="submit">Add Item</button>
-          </form>
 
           <div className={styles.layerBoard}>
             <div className={styles.layerColumn}>
@@ -484,7 +460,7 @@ export default function ItemManagementOverlay({
                 </div>
               )}
               <div className={styles.treeHint}>
-                Right-click a folder to set it as parent for quick add.
+                Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
               </div>
             </div>
 
@@ -601,7 +577,11 @@ export default function ItemManagementOverlay({
             type="button"
             onClick={() => {
               setParentId(String(contextMenu.node.id));
+              setNewItemParentId(contextMenu.node.id);
+              setIsAddItemModalOpen(true);
               setContextMenu(null);
+              setNewItemName('');
+              setNewItemBurmeseName('');
             }}
           >
             Add inside "{getLocalizedName(contextMenu.node, languageMode)}"
@@ -609,21 +589,48 @@ export default function ItemManagementOverlay({
           <button
             type="button"
             onClick={() => {
-              toggleTreeNode(contextMenu.node.id);
-              setContextMenu(null);
-            }}
-          >
-            {effectiveExpandedIds.has(contextMenu.node.id) ? 'Collapse folder' : 'Expand folder'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
               setParentId('');
+              setNewItemParentId(null);
+              setIsAddItemModalOpen(true);
               setContextMenu(null);
+              setNewItemName('');
+              setNewItemBurmeseName('');
             }}
           >
             Add in root
           </button>
+        </div>
+      )}
+
+      {isAddItemModalOpen && (
+        <div className={styles.addItemModalBackdrop} onClick={() => setIsAddItemModalOpen(false)}>
+          <div className={styles.addItemModal} onClick={(event) => event.stopPropagation()}>
+            <h4>Add Item</h4>
+            <div className={styles.addItemTarget}>
+              Parent: {addItemParentNode ? getLocalizedName(addItemParentNode, languageMode) : 'Root layer'}
+            </div>
+            <form className={styles.addItemForm} onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="Item name"
+                value={newItemName}
+                onChange={(event) => setNewItemName(event.target.value)}
+                autoFocus
+              />
+              <input
+                type="text"
+                placeholder="Burmese name (optional)"
+                value={newItemBurmeseName}
+                onChange={(event) => setNewItemBurmeseName(event.target.value)}
+              />
+              <div className={styles.addItemActions}>
+                <button type="button" onClick={() => setIsAddItemModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Add Item</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
