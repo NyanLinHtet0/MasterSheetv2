@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import currency from 'currency.js';
 import styles from './corp_details.module.css';
 import TransactionTable from '../components/transaction_table/TransactionTable';
-import ChangeViewControl from '../components/change_view/ChangeViewControl';
 import ItemManagementOverlay from '../components/item_management/ItemManagementOverlay';
 import {
   attachTransactionTagNames,
@@ -16,12 +15,10 @@ import {
   toDisplayTransaction,
 } from '../components/transaction_table/transactionTableHelpers';
 import {
-  VIEW_MODES,
   buildAssembledTree,
   buildLayerOptions,
   buildNodePathLabel,
   filterTransactionsByTreeSelection,
-  filterTransactionsByViewMode,
 } from '../components/helpers/treeViewHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
 
@@ -31,12 +28,10 @@ function CorpDetails({
   onUpdateTransaction,
   onDeleteTransaction,
   onInsertLocalTreeNode,
-  onRenameLocalTreeNode,
   onInsertInventoryTreeNode,
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
 }) {
-  const [viewMode, setViewMode] = useState(VIEW_MODES.LIVE);
   const [isEditTableMode, setIsEditTableMode] = useState(false);
   const [selectedLayer1Key, setSelectedLayer1Key] = useState(null);
   const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
@@ -165,21 +160,18 @@ function CorpDetails({
   }, [assembledTree, selectedLayer1Key, selectedLayer2Key]);
 
   const filteredTransactions = useMemo(() => {
-    const baseRows = filterTransactionsByViewMode(transactions, viewMode);
-
     const deepestSelectedNode =
       selectedLayer3Node || selectedLayer2Node || selectedLayer1Node || null;
 
     return filterTransactionsByTreeSelection({
-      transactions: baseRows,
+      transactions,
       selectedNode: deepestSelectedNode,
       globalTree,
       localTree,
-      includeSoftDeleted: viewMode === VIEW_MODES.TRASH,
+      includeSoftDeleted: false,
     });
   }, [
     transactions,
-    viewMode,
     globalTree,
     localTree,
     selectedLayer1Node,
@@ -382,41 +374,6 @@ function CorpDetails({
     });
   };
 
-  const handleRenameLayer2 = (layer2Key, nextName) => {
-    if (!selectedCorp || !onRenameLocalTreeNode) {
-      return;
-    }
-
-    const node = assembledTree.nodeMap.get(layer2Key);
-
-    if (!node || node.source !== 'local') {
-      return;
-    }
-
-    onRenameLocalTreeNode({
-      corpId: selectedCorp.id,
-      localTreeId: node.localId,
-      name: nextName,
-    });
-  };
-
-  const handleRenameLayer3 = (layer3Key, nextName) => {
-    if (!selectedCorp || !onRenameLocalTreeNode) {
-      return;
-    }
-
-    const node = assembledTree.nodeMap.get(layer3Key);
-
-    if (!node || node.source !== 'local') {
-      return;
-    }
-
-    onRenameLocalTreeNode({
-      corpId: selectedCorp.id,
-      localTreeId: node.localId,
-      name: nextName,
-    });
-  };
 
   const titleParts = [];
 
@@ -496,27 +453,6 @@ function CorpDetails({
           )}
         </div>
 
-        <ChangeViewControl
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          layer1Options={layer1Options}
-          selectedLayer1Key={selectedLayer1Key}
-          onSelectLayer1={handleSelectLayer1}
-          layer2Options={layer2OptionsWithEditState}
-          selectedLayer2Key={selectedLayer2Key}
-          onSelectLayer2={handleSelectLayer2}
-          onAddLayer2={handleAddLayer2}
-          onRenameLayer2={handleRenameLayer2}
-          layer3Options={layer3OptionsWithEditState}
-          selectedLayer3Key={selectedLayer3Key}
-          onSelectLayer3={handleSelectLayer3}
-          isEditTableMode={isEditTableMode}
-          onToggleEditTableMode={() => setIsEditTableMode((prev) => !prev)}
-          onAddLayer3={handleAddLayer3}
-          onRenameLayer3={handleRenameLayer3}
-          languageMode={languageMode}
-          onToggleLanguageMode={onToggleLanguageMode}
-        />
       </div>
 
       <div className={styles.tablecontainer}>
@@ -544,6 +480,21 @@ function CorpDetails({
           corp={safeCorp}
           onClose={() => setShowItemManagement(false)}
           onAddItem={onInsertInventoryTreeNode}
+          layer1Options={layer1Options}
+          selectedLayer1Key={selectedLayer1Key}
+          onSelectLayer1={handleSelectLayer1}
+          layer2Options={layer2OptionsWithEditState}
+          selectedLayer2Key={selectedLayer2Key}
+          onSelectLayer2={handleSelectLayer2}
+          onAddLayer2={handleAddLayer2}
+          layer3Options={layer3OptionsWithEditState}
+          selectedLayer3Key={selectedLayer3Key}
+          onSelectLayer3={handleSelectLayer3}
+          isEditTableMode={isEditTableMode}
+          onToggleEditTableMode={() => setIsEditTableMode((prev) => !prev)}
+          onAddLayer3={handleAddLayer3}
+          languageMode={languageMode}
+          onToggleLanguageMode={onToggleLanguageMode}
         />
       )}
     </div>
