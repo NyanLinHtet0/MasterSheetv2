@@ -185,14 +185,6 @@ export default function TransactionRow({
       .join(' / ');
   })();
 
-  const expandedLabels = getEditingLabels({
-    tx,
-    editFormData,
-    typeOptions,
-    globalOptions,
-    localOptions,
-  });
-
   return (
     <tr
       ref={isEditing ? editingRowRef : null}
@@ -422,18 +414,6 @@ export default function TransactionRow({
       </td>
       <td>
         <span className={styles.tagCellValue}>{tx.inven_qty ?? '-'}</span>
-      </td>
-      <td>
-        <span className={styles.tagCellValue}>{tx.inven_id ?? '-'}</span>
-      </td>
-      <td>
-        <span className={styles.tagCellValue}>{tx.link_type_name || '-'}</span>
-      </td>
-      <td>
-        <span className={styles.tagCellValue}>{tx.link_tx_display || '-'}</span>
-      </td>
-      <td>
-        <span className={styles.tagCellValue}>{tx.payment_mode_name || '-'}</span>
       </td>
 
       {showSaveColumn && (
