@@ -20,12 +20,18 @@ exports.initializeSync = async (req, res) => {
       assets,
       employees,
       corps,
-      localTree
+      localTree,
+      inventoryTree,
+      financialSummary,
+      linkTable,
+      paymentTable
     } = await getBaseData();
 
     const allTransactions = await getTransactionsForInitialization(corps);
 
     const localTreeByCorp = groupByCorpId(localTree);
+    const inventoryTreeByCorp = groupByCorpId(inventoryTree);
+    const financialSummaryByCorp = groupByCorpId(financialSummary);
     const transactionsByCorp = groupByCorpId(allTransactions);
     const { employeesByCorp, unassignedEmployees } = splitEmployees(employees);
 
@@ -33,7 +39,9 @@ exports.initializeSync = async (req, res) => {
       corps,
       localTreeByCorp,
       employeesByCorp,
-      transactionsByCorp
+      transactionsByCorp,
+      inventoryTreeByCorp,
+      financialSummaryByCorp
     });
 
     res.json({
@@ -41,6 +49,8 @@ exports.initializeSync = async (req, res) => {
       max_ids,
       global_tree: globalTree,
       assets,
+      link_table: linkTable,
+      payment_table: paymentTable,
       unassigned_employees: unassignedEmployees,
       corp_data: assembledCorps
     });

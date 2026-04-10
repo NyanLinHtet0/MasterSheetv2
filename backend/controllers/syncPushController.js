@@ -28,6 +28,12 @@ const allowedColumns = {
     'local_tree_id',
     'employee_id',
     'asset_id',
+    'inven_id',
+    'inven_flow',
+    'inven_qty',
+    'link_type',
+    'link_tx_id',
+    'payment_mode',
     'soft_delete',
     'tx_status'
   ]),
@@ -55,6 +61,30 @@ const allowedColumns = {
     'burmese_name',
     'leaf',
     'soft_delete'
+  ]),
+  link_table: new Set([
+    'type_name',
+    'burmese_name'
+  ]),
+  payment_table: new Set([
+    'type_name',
+    'burmese_name'
+  ]),
+  inventory_tree: new Set([
+    'corp_id',
+    'parent_id',
+    'name',
+    'burmese_name',
+    'quantity'
+  ]),
+  financial_summary: new Set([
+    'corp_id',
+    'total_sales',
+    'total_operational_expenses',
+    'remaining_credit',
+    'total_investment',
+    'start_date',
+    'end_date'
   ])
 };
 
@@ -78,6 +108,10 @@ function resolveForeignKeys(tableName, rowData, mapper) {
   if (next.parent_id != null) next.parent_id = mapper.resolveId(next.parent_id);
   if (next.global_parent_id != null) next.global_parent_id = mapper.resolveId(next.global_parent_id);
   if (next.local_tree_id != null) next.local_tree_id = mapper.resolveId(next.local_tree_id);
+  if (next.inven_id != null) next.inven_id = mapper.resolveId(next.inven_id);
+  if (next.link_type != null) next.link_type = mapper.resolveId(next.link_type);
+  if (next.link_tx_id != null) next.link_tx_id = mapper.resolveId(next.link_tx_id);
+  if (next.payment_mode != null) next.payment_mode = mapper.resolveId(next.payment_mode);
   if (next.employee_id != null) next.employee_id = mapper.resolveId(next.employee_id);
   if (next.asset_id != null) next.asset_id = mapper.resolveId(next.asset_id);
 
@@ -110,7 +144,11 @@ exports.pushChanges = async (req, res) => {
       'employee',
       'assets',
       'global_tree',
-      'local_tree'
+      'local_tree',
+      'link_table',
+      'payment_table',
+      'inventory_tree',
+      'financial_summary'
     ]);
 
     for (const action of actions) {
