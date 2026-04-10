@@ -26,6 +26,7 @@ export default function ItemManagementOverlay({
   const [newItemParentId, setNewItemParentId] = useState(null);
   const [isAddingItemInline, setIsAddingItemInline] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryBurmeseName, setNewCategoryBurmeseName] = useState('');
   const [isAddingCategoryInline, setIsAddingCategoryInline] = useState(false);
   const [newCategoryParentKey, setNewCategoryParentKey] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
@@ -96,9 +97,11 @@ export default function ItemManagementOverlay({
   const handleAddCategory = (event) => {
     event.preventDefault();
     const nextName = String(newCategoryName || '').trim();
+    const nextBurmeseName = String(newCategoryBurmeseName || '').trim() || null;
     if (!nextName || !newCategoryParentKey || !onAddCategoryNode) return;
-    onAddCategoryNode({ name: nextName, parentKey: newCategoryParentKey });
+    onAddCategoryNode({ name: nextName, burmeseName: nextBurmeseName, parentKey: newCategoryParentKey });
     setNewCategoryName('');
+    setNewCategoryBurmeseName('');
     setNewCategoryParentKey(null);
     setIsAddingCategoryInline(false);
   };
@@ -266,10 +269,13 @@ export default function ItemManagementOverlay({
                 }
                 newItemName={newCategoryName}
                 setNewItemName={setNewCategoryName}
+                newItemBurmeseName={newCategoryBurmeseName}
+                setNewItemBurmeseName={setNewCategoryBurmeseName}
                 onCancelInlineAdd={() => {
                   setIsAddingCategoryInline(false);
                   setNewCategoryParentKey(null);
                   setNewCategoryName('');
+                  setNewCategoryBurmeseName('');
                 }}
               />
             </div>
@@ -326,6 +332,7 @@ export default function ItemManagementOverlay({
               setIsAddingCategoryInline(true);
               setCategoryContextMenu(null);
               setNewCategoryName('');
+              setNewCategoryBurmeseName('');
             }}
           >
             Add inside "{categoryContextMenu.node.label}"

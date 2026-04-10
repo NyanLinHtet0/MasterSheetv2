@@ -330,10 +330,17 @@ function Sheets({
     );
   };
 
-  const handleInsertLocalTreeNode = ({ corpId, name, parentId = null, globalParentId = null }) => {
+  const handleInsertLocalTreeNode = ({
+    corpId,
+    name,
+    burmeseName = null,
+    parentId = null,
+    globalParentId = null,
+  }) => {
     if (!corpId || !name) return;
-    const { englishName, burmeseName } = splitBilingualName(name);
+    const { englishName, burmeseName: parsedBurmeseName } = splitBilingualName(name);
     const nextEnglishName = englishName || name;
+    const nextBurmeseName = String(burmeseName || '').trim() || parsedBurmeseName || null;
 
     const tempId = -Math.abs(Date.now() + Math.floor(Math.random() * 1000));
     const nextNode = {
@@ -342,7 +349,7 @@ function Sheets({
       parent_id: parentId,
       global_parent_id: globalParentId,
       name: nextEnglishName,
-      burmese_name: burmeseName || null,
+      burmese_name: nextBurmeseName,
       soft_delete: 0,
     };
 
@@ -362,7 +369,7 @@ function Sheets({
       parent_id: parentId,
       global_parent_id: globalParentId,
       name: nextEnglishName,
-      burmese_name: burmeseName || null,
+      burmese_name: nextBurmeseName,
       soft_delete: 0,
     });
   };
