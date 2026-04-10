@@ -126,6 +126,44 @@ export default function ItemManagementOverlay({
     return rows;
   }, [childrenByParent, rowMap]);
 
+  const itemLayer1Rows = useMemo(() => childrenByParent.get(null) || [], [childrenByParent]);
+
+  const itemLayer2Rows = useMemo(() => {
+    if (selectedItemLayer1Id) {
+      return childrenByParent.get(Number(selectedItemLayer1Id)) || [];
+    }
+
+    return itemLayer1Rows.flatMap((row) => childrenByParent.get(row.id) || []);
+  }, [childrenByParent, itemLayer1Rows, selectedItemLayer1Id]);
+
+  const itemLayer3Rows = useMemo(() => {
+    if (selectedItemLayer2Id) {
+      return childrenByParent.get(Number(selectedItemLayer2Id)) || [];
+    }
+
+    if (selectedItemLayer1Id) {
+      return itemLayer2Rows.flatMap((row) => childrenByParent.get(row.id) || []);
+    }
+
+    return [];
+  }, [childrenByParent, itemLayer2Rows, selectedItemLayer1Id, selectedItemLayer2Id]);
+
+  const selectedItemDepthLabel = useMemo(() => {
+    if (!parentId) {
+      return 'Root';
+    }
+
+    const selectedNode = rowMap.get(Number(parentId));
+    if (!selectedNode) {
+      return 'Root';
+    }
+
+    const selectedRow = rowsWithDepth.find((row) => row.id === selectedNode.id);
+    const depth = (selectedRow?.depth ?? 0) + 1;
+    return `Layer ${depth}`;
+  }, [parentId, rowMap, rowsWithDepth]);
+
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -141,7 +179,71 @@ export default function ItemManagementOverlay({
 
     setName('');
     setBurmeseName('');
-    setParentId('');
+  };
+
+  const handleAddLayer2 = () => {
+    const nextName = newLayer2Name.trim();
+    if (!nextName || !onAddLayer2) return;
+
+    onAddLayer2(nextName);
+    setNewLayer2Name('');
+  };
+
+  const handleAddLayer3 = () => {
+    const nextName = newLayer3Name.trim();
+    if (!nextName || !onAddLayer3) return;
+
+    onAddLayer3(nextName);
+    setNewLayer3Name('');
+  };
+
+  const handleSelectItemLayer1 = (nextId) => {
+    const resolved = nextId === selectedItemLayer1Id ? '' : nextId;
+    setSelectedItemLayer1Id(resolved);
+    setSelectedItemLayer2Id('');
+    setSelectedItemLayer3Id('');
+    setParentId(resolved);
+  };
+
+  const handleSelectItemLayer2 = (nextId) => {
+    const resolved = nextId === selectedItemLayer2Id ? '' : nextId;
+    setSelectedItemLayer2Id(resolved);
+    setSelectedItemLayer3Id('');
+
+    if (!resolved) {
+      setParentId(selectedItemLayer1Id || '');
+      return;
+    }
+
+    setParentId(resolved);
+
+    if (!selectedItemLayer1Id) {
+      const parentNode = rowMap.get(Number(resolved));
+      setSelectedItemLayer1Id(parentNode?.parent_id != null ? String(parentNode.parent_id) : '');
+    }
+  };
+
+  const handleSelectItemLayer3 = (nextId) => {
+    const resolved = nextId === selectedItemLayer3Id ? '' : nextId;
+    setSelectedItemLayer3Id(resolved);
+
+    if (!resolved) {
+      setParentId(selectedItemLayer2Id || selectedItemLayer1Id || '');
+      return;
+    }
+
+    setParentId(resolved);
+
+    const node = rowMap.get(Number(resolved));
+
+    if (!selectedItemLayer2Id) {
+      setSelectedItemLayer2Id(node?.parent_id != null ? String(node.parent_id) : '');
+    }
+
+    if (!selectedItemLayer1Id && node?.parent_id != null) {
+      const parentNode = rowMap.get(node.parent_id);
+      setSelectedItemLayer1Id(parentNode?.parent_id != null ? String(parentNode.parent_id) : '');
+    }
   };
 
   const handleAddLayer2 = () => {
