@@ -97,7 +97,6 @@ function renderCompactTagEditor({
   globalOptions,
   selectedGlobalOptionValue,
   localOptions,
-  inventoryOptions,
 }) {
   return (
     <div className={styles.compactTagEditor}>
@@ -134,19 +133,6 @@ function renderCompactTagEditor({
       >
         <option value="">Local Tag</option>
         {localOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className={`${styles.editInput} ${styles.tagInlineSelect}`}
-        value={editFormData.inven_id}
-        onChange={(e) => onInputChange(e, 'inven_id')}
-      >
-        <option value="">Item</option>
-        {inventoryOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
@@ -407,7 +393,6 @@ export default function TransactionRow({
             globalOptions,
             selectedGlobalOptionValue,
             localOptions,
-            inventoryOptions,
           }) : (
             <span className={styles.tagText}>{compactTagLabel}</span>
           )}
