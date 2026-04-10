@@ -10,14 +10,18 @@
 }
 
 .modal {
-  width: min(980px, 92vw);
-  max-height: 86vh;
-  background: white;
-  border-radius: 12px;
+  width: min(1100px, 94vw);
+  max-height: 90vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #f8fafc;
+  border-radius: 14px;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+  overflow: auto;
 }
 
 .headerRow {
@@ -26,11 +30,47 @@
   align-items: center;
 }
 
+.headerRow h3 {
+  margin: 0;
+}
+
 .closeButton {
-  border: 1px solid #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  background: white;
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
   padding: 4px 10px;
+}
+
+.sectionBlock {
+  background: rgba(148, 163, 184, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionHeader h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .form {
@@ -41,21 +81,27 @@
 
 .form input,
 .form select,
-.form button {
+.form button,
+.editInput {
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
 }
 
-.form button {
-  background: #0f172a;
-  color: white;
+.form button,
+.addButton {
+  border: 1px solid rgba(59, 130, 246, 0.8);
+  background: rgba(37, 99, 235, 0.9);
+  color: #ffffff;
   cursor: pointer;
+  font-weight: 700;
 }
 
 .tableWrap {
   overflow: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 8px;
 }
 
@@ -67,12 +113,127 @@
 
 .table th,
 .table td {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
   padding: 8px;
   text-align: left;
 }
 
 .empty {
   text-align: center !important;
-  color: #64748b;
+  color: rgba(248, 250, 252, 0.72);
+}
+
+.categoryColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.categoryColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: rgba(148, 163, 184, 0.08);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.optionRow:hover {
+  background-color: rgba(148, 163, 184, 0.16);
+  transform: translateX(1px);
+}
+
+.optionRow input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #60a5fa;
+}
+
+.optionLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptyList {
+  padding: 12px;
+  border-radius: 10px;
+  background-color: rgba(148, 163, 184, 0.08);
+  color: rgba(248, 250, 252, 0.7);
+  font-size: 0.92rem;
+}
+
+.editInlineRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.editTableButton,
+.languageToggleButton,
+.modeToggleButton {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.languageToggleButton {
+  min-width: 52px;
+}
+
+.editTableButtonActive {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.modeToggleButtonActive {
+  background: #1f6feb;
+  border-color: #1f6feb;
+}
+
+@media (max-width: 980px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .categoryColumns {
+    grid-template-columns: 1fr;
+  }
 }
