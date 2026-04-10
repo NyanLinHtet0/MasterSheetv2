@@ -225,7 +225,7 @@ export default function ItemManagementOverlay({
                 </div>
               </div>
 
-              <aside className={styles.addFormCard}>
+              <aside className={styles.layerColumn}>
                 <div className={styles.addFormTitle}>Add Item</div>
                 <div className={styles.inlineAddItemHeader}>
                   Add item under: {addItemParentNode ? getLocalizedName(addItemParentNode, languageMode) : 'Root layer'}
@@ -286,7 +286,7 @@ export default function ItemManagementOverlay({
                 />
               </div>
 
-              <aside className={styles.addFormCard}>
+              <aside className={styles.layerColumn}>
                 <div className={styles.addFormTitle}>Add Category</div>
                 <div className={styles.inlineAddItemHeader}>
                   Add category under: {addCategoryParentNode ? addCategoryParentNode.label : 'Select from right-click menu'}
