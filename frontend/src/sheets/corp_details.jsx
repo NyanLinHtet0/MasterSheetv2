@@ -33,7 +33,6 @@ function CorpDetails({
   languageMode = LANGUAGE_MODES.ENG,
   onToggleLanguageMode,
 }) {
-  const [isEditTableMode, setIsEditTableMode] = useState(false);
   const [selectedLayer1Key, setSelectedLayer1Key] = useState(null);
   const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
   const [selectedLayer3Key, setSelectedLayer3Key] = useState(null);
@@ -97,49 +96,10 @@ function CorpDetails({
   const selectedLayer2Node = assembledTree.nodeMap.get(selectedLayer2Key) || null;
   const selectedLayer3Node = assembledTree.nodeMap.get(selectedLayer3Key) || null;
 
-  const layer1Options = useMemo(() => {
-    return buildLayerOptions(assembledTree.childrenByKey, null).map((option) => {
-      const node = assembledTree.nodeMap.get(option.key);
-      return {
-        ...option,
-        label: node?.label || option.label,
-      };
-    });
-  }, [assembledTree]);
-
-  const layer2Options = useMemo(() => {
-    let baseOptions = [];
-
-    if (selectedLayer1Key != null) {
-      baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer1Key);
-    }
-
-    return baseOptions.map((option) => {
-      const node = assembledTree.nodeMap.get(option.key);
-      return {
-        ...option,
-        label: node?.label || option.label,
-      };
-    });
-  }, [assembledTree, selectedLayer1Key]);
-
-  const layer3Options = useMemo(() => {
-    let baseOptions = [];
-
-    if (selectedLayer2Key != null) {
-      baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer2Key);
-    } else if (selectedLayer1Key != null) {
-      baseOptions = [];
-    }
-
-    return baseOptions.map((option) => {
-      const node = assembledTree.nodeMap.get(option.key);
-      return {
-        ...option,
-        label: node?.label || option.label,
-      };
-    });
-  }, [assembledTree, selectedLayer1Key, selectedLayer2Key]);
+  const categoryRootNodes = useMemo(
+    () => buildLayerOptions(assembledTree.childrenByKey, null).map((row) => assembledTree.nodeMap.get(row.key)).filter(Boolean),
+    [assembledTree]
+  );
 
   const filteredTransactions = useMemo(() => {
     const deepestSelectedNode =
@@ -351,17 +311,20 @@ function CorpDetails({
     }
   };
 
-  const handleAddLayer3 = (name) => {
-    if (!selectedCorp || !selectedLayer2Node || !onInsertLocalTreeNode) {
+  const handleAddCategoryNode = ({ name, parentKey }) => {
+    if (!selectedCorp || !parentKey || !onInsertLocalTreeNode) {
       return;
     }
 
-    if (selectedLayer2Node.source === 'global') {
+    const parentNode = assembledTree.nodeMap.get(parentKey) || null;
+    if (!parentNode) return;
+
+    if (parentNode.source === 'global') {
       onInsertLocalTreeNode({
         corpId: selectedCorp.id,
         name,
         parentId: null,
-        globalParentId: selectedLayer2Node.globalId,
+        globalParentId: parentNode.globalId ?? null,
       });
       return;
     }
@@ -369,21 +332,8 @@ function CorpDetails({
     onInsertLocalTreeNode({
       corpId: selectedCorp.id,
       name,
-      parentId: selectedLayer2Node.localId,
-      globalParentId: selectedLayer2Node.globalId ?? null,
-    });
-  };
-
-  const handleAddLayer2 = (name) => {
-    if (!selectedCorp || !selectedLayer1Node || !onInsertLocalTreeNode) {
-      return;
-    }
-
-    onInsertLocalTreeNode({
-      corpId: selectedCorp.id,
-      name,
-      parentId: null,
-      globalParentId: selectedLayer1Node.globalId ?? null,
+      parentId: parentNode.localId,
+      globalParentId: parentNode.globalId ?? null,
     });
   };
 
@@ -401,24 +351,6 @@ function CorpDetails({
   if (selectedLayer3Node) {
     titleParts.push(selectedLayer3Node.label);
   }
-
-  const layer2OptionsWithEditState = layer2Options.map((option) => {
-    const node = assembledTree.nodeMap.get(option.key);
-
-    return {
-      ...option,
-      editable: node?.source === 'local',
-    };
-  });
-
-  const layer3OptionsWithEditState = layer3Options.map((option) => {
-    const node = assembledTree.nodeMap.get(option.key);
-
-    return {
-      ...option,
-      editable: node?.source === 'local',
-    };
-  });
 
   if (!selectedCorp) {
     return (
@@ -493,19 +425,24 @@ function CorpDetails({
           corp={safeCorp}
           onClose={() => setShowItemManagement(false)}
           onAddItem={onInsertInventoryTreeNode}
-          layer1Options={layer1Options}
-          selectedLayer1Key={selectedLayer1Key}
-          onSelectLayer1={handleSelectLayer1}
-          layer2Options={layer2OptionsWithEditState}
-          selectedLayer2Key={selectedLayer2Key}
-          onSelectLayer2={handleSelectLayer2}
-          onAddLayer2={handleAddLayer2}
-          layer3Options={layer3OptionsWithEditState}
-          selectedLayer3Key={selectedLayer3Key}
-          onSelectLayer3={handleSelectLayer3}
-          isEditTableMode={isEditTableMode}
-          onToggleEditTableMode={() => setIsEditTableMode((prev) => !prev)}
-          onAddLayer3={handleAddLayer3}
+          categoryRootNodes={categoryRootNodes}
+          categoryChildrenByKey={assembledTree.childrenByKey}
+          categoryNodeMap={assembledTree.nodeMap}
+          selectedCategoryKey={selectedLayer3Key || selectedLayer2Key || selectedLayer1Key || null}
+          onSelectCategoryNode={(nodeKey) => {
+            const node = assembledTree.nodeMap.get(nodeKey) || null;
+            if (!node) return;
+            if (node.depth <= 1) {
+              handleSelectLayer1(nodeKey);
+              return;
+            }
+            if (node.depth === 2) {
+              handleSelectLayer2(nodeKey);
+              return;
+            }
+            handleSelectLayer3(nodeKey);
+          }}
+          onAddCategoryNode={handleAddCategoryNode}
           languageMode={languageMode}
           onToggleLanguageMode={onToggleLanguageMode}
         />
