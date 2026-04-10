@@ -334,7 +334,6 @@ CREATE TABLE payment_table (
 CREATE TABLE inventory_tree (
     id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     corp_id           INT UNSIGNED NOT NULL,
-    global_parent_id  INT UNSIGNED NOT NULL,
     parent_id         INT UNSIGNED NULL,
     name              VARCHAR(255) NOT NULL,
     burmese_name      VARCHAR(255) NULL,
@@ -344,11 +343,6 @@ CREATE TABLE inventory_tree (
 
     CONSTRAINT fk_inventory_tree_corp
         FOREIGN KEY (corp_id) REFERENCES corp_data(id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_inventory_tree_global_parent
-        FOREIGN KEY (global_parent_id) REFERENCES global_tree(id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
 
