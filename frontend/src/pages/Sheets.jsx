@@ -438,6 +438,71 @@ function Sheets({
     );
   };
 
+  const handleInsertInventoryTreeNode = ({ corpId, name, burmeseName = null, parentId = null }) => {
+    if (!corpId || !name) return;
+
+    const tempId = -Math.abs(Date.now() + Math.floor(Math.random() * 1000));
+    const nextNode = {
+      id: tempId,
+      corp_id: corpId,
+      parent_id: parentId,
+      name: String(name).trim(),
+      burmese_name: burmeseName,
+      quantity: 0,
+      leaf: 1,
+      soft_delete: 0,
+    };
+
+    const corp = corps.find((row) => row.id === corpId);
+    const parentNode = (corp?.inventory_tree || []).find((row) => row.id === parentId);
+
+    setDraftData((prev) => ({
+      ...prev,
+      corp_data: (prev.corp_data || []).map((row) => {
+        if (row.id !== corpId) return row;
+
+        return {
+          ...row,
+          inventory_tree: (row.inventory_tree || []).map((item) =>
+            item.id === parentId ? { ...item, leaf: 0 } : item
+          ).concat(nextNode),
+        };
+      }),
+    }));
+
+    onQueueInsert?.('inventory_tree', tempId, {
+      corp_id: corpId,
+      parent_id: parentId,
+      name: nextNode.name,
+      burmese_name: burmeseName,
+      quantity: 0,
+      leaf: 1,
+    });
+
+    if (parentNode && Number(parentNode.leaf) !== 0) {
+      onQueueUpdate?.(
+        'inventory_tree',
+        parentNode.id,
+        {
+          corp_id: parentNode.corp_id,
+          parent_id: parentNode.parent_id,
+          name: parentNode.name,
+          burmese_name: parentNode.burmese_name ?? null,
+          quantity: parentNode.quantity ?? 0,
+          leaf: parentNode.leaf ?? 1,
+        },
+        {
+          corp_id: parentNode.corp_id,
+          parent_id: parentNode.parent_id,
+          name: parentNode.name,
+          burmese_name: parentNode.burmese_name ?? null,
+          quantity: parentNode.quantity ?? 0,
+          leaf: 0,
+        }
+      );
+    }
+  };
+
   return (
     <div className={styles.container} ref={containerRef}>
       <div
@@ -479,6 +544,7 @@ function Sheets({
         onDeleteTransaction={handleDeleteTransaction}
         onInsertLocalTreeNode={handleInsertLocalTreeNode}
         onRenameLocalTreeNode={handleRenameLocalTreeNode}
+        onInsertInventoryTreeNode={handleInsertInventoryTreeNode}
         languageMode={languageMode}
         onToggleLanguageMode={() =>
           setLanguageMode((prev) =>
