@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import styles from './ItemManagementOverlay.module.css';
 import { buildChildrenMap, buildRowMap, normalizeRows } from '../helpers/treeHelpers';
-import { LANGUAGE_MODES } from '../helpers/nameLocalization';
+import { getLocalizedName, LANGUAGE_MODES } from '../helpers/nameLocalization';
 
 const VIEW_MODES = {
   LIVE: 'live',
@@ -46,6 +46,7 @@ function renderCategoryColumn({
   setDraftName,
   onAdd,
   emptyLabel,
+  compact = false,
 }) {
   return (
     <div className={styles.categoryColumn}>
@@ -70,6 +71,22 @@ function renderCategoryColumn({
       <div className={styles.optionsList}>
         {options.length === 0 ? (
           <div className={styles.emptyList}>{emptyLabel}</div>
+        ) : compact ? (
+          <div className={styles.compactOptionsGrid}>
+            {options.map((option) => {
+              const isSelected = selectedValue === option.key;
+              return (
+                <button
+                  type="button"
+                  key={option.key}
+                  className={`${styles.compactOptionChip} ${isSelected ? styles.compactOptionChipActive : ''}`}
+                  onClick={() => onSelect?.(option.key)}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         ) : (
           options.map((option) => {
             const isSelected = selectedValue === option.key;
@@ -101,6 +118,7 @@ function renderLayerDropdown({
   emptyLabel,
   disabledLabel = '',
   formatQty,
+  languageMode,
 }) {
   if (disabledLabel) {
     return (
@@ -124,8 +142,9 @@ function renderLayerDropdown({
             className={`${styles.layerCard} ${isOpen ? styles.layerCardActive : ''}`}
             onClick={onToggle}
           >
-            <div className={styles.layerCardName}>{selectedNode?.name || `Select ${title}`}</div>
-            <div className={styles.layerCardSub}>{selectedNode?.burmese_name || '-'}</div>
+            <div className={styles.layerCardName}>
+              {selectedNode ? getLocalizedName(selectedNode, languageMode) : `Select ${title}`}
+            </div>
             <div className={styles.layerCardMeta}>
               {selectedNode ? formatQty(selectedNode.quantity) : formatQty(0)} {isOpen ? '▲' : '▼'}
             </div>
@@ -143,8 +162,7 @@ function renderLayerDropdown({
                     className={`${styles.layerCard} ${isSelected ? styles.layerCardActive : styles.layerCardPassive}`}
                     onClick={() => onSelect(node)}
                   >
-                    <div className={styles.layerCardName}>{node.name}</div>
-                    <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
+                    <div className={styles.layerCardName}>{getLocalizedName(node, languageMode)}</div>
                     <div className={styles.layerCardMeta}>{formatQty(node.quantity)}</div>
                   </button>
                 );
@@ -233,6 +251,10 @@ export default function ItemManagementOverlay({
     if (layer3Nodes.length === 0) return null;
     return layer3Nodes.find((node) => String(node.id) === previewLayer3Id) || activePath[2] || null;
   }, [activePath, layer3Nodes, previewLayer3Id]);
+  const showLayer2Board = activeLayer1 != null;
+  const showLayer3Board = layer2ViewNode != null;
+  const showLayer2Category = selectedLayer1Key != null;
+  const showLayer3Category = selectedLayer2Key != null;
 
   const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
@@ -298,7 +320,16 @@ export default function ItemManagementOverlay({
       <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
         <div className={styles.headerRow}>
           <h3>Settings</h3>
-          <button type="button" onClick={onClose} className={styles.closeButton}>✕</button>
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.languageToggleButton}
+              onClick={() => onToggleLanguageMode?.()}
+            >
+              {languageMode === LANGUAGE_MODES.ENG ? 'ENG' : 'BUR'}
+            </button>
+            <button type="button" onClick={onClose} className={styles.closeButton}>✕</button>
+          </div>
         </div>
 
         <section className={styles.sectionBlock}>
@@ -339,9 +370,10 @@ export default function ItemManagementOverlay({
               onSelect: handleSelectLayer1Node,
               emptyLabel: 'No layer 1 items yet.',
               formatQty,
+              languageMode,
             })}
 
-            {renderLayerDropdown({
+            {showLayer2Board && renderLayerDropdown({
               title: 'Layer 2',
               nodes: layer2Nodes,
               selectedNode: layer2ViewNode,
@@ -349,11 +381,11 @@ export default function ItemManagementOverlay({
               onToggle: () => toggleLayerDropdown('layer2'),
               onSelect: handleSelectLayer2Node,
               emptyLabel: 'No layer 2 items under this layer 1 item.',
-              disabledLabel: activeLayer1 == null ? 'Select a layer 1 item first.' : '',
               formatQty,
+              languageMode,
             })}
 
-            {renderLayerDropdown({
+            {showLayer3Board && renderLayerDropdown({
               title: 'Layer 3',
               nodes: layer3Nodes,
               selectedNode: layer3ViewNode,
@@ -361,8 +393,8 @@ export default function ItemManagementOverlay({
               onToggle: () => toggleLayerDropdown('layer3'),
               onSelect: handleSelectLayer3Node,
               emptyLabel: 'No layer 3 items under this layer 2 item.',
-              disabledLabel: layer2ViewNode == null ? 'Select a layer 2 item first.' : '',
               formatQty,
+              languageMode,
             })}
           </div>
         </section>
@@ -371,13 +403,6 @@ export default function ItemManagementOverlay({
           <div className={styles.sectionHeader}>
             <h4>Category Management</h4>
             <div className={styles.headerActions}>
-              <button
-                type="button"
-                className={styles.languageToggleButton}
-                onClick={() => onToggleLanguageMode?.()}
-              >
-                {languageMode === LANGUAGE_MODES.ENG ? 'ENG' : 'BUR'}
-              </button>
               <button
                 type="button"
                 className={`${styles.editTableButton} ${isEditTableMode ? styles.editTableButtonActive : ''}`}
@@ -411,7 +436,7 @@ export default function ItemManagementOverlay({
               emptyLabel: 'No layer 1 items.',
             })}
 
-            {renderCategoryColumn({
+            {showLayer2Category && renderCategoryColumn({
               title: 'Layer 2',
               options: layer2Options,
               selectedValue: selectedLayer2Key,
@@ -423,7 +448,7 @@ export default function ItemManagementOverlay({
               emptyLabel: 'No layer 2 items.',
             })}
 
-            {renderCategoryColumn({
+            {showLayer3Category && renderCategoryColumn({
               title: 'Layer 3',
               options: layer3Options,
               selectedValue: selectedLayer3Key,
@@ -433,6 +458,7 @@ export default function ItemManagementOverlay({
               setDraftName: setNewLayer3Name,
               onAdd: handleAddLayer3,
               emptyLabel: 'No layer 3 items.',
+              compact: true,
             })}
           </div>
         </section>
