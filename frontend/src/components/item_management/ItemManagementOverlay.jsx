@@ -22,6 +22,20 @@ function buildItemPath(node, rowMap) {
   return labels.join(' > ');
 }
 
+function getAncestorPath(node, rowMap) {
+  const chain = [];
+  let current = node;
+  let guard = 0;
+
+  while (current && guard < 1000) {
+    chain.unshift(current);
+    current = current.parent_id != null ? rowMap.get(current.parent_id) : null;
+    guard += 1;
+  }
+
+  return chain;
+}
+
 function renderCategoryColumn({
   title,
   options = [],
@@ -126,6 +140,26 @@ export default function ItemManagementOverlay({
     return rows;
   }, [childrenByParent, rowMap]);
 
+  const activeParentNode = useMemo(() => {
+    if (parentId === '') return null;
+    return rowMap.get(Number(parentId)) || null;
+  }, [parentId, rowMap]);
+
+  const activePath = useMemo(
+    () => (activeParentNode ? getAncestorPath(activeParentNode, rowMap) : []),
+    [activeParentNode, rowMap],
+  );
+
+  const layer1Nodes = childrenByParent.get(null) || [];
+  const activeLayer1 = activePath[0] || null;
+  const layer2Nodes = activeLayer1 ? childrenByParent.get(activeLayer1.id) || [] : [];
+  const activeLayer2 = activePath[1] || null;
+  const layer3Nodes = activeLayer2 ? childrenByParent.get(activeLayer2.id) || [] : [];
+
+  const rootLayerLabel = activeParentNode
+    ? `Layer ${activePath.length} • ${buildItemPath(activeParentNode, rowMap)}`
+    : 'Layer 0 • Root';
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -188,43 +222,72 @@ export default function ItemManagementOverlay({
             <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
               <option value="">Root layer</option>
               {rowsWithDepth.map((row) => (
-                <option key={row.id} value={row.id}>{row.path}</option>
+                <option key={row.id} value={row.id}>{`Layer ${row.depth + 1} • ${row.path}`}</option>
               ))}
             </select>
 
             <button type="submit">Add Item</button>
           </form>
 
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Parent</th>
-                  <th>Item</th>
-                  <th>Burmese</th>
-                  <th>Qty</th>
-                  <th>Leaf</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rowsWithDepth.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.id}</td>
-                    <td>{row.parent_id ?? '-'}</td>
-                    <td>{row.path}</td>
-                    <td>{row.burmese_name || '-'}</td>
-                    <td>{row.quantity ?? 0}</td>
-                    <td>{Number(row.leaf) === 1 ? 'Yes' : 'No'}</td>
-                  </tr>
-                ))}
-                {rowsWithDepth.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className={styles.empty}>No inventory items yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className={styles.activeTarget}>Current target: {rootLayerLabel}</div>
+
+          <div className={styles.layerBoard}>
+            <div className={styles.layerColumn}>
+              <div className={styles.layerTitle}>Layer 1</div>
+              {layer1Nodes.length === 0 && <div className={styles.emptyList}>No layer 1 items yet.</div>}
+              {layer1Nodes.map((node) => (
+                <button
+                  type="button"
+                  key={node.id}
+                  className={`${styles.layerCard} ${activeLayer1?.id === node.id ? styles.layerCardActive : ''}`}
+                  onClick={() => setParentId(String(node.id))}
+                >
+                  <div className={styles.layerCardName}>{node.name}</div>
+                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
+                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.layerColumn}>
+              <div className={styles.layerTitle}>Layer 2</div>
+              {activeLayer1 == null && <div className={styles.emptyList}>Select a layer 1 item first.</div>}
+              {activeLayer1 != null && layer2Nodes.length === 0 && (
+                <div className={styles.emptyList}>No layer 2 items under this layer 1 item.</div>
+              )}
+              {layer2Nodes.map((node) => (
+                <button
+                  type="button"
+                  key={node.id}
+                  className={`${styles.layerCard} ${activeLayer2?.id === node.id ? styles.layerCardActive : ''}`}
+                  onClick={() => setParentId(String(node.id))}
+                >
+                  <div className={styles.layerCardName}>{node.name}</div>
+                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
+                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.layerColumn}>
+              <div className={styles.layerTitle}>Layer 3</div>
+              {activeLayer2 == null && <div className={styles.emptyList}>Select a layer 2 item first.</div>}
+              {activeLayer2 != null && layer3Nodes.length === 0 && (
+                <div className={styles.emptyList}>No layer 3 items under this layer 2 item.</div>
+              )}
+              {layer3Nodes.map((node) => (
+                <button
+                  type="button"
+                  key={node.id}
+                  className={styles.layerCard}
+                  onClick={() => setParentId(String(node.id))}
+                >
+                  <div className={styles.layerCardName}>{node.name}</div>
+                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
+                  <div className={styles.layerCardMeta}>Qty: {node.quantity ?? 0}</div>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
