@@ -66,6 +66,8 @@ export default function CategoryTreePanel({
   addParentNode = null,
   newItemName,
   setNewItemName,
+  newItemBurmeseName,
+  setNewItemBurmeseName,
   onCancelInlineAdd,
 }) {
   const inlineForm = isAddingInline ? (
@@ -79,6 +81,12 @@ export default function CategoryTreePanel({
         value={newItemName}
         onChange={(event) => setNewItemName(event.target.value)}
         autoFocus
+      />
+      <input
+        type="text"
+        placeholder="Burmese name (optional)"
+        value={newItemBurmeseName}
+        onChange={(event) => setNewItemBurmeseName(event.target.value)}
       />
       <div className={styles.inlineAddItemActions}>
         <button type="button" onClick={onCancelInlineAdd}>Cancel</button>

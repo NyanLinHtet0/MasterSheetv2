@@ -311,7 +311,7 @@ function CorpDetails({
     }
   };
 
-  const handleAddCategoryNode = ({ name, parentKey }) => {
+  const handleAddCategoryNode = ({ name, burmeseName = null, parentKey }) => {
     if (!selectedCorp || !parentKey || !onInsertLocalTreeNode) {
       return;
     }
@@ -323,6 +323,7 @@ function CorpDetails({
       onInsertLocalTreeNode({
         corpId: selectedCorp.id,
         name,
+        burmeseName,
         parentId: null,
         globalParentId: parentNode.globalId ?? null,
       });
@@ -332,6 +333,7 @@ function CorpDetails({
     onInsertLocalTreeNode({
       corpId: selectedCorp.id,
       name,
+      burmeseName,
       parentId: parentNode.localId,
       globalParentId: parentNode.globalId ?? null,
     });
