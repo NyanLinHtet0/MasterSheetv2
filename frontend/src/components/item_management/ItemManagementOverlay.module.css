@@ -42,6 +42,19 @@
   padding: 4px 10px;
 }
 
+
+.managementGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .managementGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sectionBlock {
   background: rgba(148, 163, 184, 0.08);
   border-radius: 12px;

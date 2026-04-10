@@ -100,20 +100,22 @@ export default function CategoryTreePanel({
   }
 
   return (
-    <div className={styles.treePanel}>
-      {rootNodes.map((node) => (
-        <CategoryTreeNode
-          key={node.key}
-          node={node}
-          childrenByParent={childrenByParent}
-          expandedIds={effectiveExpandedIds}
-          onToggleExpand={toggleTreeNode}
-          onSelect={onSelectNode}
-          selectedKey={selectedKey}
-          onContextMenu={onContextMenu}
-        />
-      ))}
+    <>
+      <div className={styles.treePanel}>
+        {rootNodes.map((node) => (
+          <CategoryTreeNode
+            key={node.key}
+            node={node}
+            childrenByParent={childrenByParent}
+            expandedIds={effectiveExpandedIds}
+            onToggleExpand={toggleTreeNode}
+            onSelect={onSelectNode}
+            selectedKey={selectedKey}
+            onContextMenu={onContextMenu}
+          />
+        ))}
+      </div>
       {inlineForm}
-    </div>
+    </>
   );
 }

@@ -189,98 +189,100 @@ export default function ItemManagementOverlay({
           </div>
         </div>
 
-        <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <h4>Item Management</h4>
-          </div>
+        <div className={styles.managementGrid}>
+          <section className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <h4>Item Management</h4>
+            </div>
 
-          <div className={styles.layerBoard}>
-            <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Folder Tree</div>
-              <TreePanel
-                rootNodes={rootNodes}
-                childrenByParent={childrenByParent}
-                effectiveExpandedIds={effectiveExpandedIds}
-                toggleTreeNode={toggleTreeNode}
-                handleSelectTreeNode={handleSelectTreeNode}
-                parentId={parentId}
-                languageMode={languageMode}
-                formatQty={formatQty}
-                handleTreeContextMenu={handleTreeContextMenu}
-                onStartTree={() => {
-                  setParentId('');
-                  setNewItemParentId(null);
-                  setIsAddingItemInline(true);
-                  setContextMenu(null);
-                  setNewItemName('');
-                  setNewItemBurmeseName('');
-                }}
-                isAddingItemInline={isAddingItemInline}
-                addItemParentNode={addItemParentNode}
-                onInlineAddSubmit={handleSubmit}
-                newItemName={newItemName}
-                setNewItemName={setNewItemName}
-                newItemBurmeseName={newItemBurmeseName}
-                setNewItemBurmeseName={setNewItemBurmeseName}
-                onCancelInlineAdd={() => {
-                  setIsAddingItemInline(false);
-                  setNewItemParentId(null);
-                  setNewItemName('');
-                  setNewItemBurmeseName('');
-                }}
-              />
-              <div className={styles.treeHint}>
-                Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
+            <div className={styles.layerBoard}>
+              <div className={styles.layerColumn}>
+                <div className={styles.layerTitle}>Folder Tree</div>
+                <TreePanel
+                  rootNodes={rootNodes}
+                  childrenByParent={childrenByParent}
+                  effectiveExpandedIds={effectiveExpandedIds}
+                  toggleTreeNode={toggleTreeNode}
+                  handleSelectTreeNode={handleSelectTreeNode}
+                  parentId={parentId}
+                  languageMode={languageMode}
+                  formatQty={formatQty}
+                  handleTreeContextMenu={handleTreeContextMenu}
+                  onStartTree={() => {
+                    setParentId('');
+                    setNewItemParentId(null);
+                    setIsAddingItemInline(true);
+                    setContextMenu(null);
+                    setNewItemName('');
+                    setNewItemBurmeseName('');
+                  }}
+                  isAddingItemInline={isAddingItemInline}
+                  addItemParentNode={addItemParentNode}
+                  onInlineAddSubmit={handleSubmit}
+                  newItemName={newItemName}
+                  setNewItemName={setNewItemName}
+                  newItemBurmeseName={newItemBurmeseName}
+                  setNewItemBurmeseName={setNewItemBurmeseName}
+                  onCancelInlineAdd={() => {
+                    setIsAddingItemInline(false);
+                    setNewItemParentId(null);
+                    setNewItemName('');
+                    setNewItemBurmeseName('');
+                  }}
+                />
+                <div className={styles.treeHint}>
+                  Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <h4>Category Management</h4>
-          </div>
-
-          <div className={styles.layerBoard}>
-            <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Folder Tree</div>
-              <CategoryTreePanel
-                rootNodes={categoryRootNodes}
-                childrenByParent={categoryChildrenByKey}
-                effectiveExpandedIds={effectiveCategoryExpandedIds}
-                toggleTreeNode={toggleCategoryTreeNode}
-                onSelectNode={(node) => {
-                  onSelectCategoryNode?.(node.key);
-                  setCategoryContextMenu(null);
-                }}
-                selectedKey={selectedCategoryKey}
-                onContextMenu={(event, node) => {
-                  event.preventDefault();
-                  setCategoryContextMenu({
-                    x: event.clientX,
-                    y: event.clientY,
-                    node,
-                  });
-                }}
-                onInlineAddSubmit={handleAddCategory}
-                isAddingInline={isAddingCategoryInline}
-                addParentNode={
-                  newCategoryParentKey ? categoryNodeMap.get(newCategoryParentKey) || null : null
-                }
-                newItemName={newCategoryName}
-                setNewItemName={setNewCategoryName}
-                newItemBurmeseName={newCategoryBurmeseName}
-                setNewItemBurmeseName={setNewCategoryBurmeseName}
-                onCancelInlineAdd={() => {
-                  setIsAddingCategoryInline(false);
-                  setNewCategoryParentKey(null);
-                  setNewCategoryName('');
-                  setNewCategoryBurmeseName('');
-                }}
-              />
+          <section className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <h4>Category Management</h4>
             </div>
-          </div>
-        </section>
+
+            <div className={styles.layerBoard}>
+              <div className={styles.layerColumn}>
+                <div className={styles.layerTitle}>Folder Tree</div>
+                <CategoryTreePanel
+                  rootNodes={categoryRootNodes}
+                  childrenByParent={categoryChildrenByKey}
+                  effectiveExpandedIds={effectiveCategoryExpandedIds}
+                  toggleTreeNode={toggleCategoryTreeNode}
+                  onSelectNode={(node) => {
+                    onSelectCategoryNode?.(node.key);
+                    setCategoryContextMenu(null);
+                  }}
+                  selectedKey={selectedCategoryKey}
+                  onContextMenu={(event, node) => {
+                    event.preventDefault();
+                    setCategoryContextMenu({
+                      x: event.clientX,
+                      y: event.clientY,
+                      node,
+                    });
+                  }}
+                  onInlineAddSubmit={handleAddCategory}
+                  isAddingInline={isAddingCategoryInline}
+                  addParentNode={
+                    newCategoryParentKey ? categoryNodeMap.get(newCategoryParentKey) || null : null
+                  }
+                  newItemName={newCategoryName}
+                  setNewItemName={setNewCategoryName}
+                  newItemBurmeseName={newCategoryBurmeseName}
+                  setNewItemBurmeseName={setNewCategoryBurmeseName}
+                  onCancelInlineAdd={() => {
+                    setIsAddingCategoryInline(false);
+                    setNewCategoryParentKey(null);
+                    setNewCategoryName('');
+                    setNewCategoryBurmeseName('');
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       {contextMenu && (

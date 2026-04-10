@@ -123,22 +123,24 @@ export default function TreePanel({
   }
 
   return (
-    <div className={styles.treePanel}>
-      {rootNodes.map((node) => (
-        <TreeNode
-          key={node.id}
-          node={node}
-          childrenByParent={childrenByParent}
-          expandedIds={effectiveExpandedIds}
-          onToggleExpand={toggleTreeNode}
-          onSelect={handleSelectTreeNode}
-          selectedId={parentId === '' ? null : Number(parentId)}
-          languageMode={languageMode}
-          formatQty={formatQty}
-          onContextMenu={handleTreeContextMenu}
-        />
-      ))}
+    <>
+      <div className={styles.treePanel}>
+        {rootNodes.map((node) => (
+          <TreeNode
+            key={node.id}
+            node={node}
+            childrenByParent={childrenByParent}
+            expandedIds={effectiveExpandedIds}
+            onToggleExpand={toggleTreeNode}
+            onSelect={handleSelectTreeNode}
+            selectedId={parentId === '' ? null : Number(parentId)}
+            languageMode={languageMode}
+            formatQty={formatQty}
+            onContextMenu={handleTreeContextMenu}
+          />
+        ))}
+      </div>
       {inlineForm}
-    </div>
+    </>
   );
 }
