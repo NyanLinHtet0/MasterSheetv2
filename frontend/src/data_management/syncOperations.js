@@ -17,8 +17,24 @@ function buildChangedData(oldData, newData) {
   return { changedOld, changedNew };
 }
 
+function normalizeTableName(tableName) {
+  const normalized = String(tableName || '').trim();
+  const aliases = {
+    localTree: 'local_tree',
+    inventoryTree: 'inventory_tree',
+    globalTree: 'global_tree',
+    corpData: 'corp_data',
+    financialSummary: 'financial_summary',
+    linkTable: 'link_table',
+    paymentTable: 'payment_table',
+  };
+
+  return aliases[normalized] || normalized;
+}
+
 export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, newData) {
-  const entityKey = `${tableName}_${rowId}_UPDATE`;
+  const normalizedTableName = normalizeTableName(tableName);
+  const entityKey = `${normalizedTableName}_${rowId}_UPDATE`;
 
   setDirtyMap((prev) => {
     const next = { ...prev };
@@ -33,7 +49,7 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
     }
 
     next[entityKey] = {
-      table_name: tableName,
+      table_name: normalizedTableName,
       row_id: rowId,
       action_type: 'UPDATE',
       changed_data: {
@@ -47,13 +63,14 @@ export function queueUpdate(dirtyMap, setDirtyMap, tableName, rowId, oldData, ne
 }
 
 export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) {
+  const normalizedTableName = normalizeTableName(tableName);
   const queueSoftDelete = (oldRow) => {
     if (!oldRow) return;
 
     queueUpdate(
       dirtyMap,
       setDirtyMap,
-      tableName,
+      normalizedTableName,
       rowId,
       oldRow,
       {
@@ -63,7 +80,7 @@ export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) 
     );
   };
 
-  if (tableName === 'corp_data') {
+  if (normalizedTableName === 'corp_data') {
     const corp = draftData?.corp_data?.find((row) => row.id === rowId);
     queueSoftDelete(corp);
 
@@ -84,20 +101,21 @@ export function queueDelete(dirtyMap, setDirtyMap, draftData, tableName, rowId) 
     return;
   }
 
-  const row = tableName === 'transactions'
+  const row = normalizedTableName === 'transactions'
     ? draftData?.corp_data?.flatMap((corp) => corp.transactions || []).find((item) => item.id === rowId)
-    : draftData?.[tableName]?.find?.((item) => item.id === rowId);
+    : draftData?.[normalizedTableName]?.find?.((item) => item.id === rowId);
 
   queueSoftDelete(row);
 }
 
 export function queueInsert(setDirtyMap, tableName, rowId, changes) {
-  const entityKey = `${tableName}_${rowId}_INSERT`;
+  const normalizedTableName = normalizeTableName(tableName);
+  const entityKey = `${normalizedTableName}_${rowId}_INSERT`;
 
   setDirtyMap((prev) => ({
-    ...prev,
-    [entityKey]: {
-      table_name: tableName,
+      ...prev,
+      [entityKey]: {
+      table_name: normalizedTableName,
       row_id: rowId,
       action_type: 'INSERT',
       changes,
@@ -106,12 +124,13 @@ export function queueInsert(setDirtyMap, tableName, rowId, changes) {
 }
 
 export function removeDirtyEntry(setDirtyMap, actionType, tableName, rowId) {
-  const entityKey = `${tableName}_${rowId}_${actionType}`;
+  const normalizedTableName = normalizeTableName(tableName);
+  const entityKey = `${normalizedTableName}_${rowId}_${actionType}`;
 
   setDirtyMap((prev) => {
     const next = { ...prev };
     delete next[entityKey];
-    delete next[`${tableName}_${rowId}_UPDATE`];
+    delete next[`${normalizedTableName}_${rowId}_UPDATE`];
     return next;
   });
 }

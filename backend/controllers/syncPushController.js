@@ -102,6 +102,22 @@ function sanitizeFields(tableName, obj = {}) {
   return cleaned;
 }
 
+function normalizeTableName(tableName) {
+  const normalized = String(tableName || '').trim();
+
+  const aliases = {
+    localTree: 'local_tree',
+    inventoryTree: 'inventory_tree',
+    globalTree: 'global_tree',
+    corpData: 'corp_data',
+    financialSummary: 'financial_summary',
+    linkTable: 'link_table',
+    paymentTable: 'payment_table',
+  };
+
+  return aliases[normalized] || normalized;
+}
+
 function resolveForeignKeys(tableName, rowData, mapper) {
   const next = { ...rowData };
 
@@ -153,7 +169,9 @@ exports.pushChanges = async (req, res) => {
     ]);
 
     for (const action of actions) {
-      if (!allowedTables.has(action.table_name)) {
+      const normalizedTableName = normalizeTableName(action.table_name);
+
+      if (!allowedTables.has(normalizedTableName)) {
         throw new Error(`Invalid table name: ${action.table_name}`);
       }
 
@@ -163,18 +181,18 @@ exports.pushChanges = async (req, res) => {
       let newData = null;
 
       if (action.action_type === 'INSERT') {
-        let insertData = sanitizeFields(action.table_name, action.changes || {});
-        insertData = resolveForeignKeys(action.table_name, insertData, mapper);
+        let insertData = sanitizeFields(normalizedTableName, action.changes || {});
+        insertData = resolveForeignKeys(normalizedTableName, insertData, mapper);
 
         const [result] = await connection.query(
-          `INSERT INTO ${action.table_name} SET ?`,
+          `INSERT INTO ${normalizedTableName} SET ?`,
           [insertData]
         );
 
         auditRowId = result.insertId;
         mapper.mapId(action.row_id, auditRowId);
         insertedIdMappings.push({
-          table_name: action.table_name,
+          table_name: normalizedTableName,
           temp_id: Number(action.row_id),
           real_id: Number(auditRowId),
         });
@@ -183,21 +201,21 @@ exports.pushChanges = async (req, res) => {
 
       else if (action.action_type === 'UPDATE') {
         const [existingRows] = await connection.query(
-          `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
+          `SELECT * FROM ${normalizedTableName} WHERE id = ? LIMIT 1`,
           [resolvedRowId]
         );
 
         oldData = existingRows[0] || null;
 
         let updateFields = sanitizeFields(
-          action.table_name,
+          normalizedTableName,
           action.changed_data?.new || {}
         );
-        updateFields = resolveForeignKeys(action.table_name, updateFields, mapper);
+        updateFields = resolveForeignKeys(normalizedTableName, updateFields, mapper);
 
         if (Object.keys(updateFields).length > 0) {
           await connection.query(
-            `UPDATE ${action.table_name} SET ? WHERE id = ?`,
+            `UPDATE ${normalizedTableName} SET ? WHERE id = ?`,
             [updateFields, resolvedRowId]
           );
           newData = updateFields;
@@ -206,14 +224,14 @@ exports.pushChanges = async (req, res) => {
 
       else if (action.action_type === 'DELETE') {
         const [existingRows] = await connection.query(
-          `SELECT * FROM ${action.table_name} WHERE id = ? LIMIT 1`,
+          `SELECT * FROM ${normalizedTableName} WHERE id = ? LIMIT 1`,
           [resolvedRowId]
         );
 
         oldData = existingRows[0] || null;
 
         await connection.query(
-          `UPDATE ${action.table_name} SET soft_delete = 1 WHERE id = ?`,
+          `UPDATE ${normalizedTableName} SET soft_delete = 1 WHERE id = ?`,
           [resolvedRowId]
         );
 
@@ -225,7 +243,7 @@ exports.pushChanges = async (req, res) => {
           (table_name, row_id, action_type, old_data, new_data)
         VALUES (?, ?, ?, ?, ?)`,
         [
-          action.table_name,
+          normalizedTableName,
           auditRowId,
           String(action.action_type).toUpperCase(),
           oldData ? JSON.stringify(oldData) : null,
