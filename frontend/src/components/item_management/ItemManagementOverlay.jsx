@@ -463,42 +463,6 @@ export default function ItemManagementOverlay({
                 Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
               </div>
             </div>
-
-            {renderLayerDropdown({
-              title: 'Layer 1',
-              nodes: layer1Nodes,
-              selectedNode: activeLayer1,
-              isOpen: openLayerKey === 'layer1',
-              onToggle: () => toggleLayerDropdown('layer1'),
-              onSelect: handleSelectLayer1Node,
-              emptyLabel: 'No layer 1 items yet.',
-              formatQty,
-              languageMode,
-            })}
-
-            {showLayer2Board && renderLayerDropdown({
-              title: 'Layer 2',
-              nodes: layer2Nodes,
-              selectedNode: layer2ViewNode,
-              isOpen: openLayerKey === 'layer2',
-              onToggle: () => toggleLayerDropdown('layer2'),
-              onSelect: handleSelectLayer2Node,
-              emptyLabel: 'No layer 2 items under this layer 1 item.',
-              formatQty,
-              languageMode,
-            })}
-
-            {showLayer3Board && renderLayerDropdown({
-              title: 'Layer 3',
-              nodes: layer3Nodes,
-              selectedNode: layer3ViewNode,
-              isOpen: openLayerKey === 'layer3',
-              onToggle: () => toggleLayerDropdown('layer3'),
-              onSelect: handleSelectLayer3Node,
-              emptyLabel: 'No layer 3 items under this layer 2 item.',
-              formatQty,
-              languageMode,
-            })}
           </div>
         </section>
 
