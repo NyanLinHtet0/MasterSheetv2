@@ -209,6 +209,9 @@ function Sheets({
         isInverse: selectedCorp.inverse,
         globalTreeId: txData.global_tree_id ?? 1,
         localTreeId: txData.local_tree_id ?? null,
+        invenId: txData.inven_id ?? null,
+        invenFlow: txData.inven_flow ?? null,
+        invenQty: txData.inven_qty ?? null,
       }
     );
 

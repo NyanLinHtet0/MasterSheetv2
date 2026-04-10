@@ -41,6 +41,7 @@ export default function TransactionForm({
   globalTree = [],
   localTree = [],
   languageMode = LANGUAGE_MODES.ENG,
+  inventoryOptions = [],
 }) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -53,6 +54,9 @@ export default function TransactionForm({
   const [layer1Key, setLayer1Key] = useState('');
   const [layer2Key, setLayer2Key] = useState('');
   const [layer3Key, setLayer3Key] = useState('');
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [inventoryFlow, setInventoryFlow] = useState('');
+  const [inventoryQuantity, setInventoryQuantity] = useState('');
 
   const dayInputRef = useRef(null);
   const descriptionInputRef = useRef(null);
@@ -255,6 +259,9 @@ export default function TransactionForm({
     setLayer1Key('');
     setLayer2Key('');
     setLayer3Key('');
+    setInventoryItemId('');
+    setInventoryFlow('');
+    setInventoryQuantity('');
   };
 
   const processSubmit = (isShiftEnter) => {
@@ -292,6 +299,12 @@ export default function TransactionForm({
       tx_status: 1,
       global_tree_id: selectedTagNode?.globalId ?? null,
       local_tree_id: selectedTagNode?.localId ?? null,
+      inven_id: inventoryItemId === '' ? null : Number(inventoryItemId),
+      inven_flow: inventoryFlow === '' ? null : Number(inventoryFlow),
+      inven_qty:
+        inventoryQuantity === '' || !isUsableNumberInput(inventoryQuantity)
+          ? null
+          : parseEditableNumber(inventoryQuantity, null),
       ...(isForeign && {
         rate: calculated.rate,
       }),
@@ -430,6 +443,44 @@ export default function TransactionForm({
             />
           </div>
         )}
+
+        <div className={styles.singleFieldRow}>
+          <div className={styles.tagFields}>
+            <select
+              className={styles.tagSelect}
+              value={inventoryItemId}
+              onChange={(e) => setInventoryItemId(e.target.value)}
+            >
+              <option value="">Item Tag</option>
+              {inventoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className={styles.tagSelect}
+              value={inventoryFlow}
+              onChange={(e) => setInventoryFlow(e.target.value)}
+            >
+              <option value="">Item In/Out</option>
+              <option value="1">In</option>
+              <option value="-1">Out</option>
+            </select>
+
+            <TransactionNumberField
+              className={styles.tagSelect}
+              placeholder="Item Quantity"
+              value={formatDisplayValue(inventoryQuantity)}
+              onChange={(e) => {
+                const rawValue = cleanNumericInput(e.target.value);
+                if (!isValidPartialNumber(rawValue)) return;
+                setInventoryQuantity(rawValue);
+              }}
+            />
+          </div>
+        </div>
 
         <button type="submit" className={styles.submitBtn}>
           Add Transaction

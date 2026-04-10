@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import currency from 'currency.js';
 import styles from './corp_list.module.css';
 import AddCorpForm from './add_corp_form';
 import CorpDropdown from '../components/CorpDropdown';
 import TransactionForm from '../components/add_transaction_form/TransactionForm';
+import { buildRowMap, normalizeRows } from '../components/helpers/treeHelpers';
+import { getLocalizedName } from '../components/helpers/nameLocalization';
 
 function CorpList({
   showAddCorpForm,
@@ -20,6 +23,31 @@ function CorpList({
   const grandTotal = corps.reduce((sum, corp) => {
     return currency(sum).add(corp.current_balance || 0).value;
   }, 0);
+
+  const inventoryOptions = useMemo(() => {
+    const rows = normalizeRows(selectedCorp?.inventory_tree || []);
+    const rowMap = buildRowMap(rows);
+
+    const makePath = (node) => {
+      const parts = [];
+      let current = node;
+      let guard = 0;
+
+      while (current && guard < 1000) {
+        parts.unshift(
+          getLocalizedName(current, languageMode) || current.name || `ID ${current.id}`
+        );
+        current = current.parent_id != null ? rowMap.get(current.parent_id) : null;
+        guard += 1;
+      }
+
+      return parts.join(' > ');
+    };
+
+    return rows
+      .filter((row) => Number(row.leaf) === 1)
+      .map((row) => ({ value: String(row.id), label: makePath(row) }));
+  }, [selectedCorp, languageMode]);
 
   return (
     <div className={styles.corpList}>
@@ -68,6 +96,7 @@ function CorpList({
             globalTree={globalTree}
             localTree={selectedCorp.local_tree || []}
             languageMode={languageMode}
+            inventoryOptions={inventoryOptions}
           />
         </div>
       )}
