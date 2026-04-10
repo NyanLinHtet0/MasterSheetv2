@@ -77,41 +77,6 @@ function renderCategoryColumn({
   );
 }
 
-function renderInventoryColumn({
-  title,
-  rows,
-  selectedId,
-  onSelect,
-  emptyLabel,
-}) {
-  return (
-    <div className={styles.categoryColumn}>
-      <div className={styles.sectionTitle}>{title}</div>
-      <div className={styles.optionsList}>
-        {rows.length === 0 ? (
-          <div className={styles.emptyList}>{emptyLabel}</div>
-        ) : (
-          rows.map((row) => {
-            const isSelected = selectedId === String(row.id);
-            return (
-              <button
-                type="button"
-                key={row.id}
-                className={`${styles.inventoryCard} ${isSelected ? styles.inventoryCardActive : ''}`}
-                onClick={() => onSelect(String(row.id))}
-              >
-                <div className={styles.inventoryCardTitle}>{row.name || `ID ${row.id}`}</div>
-                <div className={styles.inventoryCardSub}>{row.burmese_name || '-'}</div>
-                <div className={styles.inventoryCardQty}>Qty: {row.quantity ?? 0}</div>
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function ItemManagementOverlay({
   corp,
   onClose,
@@ -138,9 +103,6 @@ export default function ItemManagementOverlay({
   const [newLayer2Name, setNewLayer2Name] = useState('');
   const [newLayer3Name, setNewLayer3Name] = useState('');
   const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
-  const [selectedItemLayer1Id, setSelectedItemLayer1Id] = useState('');
-  const [selectedItemLayer2Id, setSelectedItemLayer2Id] = useState('');
-  const [selectedItemLayer3Id, setSelectedItemLayer3Id] = useState('');
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -284,6 +246,22 @@ export default function ItemManagementOverlay({
     }
   };
 
+  const handleAddLayer2 = () => {
+    const nextName = newLayer2Name.trim();
+    if (!nextName || !onAddLayer2) return;
+
+    onAddLayer2(nextName);
+    setNewLayer2Name('');
+  };
+
+  const handleAddLayer3 = () => {
+    const nextName = newLayer3Name.trim();
+    if (!nextName || !onAddLayer3) return;
+
+    onAddLayer3(nextName);
+    setNewLayer3Name('');
+  };
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
@@ -313,39 +291,43 @@ export default function ItemManagementOverlay({
             <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
               <option value="">Root layer</option>
               {rowsWithDepth.map((row) => (
-                <option key={row.id} value={row.id}>{`${row.path} (${`Layer ${row.depth + 1}`})`}</option>
+                <option key={row.id} value={row.id}>{row.path}</option>
               ))}
             </select>
 
             <button type="submit">Add Item</button>
           </form>
 
-          <div className={styles.selectedLayerHint}>Current root layer target: {selectedItemDepthLabel}</div>
-
-          <div className={styles.categoryColumns}>
-            {renderInventoryColumn({
-              title: 'Layer 1',
-              rows: itemLayer1Rows,
-              selectedId: selectedItemLayer1Id,
-              onSelect: handleSelectItemLayer1,
-              emptyLabel: 'No layer 1 items.',
-            })}
-
-            {renderInventoryColumn({
-              title: 'Layer 2',
-              rows: itemLayer2Rows,
-              selectedId: selectedItemLayer2Id,
-              onSelect: handleSelectItemLayer2,
-              emptyLabel: 'No layer 2 items.',
-            })}
-
-            {renderInventoryColumn({
-              title: 'Layer 3',
-              rows: itemLayer3Rows,
-              selectedId: selectedItemLayer3Id,
-              onSelect: handleSelectItemLayer3,
-              emptyLabel: 'No layer 3 items.',
-            })}
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Parent</th>
+                  <th>Item</th>
+                  <th>Burmese</th>
+                  <th>Qty</th>
+                  <th>Leaf</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rowsWithDepth.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.id}</td>
+                    <td>{row.parent_id ?? '-'}</td>
+                    <td>{row.path}</td>
+                    <td>{row.burmese_name || '-'}</td>
+                    <td>{row.quantity ?? 0}</td>
+                    <td>{Number(row.leaf) === 1 ? 'Yes' : 'No'}</td>
+                  </tr>
+                ))}
+                {rowsWithDepth.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className={styles.empty}>No inventory items yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 

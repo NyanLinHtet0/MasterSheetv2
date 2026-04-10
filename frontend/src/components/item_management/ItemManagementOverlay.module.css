@@ -100,45 +100,54 @@
 }
 
 
-.selectedLayerHint {
-  font-size: 0.85rem;
-  color: rgba(248, 250, 252, 0.76);
+.categoryColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.inventoryCard {
-  width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.55);
-  color: #f8fafc;
-  padding: 10px;
-  text-align: left;
+.categoryColumn {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.inventoryCardActive {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.45);
+.languageToggleButton {
+  min-width: 52px;
 }
 
-.inventoryCardTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
+.table th,
+.table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 8px;
+  text-align: left;
 }
 
-.inventoryCardSub {
-  font-size: 0.82rem;
+.empty {
+  text-align: center !important;
   color: rgba(248, 250, 252, 0.72);
 }
-
-.inventoryCardQty {
-  font-size: 0.82rem;
-  color: #93c5fd;
-}
-
 
 .categoryColumns {
   display: grid;
