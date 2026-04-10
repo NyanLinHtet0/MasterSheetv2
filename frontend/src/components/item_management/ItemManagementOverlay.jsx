@@ -462,10 +462,14 @@ export default function ItemManagementOverlay({
                 type="button"
                 onClick={() => {
                   if (categoryContextMenu.node.layer === 1) {
-                    onSelectLayer1?.(categoryContextMenu.node.key);
+                    if (selectedLayer1Key !== categoryContextMenu.node.key) {
+                      onSelectLayer1?.(categoryContextMenu.node.key);
+                    }
                     openCategoryAddModal(2);
                   } else {
-                    onSelectLayer2?.(categoryContextMenu.node.key);
+                    if (selectedLayer2Key !== categoryContextMenu.node.key) {
+                      onSelectLayer2?.(categoryContextMenu.node.key);
+                    }
                     openCategoryAddModal(3);
                   }
                   setCategoryContextMenu(null);
