@@ -418,13 +418,13 @@ export default function TransactionRow({
         )}
       </td>
       <td>
-        <span className={styles.tagCellValue}>{tx.inven_id ?? '-'}</span>
-      </td>
-      <td>
         <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>
       </td>
       <td>
         <span className={styles.tagCellValue}>{tx.inven_qty ?? '-'}</span>
+      </td>
+      <td>
+        <span className={styles.tagCellValue}>{tx.inven_id ?? '-'}</span>
       </td>
       <td>
         <span className={styles.tagCellValue}>{tx.link_type_name || '-'}</span>

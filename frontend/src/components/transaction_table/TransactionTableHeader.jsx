@@ -63,9 +63,9 @@ export default function TransactionTableHeader({
           </th>
         )}
         <th>Item</th>
-        <th>Inv ID</th>
         <th>Flow</th>
         <th>Qty</th>
+        <th>Inv ID</th>
         <th>Link Type</th>
         <th>Link Tx ID</th>
         <th>Payment</th>
