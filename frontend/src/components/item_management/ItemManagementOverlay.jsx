@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './ItemManagementOverlay.module.css';
 import { buildChildrenMap, buildRowMap, normalizeRows } from '../helpers/treeHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../helpers/nameLocalization';
@@ -411,6 +411,27 @@ export default function ItemManagementOverlay({
     setContextMenu(null);
   };
 
+  const contextMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!contextMenu) return undefined;
+
+    const handlePointerDownCapture = (event) => {
+      if (event.button !== 0) return;
+      if (contextMenuRef.current?.contains(event.target)) return;
+
+      setContextMenu(null);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDownCapture, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDownCapture, true);
+    };
+  }, [contextMenu]);
+
   const rootNodes = childrenByParent.get(null) || [];
   const addItemParentNode = newItemParentId == null ? null : rowMap.get(newItemParentId) || null;
 
@@ -533,6 +554,7 @@ export default function ItemManagementOverlay({
 
       {contextMenu && (
         <div
+          ref={contextMenuRef}
           className={styles.contextMenu}
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={(event) => event.stopPropagation()}
