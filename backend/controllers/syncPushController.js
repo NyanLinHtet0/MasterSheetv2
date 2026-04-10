@@ -75,7 +75,8 @@ const allowedColumns = {
     'parent_id',
     'name',
     'burmese_name',
-    'quantity'
+    'quantity',
+    'leaf'
   ]),
   financial_summary: new Set([
     'corp_id',

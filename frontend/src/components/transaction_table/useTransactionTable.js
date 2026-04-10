@@ -28,6 +28,7 @@ export function useTransactionTable({ isForeign, isInverse, onSaveRow, resolveTy
     type_id: '',
     global_tree_id: '',
     local_tree_id: '',
+    inven_id: '',
   });
 
   const closeContextMenu = useCallback(() => {

@@ -137,6 +137,7 @@ function mergeInsertedRows(appData, tableName, rows) {
         nextData.corp_data.push({
           ...corp,
           local_tree: [],
+          inventory_tree: [],
           employees: [],
           transactions: [],
         });
@@ -236,6 +237,28 @@ function mergeInsertedRows(appData, tableName, rows) {
         const maxInsertedId = Math.max(...rows.map((row) => row.id));
         nextData.max_ids.local_tree = Math.max(
           nextData.max_ids.local_tree || 0,
+          maxInsertedId
+        );
+      }
+
+      break;
+    }
+
+    case 'inventory_tree': {
+      for (const node of rows) {
+        const corp = nextData.corp_data.find((row) => row.id === node.corp_id);
+        if (!corp) continue;
+
+        const exists = (corp.inventory_tree || []).some((row) => row.id === node.id);
+        if (!exists) {
+          corp.inventory_tree = [...(corp.inventory_tree || []), node];
+        }
+      }
+
+      if (rows.length > 0 && nextData.max_ids) {
+        const maxInsertedId = Math.max(...rows.map((row) => row.id));
+        nextData.max_ids.inventory_tree = Math.max(
+          nextData.max_ids.inventory_tree || 0,
           maxInsertedId
         );
       }

@@ -121,6 +121,7 @@ export function sanitizeTransactionForDirty(tx) {
     adjustment: toMoney(tx.adjustment),
     global_tree_id: tx.global_tree_id ?? null,
     local_tree_id: tx.local_tree_id ?? null,
+    inven_id: tx.inven_id ?? null,
     employee_id: tx.employee_id ?? null,
     asset_id: tx.asset_id ?? null,
     soft_delete: tx.soft_delete ?? 0,
@@ -182,6 +183,7 @@ export function buildEditFormData(tx, { isInverse, isForeign, resolveTypeId }) {
       hydratedTx.global_tree_id != null ? String(hydratedTx.global_tree_id) : '',
     local_tree_id:
       hydratedTx.local_tree_id != null ? String(hydratedTx.local_tree_id) : '',
+    inven_id: hydratedTx.inven_id != null ? String(hydratedTx.inven_id) : '',
   };
 }
 
@@ -221,6 +223,8 @@ export function buildUpdatedTransaction(oldTx, editFormData, { isForeign, isInve
       editFormData.global_tree_id === '' ? null : Number(editFormData.global_tree_id),
     local_tree_id:
       editFormData.local_tree_id === '' ? null : Number(editFormData.local_tree_id),
+    inven_id:
+      editFormData.inven_id === '' ? null : Number(editFormData.inven_id),
   };
 
   return {
@@ -289,6 +293,7 @@ export function buildInsertedTransaction(
     isInverse,
     globalTreeId = 1,
     localTreeId = null,
+    invenId = null,
     employeeId = null,
     assetId = null,
   }
@@ -318,6 +323,7 @@ export function buildInsertedTransaction(
     adjustment: calculated.adjustment,
     global_tree_id: globalTreeId,
     local_tree_id: localTreeId,
+    inven_id: invenId,
     employee_id: employeeId,
     asset_id: assetId,
     soft_delete: 0,
