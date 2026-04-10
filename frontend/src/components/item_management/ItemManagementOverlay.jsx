@@ -24,13 +24,12 @@ export default function ItemManagementOverlay({
   const [newItemName, setNewItemName] = useState('');
   const [newItemBurmeseName, setNewItemBurmeseName] = useState('');
   const [newItemParentId, setNewItemParentId] = useState(null);
-  const [isAddingItemInline, setIsAddingItemInline] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryBurmeseName, setNewCategoryBurmeseName] = useState('');
-  const [isAddingCategoryInline, setIsAddingCategoryInline] = useState(false);
   const [newCategoryParentKey, setNewCategoryParentKey] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [categoryContextMenu, setCategoryContextMenu] = useState(null);
+  const [internalSelectedCategoryKey, setInternalSelectedCategoryKey] = useState(null);
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -53,10 +52,13 @@ export default function ItemManagementOverlay({
   }, [activePath]);
 
   const { effectiveExpandedIds, toggleTreeNode } = useTreeExpansion(expandedIds);
+
+  const effectiveSelectedCategoryKey = selectedCategoryKey ?? internalSelectedCategoryKey;
   const selectedCategoryNode = useMemo(
-    () => (selectedCategoryKey ? categoryNodeMap.get(selectedCategoryKey) || null : null),
-    [selectedCategoryKey, categoryNodeMap]
+    () => (effectiveSelectedCategoryKey ? categoryNodeMap.get(effectiveSelectedCategoryKey) || null : null),
+    [effectiveSelectedCategoryKey, categoryNodeMap]
   );
+
   const categoryExpandedIds = useMemo(() => {
     const set = new Set();
     let current = selectedCategoryNode;
@@ -70,6 +72,7 @@ export default function ItemManagementOverlay({
 
     return set;
   }, [selectedCategoryNode, categoryNodeMap]);
+
   const { effectiveExpandedIds: effectiveCategoryExpandedIds, toggleTreeNode: toggleCategoryTreeNode } =
     useTreeExpansion(categoryExpandedIds);
 
@@ -90,8 +93,6 @@ export default function ItemManagementOverlay({
 
     setNewItemName('');
     setNewItemBurmeseName('');
-    setNewItemParentId(null);
-    setIsAddingItemInline(false);
   };
 
   const handleAddCategory = (event) => {
@@ -99,11 +100,11 @@ export default function ItemManagementOverlay({
     const nextName = String(newCategoryName || '').trim();
     const nextBurmeseName = String(newCategoryBurmeseName || '').trim() || null;
     if (!nextName || !newCategoryParentKey || !onAddCategoryNode) return;
+
     onAddCategoryNode({ name: nextName, burmeseName: nextBurmeseName, parentKey: newCategoryParentKey });
+
     setNewCategoryName('');
     setNewCategoryBurmeseName('');
-    setNewCategoryParentKey(null);
-    setIsAddingCategoryInline(false);
   };
 
   const handleSelectTreeNode = (node) => {
@@ -171,6 +172,16 @@ export default function ItemManagementOverlay({
 
   const rootNodes = childrenByParent.get(null) || [];
   const addItemParentNode = newItemParentId == null ? null : rowMap.get(newItemParentId) || null;
+  const addCategoryParentNode = newCategoryParentKey ? categoryNodeMap.get(newCategoryParentKey) || null : null;
+
+  const onSelectCategory = (node) => {
+    if (onSelectCategoryNode) {
+      onSelectCategoryNode(node.key);
+    } else {
+      setInternalSelectedCategoryKey(node.key);
+    }
+    setCategoryContextMenu(null);
+  };
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -208,32 +219,44 @@ export default function ItemManagementOverlay({
                   languageMode={languageMode}
                   formatQty={formatQty}
                   handleTreeContextMenu={handleTreeContextMenu}
-                  onStartTree={() => {
-                    setParentId('');
-                    setNewItemParentId(null);
-                    setIsAddingItemInline(true);
-                    setContextMenu(null);
-                    setNewItemName('');
-                    setNewItemBurmeseName('');
-                  }}
-                  isAddingItemInline={isAddingItemInline}
-                  addItemParentNode={addItemParentNode}
-                  onInlineAddSubmit={handleSubmit}
-                  newItemName={newItemName}
-                  setNewItemName={setNewItemName}
-                  newItemBurmeseName={newItemBurmeseName}
-                  setNewItemBurmeseName={setNewItemBurmeseName}
-                  onCancelInlineAdd={() => {
-                    setIsAddingItemInline(false);
-                    setNewItemParentId(null);
-                    setNewItemName('');
-                    setNewItemBurmeseName('');
-                  }}
                 />
                 <div className={styles.treeHint}>
-                  Left-click a selected folder to collapse/expand. Right-click a folder to add inside it.
+                  Left-click a selected folder to collapse/expand. Right-click a folder to set add target.
                 </div>
               </div>
+
+              <aside className={styles.addFormCard}>
+                <div className={styles.addFormTitle}>Add Item</div>
+                <div className={styles.inlineAddItemHeader}>
+                  Add item under: {addItemParentNode ? getLocalizedName(addItemParentNode, languageMode) : 'Root layer'}
+                </div>
+                <form className={styles.inlineAddItemForm} onSubmit={handleSubmit}>
+                  <input
+                    type="text"
+                    placeholder="English name"
+                    value={newItemName}
+                    onChange={(event) => setNewItemName(event.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Burmese name (optional)"
+                    value={newItemBurmeseName}
+                    onChange={(event) => setNewItemBurmeseName(event.target.value)}
+                  />
+                  <div className={styles.inlineAddItemActions}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewItemName('');
+                        setNewItemBurmeseName('');
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button type="submit" disabled={!String(newItemName || '').trim()}>Add</button>
+                  </div>
+                </form>
+              </aside>
             </div>
           </section>
 
@@ -250,11 +273,8 @@ export default function ItemManagementOverlay({
                   childrenByParent={categoryChildrenByKey}
                   effectiveExpandedIds={effectiveCategoryExpandedIds}
                   toggleTreeNode={toggleCategoryTreeNode}
-                  onSelectNode={(node) => {
-                    onSelectCategoryNode?.(node.key);
-                    setCategoryContextMenu(null);
-                  }}
-                  selectedKey={selectedCategoryKey}
+                  onSelectNode={onSelectCategory}
+                  selectedKey={effectiveSelectedCategoryKey}
                   onContextMenu={(event, node) => {
                     event.preventDefault();
                     setCategoryContextMenu({
@@ -263,23 +283,46 @@ export default function ItemManagementOverlay({
                       node,
                     });
                   }}
-                  onInlineAddSubmit={handleAddCategory}
-                  isAddingInline={isAddingCategoryInline}
-                  addParentNode={
-                    newCategoryParentKey ? categoryNodeMap.get(newCategoryParentKey) || null : null
-                  }
-                  newItemName={newCategoryName}
-                  setNewItemName={setNewCategoryName}
-                  newItemBurmeseName={newCategoryBurmeseName}
-                  setNewItemBurmeseName={setNewCategoryBurmeseName}
-                  onCancelInlineAdd={() => {
-                    setIsAddingCategoryInline(false);
-                    setNewCategoryParentKey(null);
-                    setNewCategoryName('');
-                    setNewCategoryBurmeseName('');
-                  }}
                 />
               </div>
+
+              <aside className={styles.addFormCard}>
+                <div className={styles.addFormTitle}>Add Category</div>
+                <div className={styles.inlineAddItemHeader}>
+                  Add category under: {addCategoryParentNode ? addCategoryParentNode.label : 'Select from right-click menu'}
+                </div>
+                <form className={styles.inlineAddItemForm} onSubmit={handleAddCategory}>
+                  <input
+                    type="text"
+                    placeholder="Category name"
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Burmese name (optional)"
+                    value={newCategoryBurmeseName}
+                    onChange={(event) => setNewCategoryBurmeseName(event.target.value)}
+                  />
+                  <div className={styles.inlineAddItemActions}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewCategoryName('');
+                        setNewCategoryBurmeseName('');
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!String(newCategoryName || '').trim() || !newCategoryParentKey}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </form>
+              </aside>
             </div>
           </section>
         </div>
@@ -297,7 +340,6 @@ export default function ItemManagementOverlay({
             onClick={() => {
               setParentId(String(contextMenu.node.id));
               setNewItemParentId(contextMenu.node.id);
-              setIsAddingItemInline(true);
               setContextMenu(null);
               setNewItemName('');
               setNewItemBurmeseName('');
@@ -310,7 +352,6 @@ export default function ItemManagementOverlay({
             onClick={() => {
               setParentId('');
               setNewItemParentId(null);
-              setIsAddingItemInline(true);
               setContextMenu(null);
               setNewItemName('');
               setNewItemBurmeseName('');
@@ -331,7 +372,6 @@ export default function ItemManagementOverlay({
             type="button"
             onClick={() => {
               setNewCategoryParentKey(categoryContextMenu.node.key);
-              setIsAddingCategoryInline(true);
               setCategoryContextMenu(null);
               setNewCategoryName('');
               setNewCategoryBurmeseName('');

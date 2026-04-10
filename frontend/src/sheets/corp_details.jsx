@@ -430,20 +430,6 @@ function CorpDetails({
           categoryRootNodes={categoryRootNodes}
           categoryChildrenByKey={assembledTree.childrenByKey}
           categoryNodeMap={assembledTree.nodeMap}
-          selectedCategoryKey={selectedLayer3Key || selectedLayer2Key || selectedLayer1Key || null}
-          onSelectCategoryNode={(nodeKey) => {
-            const node = assembledTree.nodeMap.get(nodeKey) || null;
-            if (!node) return;
-            if (node.depth <= 1) {
-              handleSelectLayer1(nodeKey);
-              return;
-            }
-            if (node.depth === 2) {
-              handleSelectLayer2(nodeKey);
-              return;
-            }
-            handleSelectLayer3(nodeKey);
-          }}
           onAddCategoryNode={handleAddCategoryNode}
           languageMode={languageMode}
           onToggleLanguageMode={onToggleLanguageMode}
