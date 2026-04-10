@@ -54,8 +54,6 @@ export default function TransactionForm({
   const [layer1Key, setLayer1Key] = useState('');
   const [layer2Key, setLayer2Key] = useState('');
   const [layer3Key, setLayer3Key] = useState('');
-  const [inventoryItemId, setInventoryItemId] = useState('');
-  const [inventoryFlow, setInventoryFlow] = useState('');
   const [inventoryQuantity, setInventoryQuantity] = useState('');
 
   const dayInputRef = useRef(null);
@@ -179,11 +177,50 @@ export default function TransactionForm({
     return buildLayerOptions(assembledTree.childrenByKey, layer2Key);
   }, [assembledTree, layer2Key]);
 
+  const deepestSelectionKey = layer3Key || layer2Key || layer1Key;
+  const selectedTagNode = useMemo(
+    () => assembledTree.nodeMap.get(deepestSelectionKey) || null,
+    [assembledTree, deepestSelectionKey]
+  );
+
+  const matchedInventoryOption = useMemo(() => {
+    if (!selectedTagNode) return null;
+
+    const normalizeName = (value) =>
+      String(value || '')
+        .trim()
+        .toLowerCase();
+
+    const selectedName = normalizeName(selectedTagNode.label || selectedTagNode.name);
+    if (!selectedName) return null;
+
+    return (
+      inventoryOptions.find((option) => {
+        const inventoryLeafName = normalizeName(
+          option.leafName || option.label?.split(' > ').at(-1)
+        );
+        return inventoryLeafName === selectedName;
+      }) || null
+    );
+  }, [inventoryOptions, selectedTagNode]);
+
+  const hasInventoryMatch = Boolean(selectedTagNode?.localId != null && matchedInventoryOption);
+
   useEffect(() => {
     if (day > daysInSelectedMonth) {
       setDay(daysInSelectedMonth);
     }
   }, [year, month, day, daysInSelectedMonth]);
+
+  const getAutoInventoryFlow = (rawAmount) => {
+    if (!hasInventoryMatch) return '';
+    const numericAmount = parseEditableNumber(rawAmount, null);
+    if (numericAmount == null || numericAmount === 0) return '';
+    return numericAmount > 0 ? '-1' : '1';
+  };
+
+  const inventoryItemId = hasInventoryMatch ? String(matchedInventoryOption.value) : '';
+  const inventoryFlow = hasInventoryMatch ? getAutoInventoryFlow(amount) : '';
 
   const syncForeignTotal = (nextAmount, nextRate) => {
     if (!isForeign) return;
@@ -259,8 +296,6 @@ export default function TransactionForm({
     setLayer1Key('');
     setLayer2Key('');
     setLayer3Key('');
-    setInventoryItemId('');
-    setInventoryFlow('');
     setInventoryQuantity('');
   };
 
@@ -286,8 +321,7 @@ export default function TransactionForm({
       { isForeign }
     );
 
-    const deepestSelectionKey = layer3Key || layer2Key || layer1Key;
-    const selectedTagNode = assembledTree.nodeMap.get(deepestSelectionKey) || null;
+    if (hasInventoryMatch && !isUsableNumberInput(inventoryQuantity)) return;
 
     const txData = {
       tx_date,
@@ -299,10 +333,10 @@ export default function TransactionForm({
       tx_status: 1,
       global_tree_id: selectedTagNode?.globalId ?? null,
       local_tree_id: selectedTagNode?.localId ?? null,
-      inven_id: inventoryItemId === '' ? null : Number(inventoryItemId),
-      inven_flow: inventoryFlow === '' ? null : Number(inventoryFlow),
+      inven_id: hasInventoryMatch && inventoryItemId !== '' ? Number(inventoryItemId) : null,
+      inven_flow: hasInventoryMatch && inventoryFlow !== '' ? Number(inventoryFlow) : null,
       inven_qty:
-        inventoryQuantity === '' || !isUsableNumberInput(inventoryQuantity)
+        !hasInventoryMatch || inventoryQuantity === '' || !isUsableNumberInput(inventoryQuantity)
           ? null
           : parseEditableNumber(inventoryQuantity, null),
       ...(isForeign && {
@@ -411,12 +445,17 @@ export default function TransactionForm({
                   setLayer1Key(value);
                   setLayer2Key('');
                   setLayer3Key('');
+                  setInventoryQuantity('');
                 }}
                 onLayer2Change={(value) => {
                   setLayer2Key(value);
                   setLayer3Key('');
+                  setInventoryQuantity('');
                 }}
-                onLayer3Change={setLayer3Key}
+                onLayer3Change={(value) => {
+                  setLayer3Key(value);
+                  setInventoryQuantity('');
+                }}
               />
             </div>
           </>
@@ -434,53 +473,51 @@ export default function TransactionForm({
                 setLayer1Key(value);
                 setLayer2Key('');
                 setLayer3Key('');
+                setInventoryQuantity('');
               }}
               onLayer2Change={(value) => {
                 setLayer2Key(value);
                 setLayer3Key('');
+                setInventoryQuantity('');
               }}
-              onLayer3Change={setLayer3Key}
+              onLayer3Change={(value) => {
+                setLayer3Key(value);
+                setInventoryQuantity('');
+              }}
             />
           </div>
         )}
 
-        <div className={styles.singleFieldRow}>
-          <div className={styles.tagFields}>
-            <select
-              className={styles.tagSelect}
-              value={inventoryItemId}
-              onChange={(e) => setInventoryItemId(e.target.value)}
-            >
-              <option value="">Item Tag</option>
-              {inventoryOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+        {hasInventoryMatch && (
+          <div className={styles.singleFieldRow}>
+            <div className={styles.tagFields}>
+              <input
+                className={styles.tagSelect}
+                value={`Item Tag: ${matchedInventoryOption.label} (ID ${matchedInventoryOption.value})`}
+                readOnly
+                title={matchedInventoryOption.label}
+              />
 
-            <select
-              className={styles.tagSelect}
-              value={inventoryFlow}
-              onChange={(e) => setInventoryFlow(e.target.value)}
-            >
-              <option value="">Item In/Out</option>
-              <option value="1">In</option>
-              <option value="-1">Out</option>
-            </select>
+              <select className={styles.tagSelect} value={inventoryFlow} disabled>
+                <option value="">Item In/Out</option>
+                <option value="1">In</option>
+                <option value="-1">Out</option>
+              </select>
 
-            <TransactionNumberField
-              className={styles.tagSelect}
-              placeholder="Item Quantity"
-              value={formatDisplayValue(inventoryQuantity)}
-              onChange={(e) => {
-                const rawValue = cleanNumericInput(e.target.value);
-                if (!isValidPartialNumber(rawValue)) return;
-                setInventoryQuantity(rawValue);
-              }}
-            />
+              <TransactionNumberField
+                className={styles.tagSelect}
+                placeholder="Item Quantity"
+                value={formatDisplayValue(inventoryQuantity)}
+                onChange={(e) => {
+                  const rawValue = cleanNumericInput(e.target.value);
+                  if (!isValidPartialNumber(rawValue)) return;
+                  setInventoryQuantity(rawValue);
+                }}
+                required
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <button type="submit" className={styles.submitBtn}>
           Add Transaction
