@@ -50,6 +50,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: visible;
 }
 
 .sectionHeader {
@@ -99,51 +100,17 @@
   font-weight: 700;
 }
 
-
-.categoryColumns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.categoryColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.sectionTitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(248, 250, 252, 0.7);
-}
-
-.optionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 260px;
-  overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.languageToggleButton {
-  min-width: 52px;
-}
-
 .layerBoard {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
+  overflow: visible;
 }
 
 .layerColumn {
+  position: relative;
+  min-width: 0;
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.35);
@@ -151,13 +118,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 340px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .layerTitle {
-  position: sticky;
-  top: 0;
   background: rgba(15, 23, 42, 0.9);
   border-radius: 8px;
   padding: 8px 10px;
@@ -168,7 +132,33 @@
   color: rgba(248, 250, 252, 0.8);
 }
 
+.layerDropdown {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+.layerDropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.98);
+  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.45);
+  z-index: 50;
+}
+
 .layerCard {
+  width: 100%;
+  box-sizing: border-box;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
   background: rgba(30, 41, 59, 0.65);
@@ -177,7 +167,7 @@
   padding: 10px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
@@ -211,15 +201,15 @@
   font-size: 0.82rem;
   font-weight: 600;
   text-align: right;
-  min-width: 56px;
+  min-width: 72px;
 }
 
 .layerCardPassive {
-  cursor: default;
+  cursor: pointer;
 }
 
 .layerCardPassive:hover {
-  border-color: rgba(148, 163, 184, 0.4);
+  border-color: rgba(96, 165, 250, 0.8);
 }
 
 .layerSelect {
@@ -344,5 +334,10 @@
   .layerBoard,
   .categoryColumns {
     grid-template-columns: 1fr;
+  }
+
+  .layerDropdownMenu {
+    position: static;
+    margin-top: 8px;
   }
 }

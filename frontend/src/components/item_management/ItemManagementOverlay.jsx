@@ -91,6 +91,72 @@ function renderCategoryColumn({
   );
 }
 
+function renderLayerDropdown({
+  title,
+  nodes = [],
+  selectedNode = null,
+  isOpen = false,
+  onToggle,
+  onSelect,
+  emptyLabel,
+  disabledLabel = '',
+  formatQty,
+}) {
+  if (disabledLabel) {
+    return (
+      <div className={styles.layerColumn}>
+        <div className={styles.layerTitle}>{title}</div>
+        <div className={styles.emptyList}>{disabledLabel}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.layerColumn}>
+      <div className={styles.layerTitle}>{title}</div>
+
+      {nodes.length === 0 ? (
+        <div className={styles.emptyList}>{emptyLabel}</div>
+      ) : (
+        <div className={styles.layerDropdown}>
+          <button
+            type="button"
+            className={`${styles.layerCard} ${isOpen ? styles.layerCardActive : ''}`}
+            onClick={onToggle}
+          >
+            <div className={styles.layerCardName}>{selectedNode?.name || `Select ${title}`}</div>
+            <div className={styles.layerCardSub}>{selectedNode?.burmese_name || '-'}</div>
+            <div className={styles.layerCardMeta}>
+              {selectedNode ? formatQty(selectedNode.quantity) : formatQty(0)} {isOpen ? '▲' : '▼'}
+            </div>
+          </button>
+
+          {isOpen && (
+            <div className={styles.layerDropdownMenu}>
+              {nodes.map((node) => {
+                const isSelected = selectedNode?.id === node.id;
+
+                return (
+                  <button
+                    type="button"
+                    key={node.id}
+                    className={`${styles.layerCard} ${isSelected ? styles.layerCardActive : styles.layerCardPassive}`}
+                    onClick={() => onSelect(node)}
+                  >
+                    <div className={styles.layerCardName}>{node.name}</div>
+                    <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
+                    <div className={styles.layerCardMeta}>{formatQty(node.quantity)}</div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ItemManagementOverlay({
   corp,
   onClose,
@@ -119,6 +185,7 @@ export default function ItemManagementOverlay({
   const [overlayViewMode, setOverlayViewMode] = useState(VIEW_MODES.LIVE);
   const [previewLayer2Id, setPreviewLayer2Id] = useState('');
   const [previewLayer3Id, setPreviewLayer3Id] = useState('');
+  const [openLayerKey, setOpenLayerKey] = useState(null);
 
   const inventoryRows = useMemo(() => normalizeRows(corp?.inventory_tree || []), [corp]);
   const rowMap = useMemo(() => buildRowMap(inventoryRows), [inventoryRows]);
@@ -159,13 +226,13 @@ export default function ItemManagementOverlay({
   const layer2ViewNode = useMemo(() => {
     if (layer2Nodes.length === 0) return null;
     const selected = layer2Nodes.find((node) => String(node.id) === previewLayer2Id);
-    return selected || activeLayer2 || layer2Nodes[0];
+    return selected || activeLayer2 || null;
   }, [activeLayer2, layer2Nodes, previewLayer2Id]);
   const layer3Nodes = layer2ViewNode ? childrenByParent.get(layer2ViewNode.id) || [] : [];
   const layer3ViewNode = useMemo(() => {
     if (layer3Nodes.length === 0) return null;
-    return layer3Nodes.find((node) => String(node.id) === previewLayer3Id) || layer3Nodes[0];
-  }, [layer3Nodes, previewLayer3Id]);
+    return layer3Nodes.find((node) => String(node.id) === previewLayer3Id) || activePath[2] || null;
+  }, [activePath, layer3Nodes, previewLayer3Id]);
 
   const formatQty = (value) => Number(value ?? 0).toFixed(2);
 
@@ -200,6 +267,30 @@ export default function ItemManagementOverlay({
 
     onAddLayer3(nextName);
     setNewLayer3Name('');
+  };
+
+  const toggleLayerDropdown = (key) => {
+    setOpenLayerKey((current) => (current === key ? null : key));
+  };
+
+  const handleSelectLayer1Node = (node) => {
+    setParentId(String(node.id));
+    setPreviewLayer2Id('');
+    setPreviewLayer3Id('');
+    setOpenLayerKey(null);
+  };
+
+  const handleSelectLayer2Node = (node) => {
+    setParentId(String(node.id));
+    setPreviewLayer2Id(String(node.id));
+    setPreviewLayer3Id('');
+    setOpenLayerKey(null);
+  };
+
+  const handleSelectLayer3Node = (node) => {
+    setParentId(String(node.id));
+    setPreviewLayer3Id(String(node.id));
+    setOpenLayerKey(null);
   };
 
   return (
@@ -239,95 +330,40 @@ export default function ItemManagementOverlay({
           </form>
 
           <div className={styles.layerBoard}>
-            <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Layer 1</div>
-              {layer1Nodes.length > 1 && (
-                <select
-                  className={styles.layerSelect}
-                  value={activeLayer1 ? String(activeLayer1.id) : ''}
-                  onChange={(event) => setParentId(event.target.value)}
-                >
-                  <option value="">Root layer</option>
-                  {layer1Nodes.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {layer1Nodes.length === 0 && <div className={styles.emptyList}>No layer 1 items yet.</div>}
-              {layer1Nodes.map((node) => (
-                <button
-                  type="button"
-                  key={node.id}
-                  className={`${styles.layerCard} ${activeLayer1?.id === node.id ? styles.layerCardActive : ''}`}
-                  onClick={() => setParentId(String(node.id))}
-                >
-                  <div className={styles.layerCardName}>{node.name}</div>
-                  <div className={styles.layerCardSub}>{node.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>{formatQty(node.quantity)}</div>
-                </button>
-              ))}
-            </div>
+            {renderLayerDropdown({
+              title: 'Layer 1',
+              nodes: layer1Nodes,
+              selectedNode: activeLayer1,
+              isOpen: openLayerKey === 'layer1',
+              onToggle: () => toggleLayerDropdown('layer1'),
+              onSelect: handleSelectLayer1Node,
+              emptyLabel: 'No layer 1 items yet.',
+              formatQty,
+            })}
 
-            <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Layer 2</div>
-              {activeLayer1 == null && <div className={styles.emptyList}>Select a layer 1 item first.</div>}
-              {activeLayer1 != null && layer2Nodes.length === 0 && (
-                <div className={styles.emptyList}>No layer 2 items under this layer 1 item.</div>
-              )}
-              {layer2Nodes.length > 1 && (
-                <select
-                  className={styles.layerSelect}
-                  value={layer2ViewNode ? String(layer2ViewNode.id) : ''}
-                  onChange={(event) => {
-                    setPreviewLayer2Id(event.target.value);
-                    setPreviewLayer3Id('');
-                  }}
-                >
-                  {layer2Nodes.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {layer2ViewNode && (
-                <div className={`${styles.layerCard} ${styles.layerCardPassive}`}>
-                  <div className={styles.layerCardName}>{layer2ViewNode.name}</div>
-                  <div className={styles.layerCardSub}>{layer2ViewNode.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>{formatQty(layer2ViewNode.quantity)}</div>
-                </div>
-              )}
-            </div>
+            {renderLayerDropdown({
+              title: 'Layer 2',
+              nodes: layer2Nodes,
+              selectedNode: layer2ViewNode,
+              isOpen: openLayerKey === 'layer2',
+              onToggle: () => toggleLayerDropdown('layer2'),
+              onSelect: handleSelectLayer2Node,
+              emptyLabel: 'No layer 2 items under this layer 1 item.',
+              disabledLabel: activeLayer1 == null ? 'Select a layer 1 item first.' : '',
+              formatQty,
+            })}
 
-            <div className={styles.layerColumn}>
-              <div className={styles.layerTitle}>Layer 3</div>
-              {layer2ViewNode == null && <div className={styles.emptyList}>Select a layer 2 item first.</div>}
-              {layer2ViewNode != null && layer3Nodes.length === 0 && (
-                <div className={styles.emptyList}>No layer 3 items under this layer 2 item.</div>
-              )}
-              {layer3Nodes.length > 1 && (
-                <select
-                  className={styles.layerSelect}
-                  value={layer3ViewNode ? String(layer3ViewNode.id) : ''}
-                  onChange={(event) => setPreviewLayer3Id(event.target.value)}
-                >
-                  {layer3Nodes.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {layer3ViewNode && (
-                <div className={`${styles.layerCard} ${styles.layerCardPassive}`}>
-                  <div className={styles.layerCardName}>{layer3ViewNode.name}</div>
-                  <div className={styles.layerCardSub}>{layer3ViewNode.burmese_name || '-'}</div>
-                  <div className={styles.layerCardMeta}>{formatQty(layer3ViewNode.quantity)}</div>
-                </div>
-              )}
-            </div>
+            {renderLayerDropdown({
+              title: 'Layer 3',
+              nodes: layer3Nodes,
+              selectedNode: layer3ViewNode,
+              isOpen: openLayerKey === 'layer3',
+              onToggle: () => toggleLayerDropdown('layer3'),
+              onSelect: handleSelectLayer3Node,
+              emptyLabel: 'No layer 3 items under this layer 2 item.',
+              disabledLabel: layer2ViewNode == null ? 'Select a layer 2 item first.' : '',
+              formatQty,
+            })}
           </div>
         </section>
 
