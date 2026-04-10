@@ -61,61 +61,25 @@ export default function CategoryTreePanel({
   onSelectNode,
   selectedKey,
   onContextMenu,
-  onInlineAddSubmit,
-  isAddingInline = false,
-  addParentNode = null,
-  newItemName,
-  setNewItemName,
-  newItemBurmeseName,
-  setNewItemBurmeseName,
-  onCancelInlineAdd,
 }) {
-  const inlineForm = isAddingInline ? (
-    <form className={styles.inlineAddItemForm} onSubmit={onInlineAddSubmit}>
-      <div className={styles.inlineAddItemHeader}>
-        Add category under: {addParentNode ? addParentNode.label : 'Select a category'}
-      </div>
-      <input
-        type="text"
-        placeholder="Category name"
-        value={newItemName}
-        onChange={(event) => setNewItemName(event.target.value)}
-        autoFocus
-      />
-      <input
-        type="text"
-        placeholder="Burmese name (optional)"
-        value={newItemBurmeseName}
-        onChange={(event) => setNewItemBurmeseName(event.target.value)}
-      />
-      <div className={styles.inlineAddItemActions}>
-        <button type="button" onClick={onCancelInlineAdd}>Cancel</button>
-        <button type="submit" disabled={!String(newItemName || '').trim()}>Add</button>
-      </div>
-    </form>
-  ) : null;
-
   if (rootNodes.length === 0) {
     return <div className={styles.emptyList}>No categories in tree yet.</div>;
   }
 
   return (
-    <>
-      <div className={styles.treePanel}>
-        {rootNodes.map((node) => (
-          <CategoryTreeNode
-            key={node.key}
-            node={node}
-            childrenByParent={childrenByParent}
-            expandedIds={effectiveExpandedIds}
-            onToggleExpand={toggleTreeNode}
-            onSelect={onSelectNode}
-            selectedKey={selectedKey}
-            onContextMenu={onContextMenu}
-          />
-        ))}
-      </div>
-      {inlineForm}
-    </>
+    <div className={styles.treePanel}>
+      {rootNodes.map((node) => (
+        <CategoryTreeNode
+          key={node.key}
+          node={node}
+          childrenByParent={childrenByParent}
+          expandedIds={effectiveExpandedIds}
+          onToggleExpand={toggleTreeNode}
+          onSelect={onSelectNode}
+          selectedKey={selectedKey}
+          onContextMenu={onContextMenu}
+        />
+      ))}
+    </div>
   );
 }

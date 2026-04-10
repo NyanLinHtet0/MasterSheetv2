@@ -122,6 +122,28 @@
   overflow: visible;
 }
 
+
+.addFormCard {
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  border-radius: 10px;
+  background: rgba(30, 64, 175, 0.16);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  height: fit-content;
+}
+
+.addFormTitle {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: rgba(191, 219, 254, 0.95);
+}
+
 .layerColumn {
   position: relative;
   min-width: 0;
