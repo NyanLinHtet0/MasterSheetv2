@@ -2,7 +2,7 @@ import currency from 'currency.js';
 import styles from './corp_list.module.css';
 import AddCorpForm from './add_corp_form';
 import CorpDropdown from '../components/CorpDropdown';
-import TransactionForm from '../components/TransactionForm';
+import TransactionForm from '../components/add_transaction_form/TransactionForm';
 
 function CorpList({
   showAddCorpForm,

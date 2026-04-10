@@ -6,8 +6,8 @@
     border-right: 1px solid #e0e0e0;
     margin: 0; /* Ensures it stays attached to the left edge */
     padding: 5px;
-    box-sizing: border-box;
-    overflow-y: auto;
+    box-sizing: border-box; 
+    height: 93vh;
 }
 
 .corpListHeader{

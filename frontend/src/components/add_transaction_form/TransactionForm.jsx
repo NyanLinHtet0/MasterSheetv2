@@ -1,3 +1,4 @@
+// TransactionForm.jsx
 import { useState, useEffect, useMemo, useRef } from 'react';
 import styles from './TransactionForm.module.css';
 import {
@@ -7,13 +8,18 @@ import {
   isUsableNumberInput,
   isValidPartialNumber,
   parseEditableNumber,
-} from './transaction_table/transactionTableHelpers';
+} from '../transaction_table/transactionTableHelpers';
 import {
   buildAssembledTree,
   buildLayerOptions,
-} from './helpers/treeViewHelpers';
-import { buildTreeScope } from './helpers/treeHelpers';
-import { LANGUAGE_MODES } from './helpers/nameLocalization';
+} from '../helpers/treeViewHelpers';
+import { buildTreeScope } from '../helpers/treeHelpers';
+import { LANGUAGE_MODES } from '../helpers/nameLocalization';
+
+import TransactionDateFields from './TransactionDateFields';
+import TransactionTagFields from './TransactionTagFields';
+import TransactionTextField from './TransactionTextField';
+import TransactionNumberField from './TransactionNumberField';
 
 const today = new Date();
 const years = Array.from({ length: 3 }, (_, i) => today.getFullYear() - 1 + i);
@@ -149,6 +155,7 @@ export default function TransactionForm({
 
   const layer3Options = useMemo(() => {
     if (!layer2Key) return [];
+
     const directChildren = assembledTree.childrenByKey.get(layer2Key) || [];
     const collectedLocalNodes = directChildren.filter(
       (child) => child.source === 'local'
@@ -212,6 +219,7 @@ export default function TransactionForm({
           isForeign,
         })
       : parseEditableNumber(rawValue, null);
+
     autoSelectLayer1ByTotal(autoTotal);
   };
 
@@ -221,11 +229,13 @@ export default function TransactionForm({
 
     setRate(rawValue);
     syncForeignTotal(amount, rawValue);
+
     const autoTotal = getDisplayedBaseTotal({
       amount,
       rate: rawValue,
       isForeign,
     });
+
     autoSelectLayer1ByTotal(autoTotal);
   };
 
@@ -313,59 +323,6 @@ export default function TransactionForm({
     }
   };
 
-  const renderTagFields = () => (
-    <div className={styles.tagFields}>
-      <select
-        className={styles.tagSelect}
-        value={layer1Key}
-        onChange={(e) => {
-          setLayer1Key(e.target.value);
-          setLayer2Key('');
-          setLayer3Key('');
-        }}
-        required
-      >
-        <option value="">-</option>
-        {layer1Options.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className={styles.tagSelect}
-        value={layer2Key}
-        onChange={(e) => {
-          setLayer2Key(e.target.value);
-          setLayer3Key('');
-        }}
-        disabled={!layer1Key}
-      >
-        <option value="">-</option>
-        {layer2Options.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className={styles.tagSelect}
-        value={layer3Key}
-        onChange={(e) => setLayer3Key(e.target.value)}
-        disabled={!layer2Key}
-      >
-        <option value="">-</option>
-        {layer3Options.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
   return (
     <div className={styles.transactionFormWrapper}>
       <h3 className={styles.formTitle}></h3>
@@ -375,72 +332,42 @@ export default function TransactionForm({
         onKeyDown={handleKeyDown}
         className={styles.formContainer}
       >
-        <div className={styles.inputRow}>
-          <div className={styles.inputDatefields}>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className={styles.flexInput}
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+        <TransactionDateFields
+          styles={styles}
+          year={year}
+          month={month}
+          day={day}
+          years={years}
+          months={months}
+          days={days}
+          dayInputRef={dayInputRef}
+          onYearChange={setYear}
+          onMonthChange={setMonth}
+          onDayChange={setDay}
+        />
 
-            <select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className={styles.flexInput}
-            >
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {new Date(2000, m - 1).toLocaleString('default', { month: 'short' })}
-                </option>
-              ))}
-            </select>
-
-            <select
-              ref={dayInputRef}
-              value={day}
-              onChange={(e) => setDay(Number(e.target.value))}
-              className={styles.flexInput}
-            >
-              {days.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <input
-          className={styles.textInput}
+        <TransactionTextField
           ref={descriptionInputRef}
-          type="text"
+          className={styles.textInput}
           placeholder="Description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
           required
         />
 
-        <input
+        <TransactionNumberField
           className={styles.amountInput}
-          type="text"
           placeholder="Amount"
           value={formatDisplayValue(amount)}
           onChange={handleAmountChange}
           required
         />
-        
 
         {isForeign ? (
           <>
             <div className={styles.singleFieldRow}>
-              <input
+              <TransactionNumberField
                 className={styles.fullWidthInput}
-                type="text"
                 placeholder="Rate"
                 value={formatDisplayValue(rate)}
                 onChange={handleRateChange}
@@ -449,9 +376,8 @@ export default function TransactionForm({
             </div>
 
             <div className={styles.singleFieldRow}>
-              <input
+              <TransactionNumberField
                 className={styles.fullWidthInput}
-                type="text"
                 placeholder="Total MMK"
                 value={formatDisplayValue(totalMMK)}
                 onChange={handleTotalChange}
@@ -459,10 +385,50 @@ export default function TransactionForm({
               />
             </div>
 
-            <div className={styles.singleFieldRow}>{renderTagFields()}</div>
+            <div className={styles.singleFieldRow}>
+              <TransactionTagFields
+                styles={styles}
+                layer1Key={layer1Key}
+                layer2Key={layer2Key}
+                layer3Key={layer3Key}
+                layer1Options={layer1Options}
+                layer2Options={layer2Options}
+                layer3Options={layer3Options}
+                onLayer1Change={(value) => {
+                  setLayer1Key(value);
+                  setLayer2Key('');
+                  setLayer3Key('');
+                }}
+                onLayer2Change={(value) => {
+                  setLayer2Key(value);
+                  setLayer3Key('');
+                }}
+                onLayer3Change={setLayer3Key}
+              />
+            </div>
           </>
         ) : (
-          <div className={styles.singleFieldRow}>{renderTagFields()}</div>
+          <div className={styles.singleFieldRow}>
+            <TransactionTagFields
+              styles={styles}
+              layer1Key={layer1Key}
+              layer2Key={layer2Key}
+              layer3Key={layer3Key}
+              layer1Options={layer1Options}
+              layer2Options={layer2Options}
+              layer3Options={layer3Options}
+              onLayer1Change={(value) => {
+                setLayer1Key(value);
+                setLayer2Key('');
+                setLayer3Key('');
+              }}
+              onLayer2Change={(value) => {
+                setLayer2Key(value);
+                setLayer3Key('');
+              }}
+              onLayer3Change={setLayer3Key}
+            />
+          </div>
         )}
 
         <button type="submit" className={styles.submitBtn}>
