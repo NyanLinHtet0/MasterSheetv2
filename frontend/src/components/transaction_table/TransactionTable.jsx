@@ -111,14 +111,14 @@ export default function TransactionTable({
         ) : (
           <table className={styles.txTable}>
             <colgroup>
-              <col style={{ width: '140px' }} />
+              <col style={{ width: '100px' }} />
               <col style={{ width: '220px' }} />
 
               {isForeign ? (
                 <>
                   <col style={{ width: '100px' }} />
                   <col style={{ width: '85px' }} />
-                  {isTableEditMode && isForeign && <col style={{ width: '120px' }} />}
+                  {isTableEditMode && isForeign && <col style={{ width: '80px' }} />}
                   <col style={{ width: '120px' }} />
                 </>
               ) : (
@@ -127,12 +127,12 @@ export default function TransactionTable({
 
               {isTagDetailsExpanded ? (
                 <>
-                  <col style={{ width: '130px' }} />
-                  <col style={{ width: '180px' }} />
-                  <col style={{ width: '180px' }} />
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '80px' }} />
                 </>
               ) : (
-                <col style={{ width: '180' }} />
+                <col style={{ width: '200' }} />
               )}
 
               {showSaveColumn && <col style={{ width: '82px' }} />}

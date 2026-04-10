@@ -298,3 +298,129 @@ CREATE INDEX idx_audit_log_action_type ON audit_log (action_type);
 
 -- Optional but useful for corp-scoped replay
 CREATE INDEX idx_audit_log_corp_id_id ON audit_log (corp_id, id);
+
+USE master_sheets;
+
+-- =========================================================
+-- NEW TABLES
+-- =========================================================
+
+CREATE TABLE link_table (
+    id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type_name         VARCHAR(100) NOT NULL,
+    burmese_name      VARCHAR(255) NULL,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_link_table_type_name UNIQUE (type_name)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE payment_table (
+    id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type_name         VARCHAR(100) NOT NULL,
+    burmese_name      VARCHAR(255) NULL,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_payment_table_type_name UNIQUE (type_name)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE inventory_tree (
+    id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    corp_id           INT UNSIGNED NOT NULL,
+    parent_id         INT UNSIGNED NULL,
+    name              VARCHAR(255) NOT NULL,
+    burmese_name      VARCHAR(255) NULL,
+    quantity          TINYINT NOT NULL DEFAULT 0,
+    created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_inventory_tree_corp
+        FOREIGN KEY (corp_id) REFERENCES corp_data(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_inventory_tree_parent
+        FOREIGN KEY (parent_id) REFERENCES inventory_tree(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE financial_summary (
+    id                          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    corp_id                     INT UNSIGNED NOT NULL,
+    total_sales                 DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
+    total_operational_expenses  DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
+    remaining_credit            DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
+    total_investment            DECIMAL(16,4) NOT NULL DEFAULT 0.0000,
+    start_date                  DATE NOT NULL,
+    end_date                    DATE NOT NULL,
+    created_at                  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_financial_summary_corp
+        FOREIGN KEY (corp_id) REFERENCES corp_data(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+-- =========================================================
+-- TRANSACTIONS: NEW NULLABLE FIELDS
+-- =========================================================
+
+ALTER TABLE transactions
+    ADD COLUMN inven_id       INT UNSIGNED NULL AFTER asset_id,
+    ADD COLUMN inven_flow     TINYINT NULL AFTER inven_id,
+    ADD COLUMN inven_qty      INT NULL AFTER inven_flow,
+    ADD COLUMN link_type      INT UNSIGNED NULL AFTER inven_qty,
+    ADD COLUMN link_tx_id     BIGINT UNSIGNED NULL AFTER link_type,
+    ADD COLUMN payment_mode   INT UNSIGNED NULL AFTER link_tx_id;
+
+
+ALTER TABLE transactions
+    ADD CONSTRAINT fk_transactions_inven_id
+        FOREIGN KEY (inven_id) REFERENCES inventory_tree(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    ADD CONSTRAINT fk_transactions_link_type
+        FOREIGN KEY (link_type) REFERENCES link_table(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    ADD CONSTRAINT fk_transactions_link_tx_id
+        FOREIGN KEY (link_tx_id) REFERENCES transactions(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    ADD CONSTRAINT fk_transactions_payment_mode
+        FOREIGN KEY (payment_mode) REFERENCES payment_table(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL;
+
+
+-- =========================================================
+-- INDEXES
+-- =========================================================
+
+CREATE INDEX idx_inventory_tree_corp_id ON inventory_tree (corp_id);
+CREATE INDEX idx_inventory_tree_parent_id ON inventory_tree (parent_id);
+CREATE INDEX idx_inventory_tree_corp_parent ON inventory_tree (corp_id, parent_id);
+CREATE INDEX idx_inventory_tree_name ON inventory_tree (name);
+
+CREATE INDEX idx_financial_summary_corp_id ON financial_summary (corp_id);
+CREATE INDEX idx_financial_summary_corp_dates ON financial_summary (corp_id, start_date, end_date);
+
+CREATE INDEX idx_transactions_inven_id ON transactions (inven_id);
+CREATE INDEX idx_transactions_link_type ON transactions (link_type);
+CREATE INDEX idx_transactions_link_tx_id ON transactions (link_tx_id);
+CREATE INDEX idx_transactions_payment_mode ON transactions (payment_mode);
