@@ -137,15 +137,6 @@
   min-width: 52px;
 }
 
-.activeTarget {
-  border: 1px solid rgba(96, 165, 250, 0.4);
-  background: rgba(30, 64, 175, 0.2);
-  color: #dbeafe;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 600;
-}
-
 .layerBoard {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -185,9 +176,10 @@
   text-align: left;
   padding: 10px;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .layerCard:hover {
@@ -201,17 +193,42 @@
 
 .layerCardName {
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .layerCardSub {
   color: rgba(226, 232, 240, 0.9);
   font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .layerCardMeta {
   color: rgba(191, 219, 254, 0.95);
   font-size: 0.82rem;
   font-weight: 600;
+  text-align: right;
+  min-width: 56px;
+}
+
+.layerCardPassive {
+  cursor: default;
+}
+
+.layerCardPassive:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.layerSelect {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
 }
 
 .categoryColumns {
