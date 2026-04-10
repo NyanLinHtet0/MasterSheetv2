@@ -101,6 +101,27 @@ function CorpDetails({
     [assembledTree]
   );
 
+  const layer1Options = categoryRootNodes.map((node) => ({
+    key: node.key,
+    label: node.label,
+  }));
+
+  const layer2Options = useMemo(() => {
+    if (!selectedLayer1Key) return [];
+    return buildLayerOptions(assembledTree.childrenByKey, selectedLayer1Key)
+      .map((row) => assembledTree.nodeMap.get(row.key))
+      .filter(Boolean)
+      .map((node) => ({ key: node.key, label: node.label }));
+  }, [assembledTree, selectedLayer1Key]);
+
+  const layer3Options = useMemo(() => {
+    if (!selectedLayer2Key) return [];
+    return buildLayerOptions(assembledTree.childrenByKey, selectedLayer2Key)
+      .map((row) => assembledTree.nodeMap.get(row.key))
+      .filter(Boolean)
+      .map((node) => ({ key: node.key, label: node.label }));
+  }, [assembledTree, selectedLayer2Key]);
+
   const filteredTransactions = useMemo(() => {
     const deepestSelectedNode =
       selectedLayer3Node || selectedLayer2Node || selectedLayer1Node || null;
@@ -403,6 +424,58 @@ function CorpDetails({
       </div>
 
       <div className={styles.tablecontainer}>
+        <div className={styles.transactionFilters}>
+          <div className={styles.filterGroup}>
+            <label htmlFor="tx-filter-type">Type</label>
+            <select
+              id="tx-filter-type"
+              value={selectedLayer1Key || ''}
+              onChange={(event) => handleSelectLayer1(event.target.value || null)}
+            >
+              <option value="">All Types</option>
+              {layer1Options.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label htmlFor="tx-filter-global-tag">Global Tag</label>
+            <select
+              id="tx-filter-global-tag"
+              value={selectedLayer2Key || ''}
+              onChange={(event) => handleSelectLayer2(event.target.value || null)}
+              disabled={!selectedLayer1Key}
+            >
+              <option value="">All Global Tags</option>
+              {layer2Options.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label htmlFor="tx-filter-local-tag">Local Tag</label>
+            <select
+              id="tx-filter-local-tag"
+              value={selectedLayer3Key || ''}
+              onChange={(event) => handleSelectLayer3(event.target.value || null)}
+              disabled={!selectedLayer2Key}
+            >
+              <option value="">All Local Tags</option>
+              {layer3Options.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className={styles.tablecontent}>
           <TransactionTable
             title={`${titleParts.reverse().join(' ') + ' Transactions: '+currency(sum_data(displayTransactions).value,{precision:0,symbol: '',}).format()} MMK`}

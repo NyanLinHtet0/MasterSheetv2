@@ -7,6 +7,11 @@
   padding-bottom: 16px;
 }
 
+.txHeaderActions {
+  display: flex;
+  align-items: center;
+}
+
 .txHeader button {
   background-color: var(--primary-color);
   color: white;
@@ -23,6 +28,7 @@
 }
 
 .tableTitle {
+  margin: 0;
   color: var(--text-main);
   font-size: 1.15rem;
   font-weight: 700;

@@ -90,6 +90,43 @@
   overflow: hidden;
 }
 
+.transactionFilters {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterGroup label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.filterGroup select {
+  min-width: 185px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--text-main);
+}
+
+.filterGroup select:disabled {
+  background: #f8fafc;
+  color: var(--text-muted);
+}
+
 .tablecontent {
   display: flex;
   flex-direction: column;
