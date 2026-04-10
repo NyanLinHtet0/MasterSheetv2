@@ -167,7 +167,7 @@
   padding: 10px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
@@ -183,14 +183,6 @@
 
 .layerCardName {
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.layerCardSub {
-  color: rgba(226, 232, 240, 0.9);
-  font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -223,7 +215,7 @@
 
 .categoryColumns {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -248,6 +240,32 @@
   max-height: 260px;
   overflow: auto;
   padding-right: 2px;
+}
+
+.compactOptionsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.compactOptionChip {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compactOptionChipActive {
+  border-color: rgba(59, 130, 246, 0.95);
+  background: rgba(30, 64, 175, 0.35);
 }
 
 .optionRow {

@@ -17,7 +17,6 @@ import {
 import {
   buildAssembledTree,
   buildLayerOptions,
-  buildNodePathLabel,
   filterTransactionsByTreeSelection,
 } from '../components/helpers/treeViewHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
@@ -103,7 +102,7 @@ function CorpDetails({
       const node = assembledTree.nodeMap.get(option.key);
       return {
         ...option,
-        label: buildNodePathLabel(node, assembledTree.nodeMap),
+        label: node?.label || option.label,
       };
     });
   }, [assembledTree]);
@@ -113,21 +112,13 @@ function CorpDetails({
 
     if (selectedLayer1Key != null) {
       baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer1Key);
-    } else {
-      baseOptions = assembledTree.nodes
-        .filter((node) => node.depth === 2)
-        .map((node) => ({
-          key: node.key,
-          label: node.label,
-          depth: 0,
-        }));
     }
 
     return baseOptions.map((option) => {
       const node = assembledTree.nodeMap.get(option.key);
       return {
         ...option,
-        label: buildNodePathLabel(node, assembledTree.nodeMap),
+        label: node?.label || option.label,
       };
     });
   }, [assembledTree, selectedLayer1Key]);
@@ -138,25 +129,14 @@ function CorpDetails({
     if (selectedLayer2Key != null) {
       baseOptions = buildLayerOptions(assembledTree.childrenByKey, selectedLayer2Key);
     } else if (selectedLayer1Key != null) {
-      const childLayer2Nodes = assembledTree.childrenByKey.get(selectedLayer1Key) || [];
-      baseOptions = childLayer2Nodes.flatMap((node) =>
-        buildLayerOptions(assembledTree.childrenByKey, node.key)
-      );
-    } else {
-      baseOptions = assembledTree.nodes
-        .filter((node) => node.depth === 3)
-        .map((node) => ({
-          key: node.key,
-          label: node.label,
-          depth: 0,
-        }));
+      baseOptions = [];
     }
 
     return baseOptions.map((option) => {
       const node = assembledTree.nodeMap.get(option.key);
       return {
         ...option,
-        label: buildNodePathLabel(node, assembledTree.nodeMap),
+        label: node?.label || option.label,
       };
     });
   }, [assembledTree, selectedLayer1Key, selectedLayer2Key]);
