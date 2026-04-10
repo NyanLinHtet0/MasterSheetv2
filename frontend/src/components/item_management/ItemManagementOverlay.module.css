@@ -137,16 +137,81 @@
   min-width: 52px;
 }
 
-.table th,
-.table td {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-  padding: 8px;
-  text-align: left;
+.activeTarget {
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(30, 64, 175, 0.2);
+  color: #dbeafe;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 600;
 }
 
-.empty {
-  text-align: center !important;
-  color: rgba(248, 250, 252, 0.72);
+.layerBoard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.layerColumn {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.layerTitle {
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.8);
+}
+
+.layerCard {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.65);
+  color: #f8fafc;
+  text-align: left;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layerCard:hover {
+  border-color: rgba(96, 165, 250, 0.8);
+}
+
+.layerCardActive {
+  border-color: rgba(59, 130, 246, 0.95);
+  background: rgba(30, 64, 175, 0.35);
+}
+
+.layerCardName {
+  font-weight: 700;
+}
+
+.layerCardSub {
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 0.9rem;
+}
+
+.layerCardMeta {
+  color: rgba(191, 219, 254, 0.95);
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .categoryColumns {
@@ -259,6 +324,7 @@
     grid-template-columns: 1fr;
   }
 
+  .layerBoard,
   .categoryColumns {
     grid-template-columns: 1fr;
   }
