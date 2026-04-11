@@ -167,5 +167,5 @@
   border-radius: 10px;
   padding: 5px;
   background: #fff;
-  overflow: hidden;
+  max-height: 90vh;
 }
