@@ -63,60 +63,13 @@ function SummaryRow({
   );
 }
 
-export default function ProfitSummarySheet() {
-  const summaryData = [
-    {
-      label: 'Total Sales',
-      value: '2,450,000',
-      defaultOpen: true,
-      bold: true,
-      children: [
-        {
-          label: 'Total sales (qty)',
-          value: '1,500,000',
-          defaultOpen: true,
-          children: [
-            { label: 'Item A (qty)', value: '900,000' },
-            { label: 'Item B (qty)', value: '600,000' },
-          ],
-        },
-        {
-          label: 'Total credit sales (qty)',
-          value: '950,000',
-          defaultOpen: true,
-          children: [
-            { label: 'Item A (qty)', value: '500,000' },
-            { label: 'Item B (qty)', value: '450,000' },
-          ],
-        },
-      ],
-    },
-    {
-      label: 'Total Purchases (qty)',
-      value: '1,100,000',
-      defaultOpen: true,
-      bold: true,
-      children: [
-        { label: 'Item A (qty)', value: '700,000' },
-        { label: 'Item B (qty)', value: '400,000' },
-      ],
-    },
-    {
-      label: 'Total Expenses',
-      value: '350,000',
-      defaultOpen: true,
-      bold: true,
-      children: [
-        { label: 'General expense', value: '120,000' },
-        { label: 'Regular expense', value: '150,000' },
-        { label: 'Maintenance expense', value: '80,000' },
-      ],
-    },
-  ];
-
+export default function ProfitSummarySheet({
+  summaryData = [],
+  title = 'Accounting Profit Summary',
+}) {
   return (
     <div className={styles.card}>
-      <div className={styles.header}>Accounting Profit Summary</div>
+      <div className={styles.header}>{title}</div>
 
       <div className={styles.body}>
         <div className={styles.scrollArea}>
@@ -128,13 +81,9 @@ export default function ProfitSummarySheet() {
               children={row.children}
               defaultOpen={row.defaultOpen}
               bold={row.bold}
+              isTotal={row.isTotal}
             />
           ))}
-        </div>
-
-        <div className={styles.profitTotal}>
-          <span>Total Profit</span>
-          <span>1,000,000</span>
         </div>
       </div>
     </div>
