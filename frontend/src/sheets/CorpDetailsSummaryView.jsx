@@ -9,7 +9,11 @@ import {
   getCurrencyValue,
   normalizeRows,
 } from '../components/helpers/treeHelpers';
-import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
+import {
+  getLocalizedName,
+  getLocalizedUiText,
+  LANGUAGE_MODES,
+} from '../components/helpers/nameLocalization';
 
 const GLOBAL_IDS = {
   EXPENSE: 2,
@@ -151,17 +155,17 @@ function CorpDetailsSummaryView({
       .map((row) => row.id)
       .filter((id) => id !== GLOBAL_IDS.PURCHASES);
 
-    const totalSalesRow = buildTopLevelSummaryRow('Total Sales', [
+    const totalSalesRow = buildTopLevelSummaryRow(getLocalizedUiText('total_sales', languageMode), [
       `g-${GLOBAL_IDS.SALES}`,
       `g-${GLOBAL_IDS.CREDIT_SALES}`,
     ]);
 
-    const totalPurchasesRow = buildTopLevelSummaryRow('Total Purchases', [
+    const totalPurchasesRow = buildTopLevelSummaryRow(getLocalizedUiText('total_purchases', languageMode), [
       `g-${GLOBAL_IDS.PURCHASES}`,
     ]);
 
     const totalExpensesRow = buildTopLevelSummaryRow(
-      'Total Expenses',
+      getLocalizedUiText('total_expenses', languageMode),
       expenseRootIds.map((id) => `g-${id}`)
     );
 
@@ -171,7 +175,7 @@ function CorpDetailsSummaryView({
       .add(totalExpensesRow.amount.value);
 
     const grandTotalRow = {
-      label: 'Total',
+      label: getLocalizedUiText('total', languageMode),
       value: formatAmount(grandTotalAmount),
       amount: grandTotalAmount,
       bold: true,
@@ -186,7 +190,10 @@ function CorpDetailsSummaryView({
   return(
     <div className={styles.container}>
       <div>
-        <SummaryViewSheet title={`${corpName} Summary`} summaryData={summaryData} />
+        <SummaryViewSheet
+          title={`${corpName} ${getLocalizedUiText('summary', languageMode)}`}
+          summaryData={summaryData}
+        />
       </div>
     </div>
 

@@ -3,7 +3,48 @@ export const LANGUAGE_MODES = {
   BUR: 'bur',
 };
 
+const UI_TRANSLATIONS = {
+  summary: {
+    eng: 'Summary',
+    bur: 'အနှစ်ချုပ်',
+  },
+  total_sales: {
+    eng: 'Total Sales',
+    bur: 'စုစုပေါင်း ရောင်းရငွေ',
+  },
+  total_purchases: {
+    eng: 'Total Purchases',
+    bur: 'စုစုပေါင်း ဝယ်ယူငွေ',
+  },
+  total_expenses: {
+    eng: 'Total Expenses',
+    bur: 'စုစုပေါင်း အသုံးစရိတ်',
+  },
+  total: {
+    eng: 'Total',
+    bur: 'စုစုပေါင်း',
+  },
+  flow_in: {
+    eng: 'In',
+    bur: 'အဝင်',
+  },
+  flow_out: {
+    eng: 'Out',
+    bur: 'အထွက်',
+  },
+  flow: {
+    eng: 'Flow',
+    bur: 'အဝင်/အထွက်',
+  },
+};
+
 const NAME_PARTITION_CHARS = ['|', '｜'];
+
+export function getLocalizedUiText(key, languageMode = LANGUAGE_MODES.ENG) {
+  const entry = UI_TRANSLATIONS[key];
+  if (!entry) return String(key || '');
+  return languageMode === LANGUAGE_MODES.BUR ? entry.bur : entry.eng;
+}
 
 export function splitBilingualName(rawName = '') {
   const normalized = String(rawName || '').trim();

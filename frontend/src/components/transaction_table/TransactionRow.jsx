@@ -1,5 +1,6 @@
 import styles from './transactiontable.module.css';
 import currency from 'currency.js';
+import { getLocalizedUiText, LANGUAGE_MODES } from '../helpers/nameLocalization';
 
 function formatCurrencyValue(value, { fallback = '' } = {}) {
   if (value === '-') return '-';
@@ -160,6 +161,7 @@ export default function TransactionRow({
   onContextMenu,
   editingRowRef,
   showSaveColumn = false,
+  languageMode = LANGUAGE_MODES.ENG,
 }) {
   const amountColor = (type === 'income' || (type === 'all' && Number(tx.amount) >= 0))
     ? 'var(--success-color)'
@@ -417,8 +419,8 @@ export default function TransactionRow({
             onChange={(e) => onInputChange(e, 'inven_flow')}
           >
             <option value="">-</option>
-            <option value="1">In</option>
-            <option value="-1">Out</option>
+            <option value="1">{getLocalizedUiText('flow_in', languageMode)}</option>
+            <option value="-1">{getLocalizedUiText('flow_out', languageMode)}</option>
           </select>
         ) : (
           <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>

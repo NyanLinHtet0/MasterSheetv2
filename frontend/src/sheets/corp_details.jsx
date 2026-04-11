@@ -17,7 +17,11 @@ import {
   buildLayerOptions,
   filterTransactionsByTreeSelection,
 } from '../components/helpers/treeViewHelpers';
-import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
+import {
+  getLocalizedName,
+  getLocalizedUiText,
+  LANGUAGE_MODES,
+} from '../components/helpers/nameLocalization';
 import CorpDetailsTransactionsView from './CorpDetailsTransactionsView';
 import CorpDetailsSummaryView from './CorpDetailsSummaryView';
 
@@ -147,9 +151,9 @@ function CorpDetails({
       inventory_item_name: tx.inven_id != null ? (inventoryNameById.get(tx.inven_id) || '-') : '-',
       inventory_flow_label:
         Number(tx.inven_flow) === 1
-          ? 'In'
+          ? getLocalizedUiText('flow_in', languageMode)
           : Number(tx.inven_flow) === -1
-            ? 'Out'
+            ? getLocalizedUiText('flow_out', languageMode)
             : '-',
       link_type_name: tx.link_type != null ? (linkTypeNameById.get(tx.link_type) || '-') : '-',
       payment_mode_name: tx.payment_mode != null ? (paymentModeNameById.get(tx.payment_mode) || '-') : '-',
@@ -397,7 +401,7 @@ function CorpDetails({
           className={`${styles.tabButton} ${activeTab === DETAIL_TABS.SUMMARY ? styles.tabButtonActive : ''}`}
           onClick={() => setActiveTab(DETAIL_TABS.SUMMARY)}
         >
-          Summary
+          {getLocalizedUiText('summary', languageMode)}
         </button>
       </div>
 
@@ -425,6 +429,7 @@ function CorpDetails({
             getLocalOptionsByGlobal={getLocalOptionsByGlobal}
             resolveTypeId={resolveTypeId}
             inventoryLeafOptions={inventoryLeafOptions}
+            languageMode={languageMode}
           />
         ) : (
           <CorpDetailsSummaryView
