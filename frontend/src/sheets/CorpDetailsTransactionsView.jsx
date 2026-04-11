@@ -1,6 +1,7 @@
 import currency from 'currency.js';
 import TransactionTable from '../components/transaction_table/TransactionTable';
 import styles from './corp_details.module.css';
+import { LANGUAGE_MODES } from '../components/helpers/nameLocalization';
 
 function CorpDetailsTransactionsView({
   titleParts,
@@ -24,6 +25,7 @@ function CorpDetailsTransactionsView({
   getLocalOptionsByGlobal,
   resolveTypeId,
   inventoryLeafOptions,
+  languageMode = LANGUAGE_MODES.ENG,
 }) {
   const sumData = (rows) => rows.reduce((subTotal, tx) => subTotal.add(tx.total_mmk ?? 0), currency(0));
   const sumQty = (rows) => rows.reduce((subTotal, tx) => subTotal.add(tx.inven_qty ?? 0), currency(0));
@@ -97,6 +99,7 @@ function CorpDetailsTransactionsView({
           getLocalOptionsByGlobal={getLocalOptionsByGlobal}
           resolveTypeId={resolveTypeId}
           inventoryOptions={inventoryLeafOptions}
+          languageMode={languageMode}
         />
       </div>
     </div>

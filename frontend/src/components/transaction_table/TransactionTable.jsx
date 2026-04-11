@@ -3,6 +3,7 @@ import styles from './transactiontable.module.css';
 import TransactionTableHeader from './TransactionTableHeader';
 import TransactionRow from './TransactionRow';
 import { useTransactionTable } from './useTransactionTable';
+import { LANGUAGE_MODES } from '../helpers/nameLocalization';
 
 export default function TransactionTable({
   title,
@@ -18,6 +19,7 @@ export default function TransactionTable({
   getLocalOptionsByGlobal = () => [],
   resolveTypeId = () => null,
   inventoryOptions = [],
+  languageMode = LANGUAGE_MODES.ENG,
 }) {
   const isEmpty = data.length === 0;
   const [pendingDeleteRowId, setPendingDeleteRowId] = useState(null);
@@ -150,6 +152,7 @@ export default function TransactionTable({
               isTagDetailsExpanded={isTagDetailsExpanded}
               onToggleTagDetails={toggleTagDetails}
               showSaveColumn={showSaveColumn}
+              languageMode={languageMode}
             />
 
             <tbody>
@@ -175,6 +178,7 @@ export default function TransactionTable({
                   onContextMenu={(e) => handleOpenContextMenu(e, tx.id)}
                   editingRowRef={editingRowRef}
                   showSaveColumn={showSaveColumn}
+                  languageMode={languageMode}
                 />
               ))}
             </tbody>

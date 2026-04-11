@@ -1,4 +1,5 @@
 import styles from './transactiontable.module.css';
+import { getLocalizedUiText, LANGUAGE_MODES } from '../helpers/nameLocalization';
 
 export default function TransactionTableHeader({
   isForeign,
@@ -7,6 +8,7 @@ export default function TransactionTableHeader({
   isTagDetailsExpanded,
   onToggleTagDetails,
   showSaveColumn = false,
+  languageMode = LANGUAGE_MODES.ENG,
 }) {
   return (
     <thead>
@@ -63,7 +65,7 @@ export default function TransactionTableHeader({
           </th>
         )}
         <th>Item</th>
-        <th>Flow</th>
+        <th>{getLocalizedUiText('flow', languageMode)}</th>
         <th>Qty</th>
 
         {showSaveColumn && <th className={styles.saveHeaderCell} aria-label="Save row" />}
