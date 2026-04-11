@@ -491,12 +491,6 @@ export default function TransactionForm({
         {hasInventoryMatch && (
           <div className={styles.singleFieldRow}>
             <div className={styles.tagFields}>
-              <select className={styles.tagSelect} value={inventoryFlow} disabled>
-                <option value="">Item In/Out</option>
-                <option value="1">In</option>
-                <option value="-1">Out</option>
-              </select>
-
               <TransactionNumberField
                 className={styles.tagSelect}
                 placeholder="Item Quantity"

@@ -399,6 +399,7 @@ function CorpDetails({
           Summary
         </button>
       </div>
+
       <div className={styles.summaryContainer}>
         {activeTab === DETAIL_TABS.VIEW ? (
           <CorpDetailsTransactionsView

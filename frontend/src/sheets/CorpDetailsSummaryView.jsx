@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import SummaryViewSheet from '../sheets/SummaryView/profitview';
+import currency from 'currency.js';
+import SummaryViewSheet from './SummaryView/profitview';
+import styles from './CorpDetailsSummaryView.module.css'
+
 import {
   buildChildrenMap,
   buildRowMap,
@@ -14,6 +17,21 @@ const GLOBAL_IDS = {
   CREDIT_SALES: 6,
   PURCHASES: 8,
 };
+
+const money = (value = 0) =>
+  currency(value || 0, {
+    symbol: '',
+    separator: ',',
+    decimal: '.',
+    precision: 2,
+    pattern: '#',
+    negativePattern: '-#',
+  });
+
+const formatAmount = (value) =>
+  money(value?.value ?? value ?? 0)
+    .format()
+    .replace(/\.00$/, '');
 
 function CorpDetailsSummaryView({
   corpData,
@@ -47,23 +65,19 @@ function CorpDetailsSummaryView({
     const directAmountByKey = new Map();
 
     for (const tx of liveTransactions) {
-      const amount = getCurrencyValue(tx?.total_mmk);
-      if (!amount) continue;
+      const amount = money(getCurrencyValue(tx?.total_mmk));
+      if (amount.value === 0) continue;
 
       if (tx.local_tree_id != null) {
         const key = `l-${Number(tx.local_tree_id)}`;
-        directAmountByKey.set(key, (directAmountByKey.get(key) || 0) + amount);
+        const prev = directAmountByKey.get(key) || money(0);
+        directAmountByKey.set(key, prev.add(amount.value));
       } else if (tx.global_tree_id != null) {
         const key = `g-${Number(tx.global_tree_id)}`;
-        directAmountByKey.set(key, (directAmountByKey.get(key) || 0) + amount);
+        const prev = directAmountByKey.get(key) || money(0);
+        directAmountByKey.set(key, prev.add(amount.value));
       }
     }
-
-    const formatAmount = (value) =>
-      new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }).format(value || 0);
 
     const getChildrenKeys = (key) => {
       if (key.startsWith('g-')) {
@@ -95,9 +109,14 @@ function CorpDetailsSummaryView({
       const childRows = getChildrenKeys(key)
         .map((childKey) => buildRowForKey(childKey))
         .filter(Boolean)
-        .filter((row) => row.amount !== 0 || (row.children?.length || 0) > 0);
+        .filter((row) => row.amount.value !== 0 || (row.children?.length || 0) > 0);
 
-      const amount = (directAmountByKey.get(key) || 0) + childRows.reduce((sum, row) => sum + row.amount, 0);
+      const childAmount = childRows.reduce(
+        (sum, row) => sum.add(row.amount.value),
+        money(0)
+      );
+
+      const amount = (directAmountByKey.get(key) || money(0)).add(childAmount.value);
 
       return {
         key,
@@ -114,9 +133,9 @@ function CorpDetailsSummaryView({
         .filter(Boolean)
         .map((key) => buildRowForKey(key))
         .filter(Boolean)
-        .filter((row) => row.amount !== 0 || (row.children?.length || 0) > 0);
+        .filter((row) => row.amount.value !== 0 || (row.children?.length || 0) > 0);
 
-      const amount = children.reduce((sum, row) => sum + row.amount, 0);
+      const amount = children.reduce((sum, row) => sum.add(row.amount.value), money(0));
 
       return {
         label,
@@ -136,12 +155,21 @@ function CorpDetailsSummaryView({
       `g-${GLOBAL_IDS.SALES}`,
       `g-${GLOBAL_IDS.CREDIT_SALES}`,
     ]);
-    const totalPurchasesRow = buildTopLevelSummaryRow('Total Purchases', [`g-${GLOBAL_IDS.PURCHASES}`]);
+
+    const totalPurchasesRow = buildTopLevelSummaryRow('Total Purchases', [
+      `g-${GLOBAL_IDS.PURCHASES}`,
+    ]);
+
     const totalExpensesRow = buildTopLevelSummaryRow(
       'Total Expenses',
       expenseRootIds.map((id) => `g-${id}`)
     );
-    const grandTotalAmount = totalSalesRow.amount + totalPurchasesRow.amount + totalExpensesRow.amount;
+
+    const grandTotalAmount = money(0)
+      .add(totalSalesRow.amount.value)
+      .add(totalPurchasesRow.amount.value)
+      .add(totalExpensesRow.amount.value);
+
     const grandTotalRow = {
       label: 'Total',
       value: formatAmount(grandTotalAmount),
@@ -155,7 +183,14 @@ function CorpDetailsSummaryView({
     return [totalSalesRow, totalPurchasesRow, totalExpensesRow, grandTotalRow];
   }, [globalTree, localTree, transactions, languageMode]);
 
-  return <SummaryViewSheet title={`${corpName} Summary`} summaryData={summaryData} />;
+  return(
+    <div className={styles.container}>
+      <div>
+        <SummaryViewSheet title={`${corpName} Summary`} summaryData={summaryData} />
+      </div>
+    </div>
+
+  );
 }
 
 export default CorpDetailsSummaryView;

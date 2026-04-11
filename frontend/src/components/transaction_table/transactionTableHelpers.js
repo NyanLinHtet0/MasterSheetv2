@@ -170,16 +170,27 @@ export function toDisplayTransaction(tx, { isInverse, isForeign }) {
 
 export function buildEditFormData(tx, { isForeign, resolveTypeId }) {
   const hydratedTx = hydrateStoredTransaction(tx, { isForeign });
-  const typeId = resolveTypeId?.(hydratedTx.global_tree_id) ?? null;
+
+  const isTypeOnlySelection =
+    hydratedTx.local_tree_id == null &&
+    (
+      !tx?.global_tag_name ||
+      !tx?.global_tag_root_name ||
+      String(tx.global_tag_name) === String(tx.global_tag_root_name)
+    );
+
+  const typeId = tx?.global_tag_root_id != null
+    ? tx.global_tag_root_id
+    : isTypeOnlySelection
+      ? hydratedTx.global_tree_id
+      : (resolveTypeId?.(hydratedTx.global_tree_id) ?? null);
 
   return {
     date: formatTxDateForInput(hydratedTx.tx_date),
     description: hydratedTx.description || '',
     amount: String(toMoney(hydratedTx.amount)),
     rate: isForeign ? String(toMoney(hydratedTx.rate)) : '',
-    total_mmk: isForeign
-      ? String(toMoney(hydratedTx.total_mmk))
-      : '',
+    total_mmk: isForeign ? String(toMoney(hydratedTx.total_mmk)) : '',
     type_id: typeId != null ? String(typeId) : '',
     global_tree_id:
       hydratedTx.global_tree_id != null ? String(hydratedTx.global_tree_id) : '',

@@ -13,12 +13,33 @@ function SummaryRow({
   const [open, setOpen] = useState(defaultOpen);
   const hasChildren = Array.isArray(children) && children.length > 0;
 
+  const levelClass =
+    level === 0
+      ? styles.rowLevel0
+      : level === 1
+      ? styles.rowLevel1
+      : styles.rowLevel2;
+
+  const labelClass =
+    level === 0
+      ? styles.labelLevel0
+      : level === 1
+      ? styles.labelLevel1
+      : styles.labelLevel2;
+
+  const valueClass =
+    level === 0
+      ? styles.valueLevel0
+      : level === 1
+      ? styles.valueLevel1
+      : styles.valueLevel2;
+
   const rowClassName = [
     styles.row,
     hasChildren ? styles.rowClickable : '',
     isTotal ? styles.rowTotal : '',
     bold ? styles.rowBold : '',
-    level === 0 ? styles.rowLevel0 : styles.rowLevelChild,
+    levelClass,
   ]
     .filter(Boolean)
     .join(' ');
@@ -37,10 +58,15 @@ function SummaryRow({
             <span className={`${styles.arrow} ${styles.arrowEmpty}`} />
           )}
 
-          <span>{label}</span>
+          <span className={`${styles.label} ${labelClass}`}>{label}</span>
         </div>
 
-        <div className={styles.value}>{value}</div>
+        <div
+          className={`${styles.value} ${valueClass}`}
+          style={{ marginRight: `${level * 12}px` }}
+        >
+          {value}
+        </div>
       </div>
 
       {hasChildren && open && (
@@ -51,7 +77,7 @@ function SummaryRow({
               label={child.label}
               value={child.value}
               children={child.children}
-              defaultOpen={child.defaultOpen}
+              defaultOpen={false}
               level={level + 1}
               bold={child.bold}
               isTotal={child.isTotal}
@@ -95,7 +121,7 @@ export default function ProfitSummarySheet({
               label={row.label}
               value={row.value}
               children={row.children}
-              defaultOpen={row.defaultOpen}
+              defaultOpen={false}
               bold={row.bold}
               isTotal={row.isTotal}
             />
