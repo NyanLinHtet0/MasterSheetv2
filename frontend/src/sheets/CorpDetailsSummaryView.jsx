@@ -191,7 +191,7 @@ function CorpDetailsSummaryView({
     <div className={styles.container}>
       <div>
         <SummaryViewSheet
-          title={`${corpName} ${getLocalizedUiText('summary', languageMode)}`}
+          title={`${corpName} ${getLocalizedUiText('accounting_summary', languageMode)}`}
           summaryData={summaryData}
         />
       </div>

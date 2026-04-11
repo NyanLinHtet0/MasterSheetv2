@@ -4,9 +4,9 @@ export const LANGUAGE_MODES = {
 };
 
 const UI_TRANSLATIONS = {
-  summary: {
-    eng: 'Summary',
-    bur: 'အနှစ်ချုပ်',
+  accounting_summary: {
+    eng: 'Accounting Summary',
+    bur: 'စာရင်းချုပ်',
   },
   total_sales: {
     eng: 'Total Sales',

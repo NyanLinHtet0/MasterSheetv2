@@ -27,7 +27,7 @@ import CorpDetailsSummaryView from './CorpDetailsSummaryView';
 
 const DETAIL_TABS = {
   VIEW: 'view',
-  SUMMARY: 'summary',
+  SUMMARY: 'Summary',
 };
 
 function CorpDetails({
@@ -401,7 +401,7 @@ function CorpDetails({
           className={`${styles.tabButton} ${activeTab === DETAIL_TABS.SUMMARY ? styles.tabButtonActive : ''}`}
           onClick={() => setActiveTab(DETAIL_TABS.SUMMARY)}
         >
-          {getLocalizedUiText('summary', languageMode)}
+          {getLocalizedUiText('Summary', languageMode)}
         </button>
       </div>
 
