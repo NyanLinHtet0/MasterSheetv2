@@ -13,7 +13,6 @@ const GLOBAL_IDS = {
   SALES: 5,
   CREDIT_SALES: 6,
   PURCHASES: 8,
-  INVESTMENT: 12,
 };
 
 function CorpDetailsSummaryView({
@@ -131,19 +130,29 @@ function CorpDetailsSummaryView({
 
     const expenseRootIds = (globalChildrenByParent.get(GLOBAL_IDS.EXPENSE) || [])
       .map((row) => row.id)
-      .filter((id) => id !== GLOBAL_IDS.INVESTMENT);
+      .filter((id) => id !== GLOBAL_IDS.PURCHASES);
 
-    return [
-      buildTopLevelSummaryRow('Total Sales', [
-        `g-${GLOBAL_IDS.SALES}`,
-        `g-${GLOBAL_IDS.CREDIT_SALES}`,
-      ]),
-      buildTopLevelSummaryRow('Total Purchases', [`g-${GLOBAL_IDS.PURCHASES}`]),
-      buildTopLevelSummaryRow(
-        'Total Expenses',
-        expenseRootIds.map((id) => `g-${id}`)
-      ),
-    ];
+    const totalSalesRow = buildTopLevelSummaryRow('Total Sales', [
+      `g-${GLOBAL_IDS.SALES}`,
+      `g-${GLOBAL_IDS.CREDIT_SALES}`,
+    ]);
+    const totalPurchasesRow = buildTopLevelSummaryRow('Total Purchases', [`g-${GLOBAL_IDS.PURCHASES}`]);
+    const totalExpensesRow = buildTopLevelSummaryRow(
+      'Total Expenses',
+      expenseRootIds.map((id) => `g-${id}`)
+    );
+    const grandTotalAmount = totalSalesRow.amount + totalPurchasesRow.amount + totalExpensesRow.amount;
+    const grandTotalRow = {
+      label: 'Total',
+      value: formatAmount(grandTotalAmount),
+      amount: grandTotalAmount,
+      bold: true,
+      isTotal: true,
+      defaultOpen: true,
+      children: [],
+    };
+
+    return [totalSalesRow, totalPurchasesRow, totalExpensesRow, grandTotalRow];
   }, [globalTree, localTree, transactions, languageMode]);
 
   return <SummaryViewSheet title={`${corpName} Summary`} summaryData={summaryData} />;
