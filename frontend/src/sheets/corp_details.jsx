@@ -433,6 +433,7 @@ function CorpDetails({
             transactions={transactions}
             linkTable={linkTable}
             paymentTable={paymentTable}
+            languageMode={languageMode}
           />
         )}
 
