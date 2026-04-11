@@ -491,13 +491,6 @@ export default function TransactionForm({
         {hasInventoryMatch && (
           <div className={styles.singleFieldRow}>
             <div className={styles.tagFields}>
-              <input
-                className={styles.tagSelect}
-                value={`Item Tag: ${matchedInventoryOption.label} (ID ${matchedInventoryOption.value})`}
-                readOnly
-                title={matchedInventoryOption.label}
-              />
-
               <select className={styles.tagSelect} value={inventoryFlow} disabled>
                 <option value="">Item In/Out</option>
                 <option value="1">In</option>
