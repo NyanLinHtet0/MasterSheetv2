@@ -135,3 +135,35 @@
   min-width: 0;
   overflow: hidden;
 }
+
+.tabsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.tabButton {
+  border: 1px solid var(--border-color);
+  background: #fff;
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabButtonActive {
+  background: #edf2ff;
+  border-color: #a3bffa;
+}
+
+.summaryContainer {
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+}
