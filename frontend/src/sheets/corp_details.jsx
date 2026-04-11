@@ -146,9 +146,9 @@ function CorpDetails({
       ...tx,
       inventory_item_name: tx.inven_id != null ? (inventoryNameById.get(tx.inven_id) || '-') : '-',
       inventory_flow_label:
-        Number(tx.inven_flow) === 1
+        Number(tx.inven_flow) === 0
           ? 'In'
-          : Number(tx.inven_flow) === -1
+          : Number(tx.inven_flow) === 1
             ? 'Out'
             : '-',
       link_type_name: tx.link_type != null ? (linkTypeNameById.get(tx.link_type) || '-') : '-',

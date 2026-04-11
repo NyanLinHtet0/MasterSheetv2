@@ -216,7 +216,7 @@ export default function TransactionForm({
     if (!hasInventoryMatch) return '';
     const numericAmount = parseEditableNumber(rawAmount, null);
     if (numericAmount == null || numericAmount === 0) return '';
-    return numericAmount > 0 ? '-1' : '1';
+    return numericAmount > 0 ? '0' : '1';
   };
 
   const inventoryItemId = hasInventoryMatch ? String(matchedInventoryOption.value) : '';

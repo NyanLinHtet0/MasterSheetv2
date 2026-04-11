@@ -417,8 +417,8 @@ export default function TransactionRow({
             onChange={(e) => onInputChange(e, 'inven_flow')}
           >
             <option value="">-</option>
-            <option value="1">In</option>
-            <option value="-1">Out</option>
+            <option value="0">In</option>
+            <option value="1">Out</option>
           </select>
         ) : (
           <span className={styles.tagCellValue}>{tx.inventory_flow_label || '-'}</span>
