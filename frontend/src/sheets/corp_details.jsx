@@ -425,7 +425,15 @@ function CorpDetails({
             inventoryLeafOptions={inventoryLeafOptions}
           />
         ) : (
-          <CorpDetailsSummaryView corpName={safeCorp.name} />
+          <CorpDetailsSummaryView
+            corpData={safeCorp}
+            globalTree={globalTree}
+            localTree={localTree}
+            inventoryTree={inventoryTree}
+            transactions={transactions}
+            linkTable={linkTable}
+            paymentTable={paymentTable}
+          />
         )}
 
         {showItemManagement && (
