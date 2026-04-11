@@ -3,6 +3,8 @@ const mysql = require('mysql2/promise');
 const SQL_DEBUG = process.env.SQL_DEBUG === 'true';
 const SQL_DEBUG_RESULTS = process.env.SQL_DEBUG_RESULTS === 'true';
 
+
+
 function now() {
   return new Date().toISOString();
 }
@@ -66,6 +68,34 @@ async function runLoggedQuery(fn, source, sql, params = []) {
     throw error;
   }
 }
+// ---> PRODUCTION SETUP <---
+// let pool;
+// async function initializePool() {
+//   try {
+//     const connector = new Connector();
+
+//     const clientOpts = await connector.getOptions({
+//       instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME,
+//       ipType: process.env.PRIVATE_IP === 'true' ? 'PRIVATE' : 'PUBLIC',
+//     });
+
+//     pool = mysql.createPool({
+//       ...clientOpts,
+//       user: process.env.DB_USER,
+//       password: process.env.DB_PASS,
+//       database: process.env.DB_NAME,
+//       dateStrings: true,
+//       waitForConnections: true,
+//       connectionLimit: 10,
+//       queueLimit: 0
+//     });
+
+//     console.log('Connected to Google Cloud SQL');
+//   } catch (error) {
+//     console.error('Failed to initialize Cloud SQL pool:', error);
+//     process.exit(1);
+//   }
+// }
 
 const rawPool = mysql.createPool({
   host: 'localhost',

@@ -1,4 +1,4 @@
-import styles from './corp_details.module.css';
+import styles from './CorpDetailsSummaryView.module.css';
 
 function CorpDetailsSummaryView({ corpName }) {
   return (

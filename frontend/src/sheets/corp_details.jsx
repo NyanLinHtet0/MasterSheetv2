@@ -399,48 +399,49 @@ function CorpDetails({
           Summary
         </button>
       </div>
+      <div className={styles.summaryContainer}>
+        {activeTab === DETAIL_TABS.VIEW ? (
+          <CorpDetailsTransactionsView
+            titleParts={titleParts}
+            selectedLayer1Key={selectedLayer1Key}
+            selectedLayer2Key={selectedLayer2Key}
+            selectedLayer3Key={selectedLayer3Key}
+            handleSelectLayer1={handleSelectLayer1}
+            handleSelectLayer2={handleSelectLayer2}
+            handleSelectLayer3={handleSelectLayer3}
+            layer1Options={layer1Options}
+            layer2Options={layer2Options}
+            layer3Options={layer3Options}
+            displayTransactions={displayTransactions}
+            foreignLabel={foreignLabel}
+            isForeign={isForeign}
+            isInverse={isInverse}
+            onUpdateTransaction={onUpdateTransaction}
+            onDeleteTransaction={onDeleteTransaction}
+            typeOptions={typeOptions}
+            getGlobalOptionsByType={getGlobalOptionsByType}
+            getLocalOptionsByGlobal={getLocalOptionsByGlobal}
+            resolveTypeId={resolveTypeId}
+            inventoryLeafOptions={inventoryLeafOptions}
+          />
+        ) : (
+          <CorpDetailsSummaryView corpName={safeCorp.name} />
+        )}
 
-      {activeTab === DETAIL_TABS.VIEW ? (
-        <CorpDetailsTransactionsView
-          titleParts={titleParts}
-          selectedLayer1Key={selectedLayer1Key}
-          selectedLayer2Key={selectedLayer2Key}
-          selectedLayer3Key={selectedLayer3Key}
-          handleSelectLayer1={handleSelectLayer1}
-          handleSelectLayer2={handleSelectLayer2}
-          handleSelectLayer3={handleSelectLayer3}
-          layer1Options={layer1Options}
-          layer2Options={layer2Options}
-          layer3Options={layer3Options}
-          displayTransactions={displayTransactions}
-          foreignLabel={foreignLabel}
-          isForeign={isForeign}
-          isInverse={isInverse}
-          onUpdateTransaction={onUpdateTransaction}
-          onDeleteTransaction={onDeleteTransaction}
-          typeOptions={typeOptions}
-          getGlobalOptionsByType={getGlobalOptionsByType}
-          getLocalOptionsByGlobal={getLocalOptionsByGlobal}
-          resolveTypeId={resolveTypeId}
-          inventoryLeafOptions={inventoryLeafOptions}
-        />
-      ) : (
-        <CorpDetailsSummaryView corpName={safeCorp.name} />
-      )}
-
-      {showItemManagement && (
-        <ItemManagementOverlay
-          corp={safeCorp}
-          onClose={() => setShowItemManagement(false)}
-          onAddItem={onInsertInventoryTreeNode}
-          categoryRootNodes={categoryRootNodes}
-          categoryChildrenByKey={assembledTree.childrenByKey}
-          categoryNodeMap={assembledTree.nodeMap}
-          onAddCategoryNode={handleAddCategoryNode}
-          languageMode={languageMode}
-          onToggleLanguageMode={onToggleLanguageMode}
-        />
-      )}
+        {showItemManagement && (
+          <ItemManagementOverlay
+            corp={safeCorp}
+            onClose={() => setShowItemManagement(false)}
+            onAddItem={onInsertInventoryTreeNode}
+            categoryRootNodes={categoryRootNodes}
+            categoryChildrenByKey={assembledTree.childrenByKey}
+            categoryNodeMap={assembledTree.nodeMap}
+            onAddCategoryNode={handleAddCategoryNode}
+            languageMode={languageMode}
+            onToggleLanguageMode={onToggleLanguageMode}
+          />
+        )}
+      </div>
     </div>
   );
 }
