@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
-import currency from 'currency.js';
 import styles from './corp_details.module.css';
-import TransactionTable from '../components/transaction_table/TransactionTable';
 import ItemManagementOverlay from '../components/item_management/ItemManagementOverlay';
 import {
   attachTransactionTagNames,
@@ -20,6 +18,13 @@ import {
   filterTransactionsByTreeSelection,
 } from '../components/helpers/treeViewHelpers';
 import { getLocalizedName, LANGUAGE_MODES } from '../components/helpers/nameLocalization';
+import CorpDetailsTransactionsView from './CorpDetailsTransactionsView';
+import CorpDetailsSummaryView from './CorpDetailsSummaryView';
+
+const DETAIL_TABS = {
+  VIEW: 'view',
+  SUMMARY: 'summary',
+};
 
 function CorpDetails({
   selectedCorp,
@@ -37,6 +42,7 @@ function CorpDetails({
   const [selectedLayer2Key, setSelectedLayer2Key] = useState(null);
   const [selectedLayer3Key, setSelectedLayer3Key] = useState(null);
   const [showItemManagement, setShowItemManagement] = useState(false);
+  const [activeTab, setActiveTab] = useState(DETAIL_TABS.VIEW);
 
   const safeCorp = selectedCorp || {};
   const localTree = safeCorp.local_tree || [];
@@ -45,35 +51,8 @@ function CorpDetails({
   const isInverse = normalizeBool(safeCorp.inverse);
   const isForeign = normalizeBool(safeCorp.is_foreign);
 
-  const currentBalance = currency(safeCorp.current_balance || 0, {
-    symbol: '',
-    precision: 0,
-  })
-    .multiply(isInverse ? -1 : 1)
-    .format();
-
-  const currentForeign = currency(safeCorp.current_foreign || 0, {
-    symbol: '',
-    precision: 2,
-  })
-    .multiply(isInverse ? -1 : 1)
-    .format();
-
   const foreignLabel =
     safeCorp.name?.split('ဝယ်စာရင်း')[0]?.trim() || 'Foreign';
-
-  const rate = (() => {
-    if (!isForeign) return '-';
-
-    const foreignBalance = currency(safeCorp.current_foreign || 0).value;
-    if (!foreignBalance) return '-';
-
-    const derivedRate = currency(safeCorp.current_balance || 0)
-      .divide(foreignBalance)
-      .value;
-
-    return Math.abs(derivedRate).toLocaleString(undefined, { maximumFractionDigits: 2 });
-  })();
 
   const assembledTree = useMemo(() => {
     return buildAssembledTree(globalTree, localTree, { languageMode });
@@ -364,7 +343,6 @@ function CorpDetails({
     });
   };
 
-
   const titleParts = [];
 
   if (selectedLayer1Node) {
@@ -388,13 +366,6 @@ function CorpDetails({
     );
   }
 
-  const sum_data = (displayTransactions) => {
-    return displayTransactions.reduce((subTotal, tx) => subTotal.add(tx.total_mmk ?? 0), currency(0));
-  };
-  const sum_qty = (displayTransactions) => {
-    return displayTransactions.reduce((subTotal, tx) => subTotal.add(tx.inven_qty ?? 0), currency(0));
-  };
-
   return (
     <div className={styles.corpDetails}>
       <div className={styles.headerbar}>
@@ -412,95 +383,50 @@ function CorpDetails({
         </button>
       </div>
 
-      <div className={styles.balanceRow}>
-        <div className={styles.balanceInfo}>
-          <span className={styles.balanceText}>Balance: {currentBalance} MMK</span>
-
-          {isForeign && (
-            <>
-              <span className={styles.divider}>|</span>
-              <span className={styles.balanceText}>
-                {foreignLabel} Balance: {currentForeign}
-              </span>
-              <span className={styles.divider}>|</span>
-              <span className={styles.rateText}>Rate: {rate}</span>
-            </>
-          )}
-        </div>
-
+      <div className={styles.tabsRow}>
+        <button
+          type="button"
+          className={`${styles.tabButton} ${activeTab === DETAIL_TABS.VIEW ? styles.tabButtonActive : ''}`}
+          onClick={() => setActiveTab(DETAIL_TABS.VIEW)}
+        >
+          View
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabButton} ${activeTab === DETAIL_TABS.SUMMARY ? styles.tabButtonActive : ''}`}
+          onClick={() => setActiveTab(DETAIL_TABS.SUMMARY)}
+        >
+          Summary
+        </button>
       </div>
 
-      <div className={styles.tablecontainer}>
-        <div className={styles.transactionFilters}>
-          <div className={styles.filterGroup}>
-            <label htmlFor="tx-filter-type">Type</label>
-            <select
-              id="tx-filter-type"
-              value={selectedLayer1Key || ''}
-              onChange={(event) => handleSelectLayer1(event.target.value || null)}
-            >
-              <option value="">All Types</option>
-              {layer1Options.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <label htmlFor="tx-filter-global-tag">Global Tag</label>
-            <select
-              id="tx-filter-global-tag"
-              value={selectedLayer2Key || ''}
-              onChange={(event) => handleSelectLayer2(event.target.value || null)}
-              disabled={!selectedLayer1Key}
-            >
-              <option value="">All Global Tags</option>
-              {layer2Options.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <label htmlFor="tx-filter-local-tag">Local Tag</label>
-            <select
-              id="tx-filter-local-tag"
-              value={selectedLayer3Key || ''}
-              onChange={(event) => handleSelectLayer3(event.target.value || null)}
-              disabled={!selectedLayer2Key}
-            >
-              <option value="">All Local Tags</option>
-              {layer3Options.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className={styles.tablecontent}>
-          <TransactionTable
-            title={`${titleParts.reverse().join(' ') + ' Transactions: '+currency(sum_data(displayTransactions).value,{precision:0,symbol: '',}).format()} MMK (${sum_qty(displayTransactions).value} items)`}
-            data={displayTransactions}
-            type="all"
-            currencyName={foreignLabel}
-            isForeign={isForeign}
-            isInverse={isInverse}
-            onUpdate={onUpdateTransaction}
-            onDelete={onDeleteTransaction}
-            typeOptions={typeOptions}
-            getGlobalOptionsByType={getGlobalOptionsByType}
-            getLocalOptionsByGlobal={getLocalOptionsByGlobal}
-            resolveTypeId={resolveTypeId}
-            inventoryOptions={inventoryLeafOptions}
-          />
-        </div>
-      </div>
+      {activeTab === DETAIL_TABS.VIEW ? (
+        <CorpDetailsTransactionsView
+          titleParts={titleParts}
+          selectedLayer1Key={selectedLayer1Key}
+          selectedLayer2Key={selectedLayer2Key}
+          selectedLayer3Key={selectedLayer3Key}
+          handleSelectLayer1={handleSelectLayer1}
+          handleSelectLayer2={handleSelectLayer2}
+          handleSelectLayer3={handleSelectLayer3}
+          layer1Options={layer1Options}
+          layer2Options={layer2Options}
+          layer3Options={layer3Options}
+          displayTransactions={displayTransactions}
+          foreignLabel={foreignLabel}
+          isForeign={isForeign}
+          isInverse={isInverse}
+          onUpdateTransaction={onUpdateTransaction}
+          onDeleteTransaction={onDeleteTransaction}
+          typeOptions={typeOptions}
+          getGlobalOptionsByType={getGlobalOptionsByType}
+          getLocalOptionsByGlobal={getLocalOptionsByGlobal}
+          resolveTypeId={resolveTypeId}
+          inventoryLeafOptions={inventoryLeafOptions}
+        />
+      ) : (
+        <CorpDetailsSummaryView corpName={safeCorp.name} />
+      )}
 
       {showItemManagement && (
         <ItemManagementOverlay
