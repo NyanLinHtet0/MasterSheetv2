@@ -2,14 +2,15 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   background-color: #ffffff;
-  margin: 8px 8px 8px 0px;
+  margin: 6px 8px 8px 0px;
   padding: 8px 8px 8px 8px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
-  height: 92.25vh;
+  height: 100%;
 }
 
 .headerbar {
@@ -86,7 +87,7 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  margin-top: 15px;
+  margin-top: 8px;
   overflow: hidden;
 }
 

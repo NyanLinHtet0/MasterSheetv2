@@ -92,7 +92,7 @@ export default function TransactionTable({
   };
 
   return (
-    <>
+    <div className={styles.tableWrapper}>
       <div className={styles.txHeader} style={{ marginBottom: '10px' }}>
         <h3 className={styles.tableTitle}>{title}</h3>
         <div className={styles.txHeaderActions}>
@@ -236,6 +236,6 @@ export default function TransactionTable({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
