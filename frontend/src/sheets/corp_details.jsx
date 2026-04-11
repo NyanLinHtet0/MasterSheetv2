@@ -264,9 +264,10 @@ function CorpDetails({
       getAncestorIds(liveGlobalTree, Number(effectiveGlobalId), { includeSelf: true })
     );
 
-    const typeAncestor = ancestors.find(
-      (ancestorId) => (globalRowMap.get(ancestorId)?.parent_id ?? null) == null
-    );
+    const typeAncestor = ancestors.find((ancestorId) => {
+      const ancestorRow = globalRowMap.get(ancestorId);
+      return ancestorRow != null && (ancestorRow.parent_id ?? null) == null;
+    });
 
     return typeAncestor ?? null;
   };
