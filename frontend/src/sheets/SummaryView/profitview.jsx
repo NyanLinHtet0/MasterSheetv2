@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import styles from './profitview.module.css';
 
 function SummaryRow({
@@ -67,13 +67,29 @@ export default function ProfitSummarySheet({
   summaryData = [],
   title = 'Accounting Profit Summary',
 }) {
+  const { displayRows, totalRow } = useMemo(() => {
+    const totalIndex = summaryData.findIndex((row) => row?.isTotal);
+
+    if (totalIndex === -1) {
+      return {
+        displayRows: summaryData,
+        totalRow: null,
+      };
+    }
+
+    return {
+      displayRows: summaryData.filter((_, index) => index !== totalIndex),
+      totalRow: summaryData[totalIndex],
+    };
+  }, [summaryData]);
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>{title}</div>
 
       <div className={styles.body}>
         <div className={styles.scrollArea}>
-          {summaryData.map((row, index) => (
+          {displayRows.map((row, index) => (
             <SummaryRow
               key={`${row.label}-${index}`}
               label={row.label}
@@ -85,6 +101,13 @@ export default function ProfitSummarySheet({
             />
           ))}
         </div>
+
+        {totalRow && (
+          <div className={styles.profitTotal}>
+            <span>{totalRow.label}</span>
+            <span>{totalRow.value}</span>
+          </div>
+        )}
       </div>
     </div>
   );
